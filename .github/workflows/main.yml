@@ -125,7 +125,7 @@ jobs:
           use-tool-cache: true
         continue-on-error: true
       - name: 🧪 Test 🧪
-        run: cargo test-all-features
+        run: cargo test-all-features --target=${{ matrix.target }}
       - name: 🙊 Code Coverage 🙊
         run: cargo tarpaulin --out Xml
       - name: 🙊 Upload Code Coverage 🙊
@@ -189,7 +189,7 @@ jobs:
           use-tool-cache: true
         continue-on-error: true
       - name: 🧪 Test 🧪
-        run: cargo test-all-features
+        run: cargo test-all-features --target=${{ matrix.target }}
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints
@@ -271,4 +271,4 @@ jobs:
           use-tool-cache: true
         continue-on-error: true
       - name: 🧪 Test 🧪
-        run: cargo test-all-features
+        run: cargo test-all-features --target=${{ matrix.target }}
