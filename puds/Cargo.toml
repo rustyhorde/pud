@@ -14,7 +14,9 @@ resolver = "2"
 version = "0.1.0"
 
 [dependencies]
+actix-web = { version = "4.2.1", features = ["rustls"] }
 anyhow = "1.0.66"
+clap = { version = "4.0.29", features = ["derive"] }
 
 [build-dependencies]
 anyhow = "1.0.66"

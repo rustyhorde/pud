@@ -179,9 +179,14 @@
     )
 )]
 
-use anyhow::Result;
+mod error;
+mod runtime;
 
-#[allow(clippy::unnecessary_wraps)]
-fn main() -> Result<()> {
-    Ok(())
+use anyhow::Result;
+use error::{clap_or_error, success};
+use std::process;
+
+#[actix_web::main]
+async fn main() -> Result<()> {
+    process::exit(runtime::run().await.map_or_else(clap_or_error, success))
 }
