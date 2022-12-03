@@ -126,7 +126,7 @@
         unused_attributes,
         unused_braces,
         unused_comparisons,
-        unused_crate_dependencies,
+        // unused_crate_dependencies,
         unused_doc_comments,
         unused_extern_crates,
         unused_features,
@@ -179,6 +179,9 @@
     )
 )]
 
-fn main() {
-    println!("Hello, world!");
+use anyhow::Result;
+
+#[allow(clippy::unnecessary_wraps)]
+fn main() -> Result<()> {
+    Ok(())
 }

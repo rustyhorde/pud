@@ -14,7 +14,11 @@ resolver = "2"
 version = "0.1.0"
 
 [dependencies]
+anyhow = "1.0.66"
 
 [build-dependencies]
 anyhow = "1.0.66"
 rustversion = "1.0.9"
+
+[dev-dependencies]
+assert_cmd = "2.0.7"
