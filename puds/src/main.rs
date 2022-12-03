@@ -1,3 +1,11 @@
+// Copyright (c) 2022 pud developers
+//
+// Licensed under the Apache License, Version 2.0
+// <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
+// license <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. All files in the project carrying such notice may not be copied,
+// modified, or distributed except according to those terms.
+
 //! Job Scheduling Server
 
 // rustc lints
@@ -140,16 +148,35 @@
         where_clauses_object_safety,
         while_true,
 ))]
-
 // nightly only lints
-// #![cfg_attr(
-//     all(msrv, nightly_lints),
-//     deny()
-// )]
+// #![cfg_attr(all(msrv, nightly_lints),deny())]
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta_lints, nightly_lints)),
     deny(for_loops_over_fallibles, opaque_hidden_inferred_bound)
+)]
+// beta only lints
+// #![cfg_attr( all(msrv, beta_lints), deny())]
+// beta or stable only lints
+// #![cfg_attr(all(msrv, any(beta_lints, stable_lints)), deny())]
+// stable only lints
+// #![cfg_attr(all(msrv, stable_lints), deny())]
+// clippy lints
+#![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
+// #![cfg_attr(msrv, allow())]
+// rustdoc lints
+#![cfg_attr(
+    msrv,
+    deny(
+        rustdoc::bare_urls,
+        rustdoc::broken_intra_doc_links,
+        rustdoc::invalid_codeblock_attributes,
+        rustdoc::invalid_html_tags,
+        rustdoc::missing_crate_level_docs,
+        rustdoc::missing_doc_code_examples,
+        rustdoc::private_doc_tests,
+        rustdoc::private_intra_doc_links,
+    )
 )]
 
 fn main() {
