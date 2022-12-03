@@ -69,28 +69,12 @@ jobs:
         include:
         - os: ubuntu-latest
           rust: "1.65.0"
-          target: i686-unknown-linux-gnu
         - os: ubuntu-latest
           rust: stable
-          target: i686-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: "1.65.0"
-          target: x86_64-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: stable
-          target: x86_64-unknown-linux-gnu
         - os: ubuntu-latest
           rust: beta
-          target: i686-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: beta
-          target: x86_64-unknown-linux-gnu
         - os: ubuntu-latest
           rust: nightly
-          target: i686-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: nightly
-          target: x86_64-unknown-linux-gnu
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
@@ -102,13 +86,12 @@ jobs:
           path: |
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
       - uses: actions-rs/toolchain@v1
         name: 🧰 Toolchain 🧰
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
           override: true
       - name: 💾 Install (cargo-tarpaulin) 💾
         uses: actions-rs/install@v0.1
@@ -125,7 +108,7 @@ jobs:
           use-tool-cache: true
         continue-on-error: true
       - name: 🧪 Test 🧪
-        run: cargo test-all-features --target=${{ matrix.target }}
+        run: cargo test-all-features
       - name: 🙊 Code Coverage 🙊
         run: cargo tarpaulin --out Xml
       - name: 🙊 Upload Code Coverage 🙊
@@ -141,28 +124,12 @@ jobs:
         include:
         - os: macos-latest
           rust: "1.65.0"
-          target: x86_64-apple-darwin
         - os: macos-latest
           rust: stable
-          target: x86_64-apple-darwin
-        - os: macos-latest
-          rust: "1.65.0"
-          target: aarch64-apple-darwin
-        - os: macos-latest
-          rust: stable
-          target: aarch64-apple-darwin
         - os: macos-latest
           rust: beta
-          target: x86_64-apple-darwin
-        - os: macos-latest
-          rust: beta
-          target: aarch64-apple-darwin
         - os: macos-latest
           rust: nightly
-          target: x86_64-apple-darwin
-        - os: macos-latest
-          rust: nightly
-          target: aarch64-apple-darwin
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
@@ -173,13 +140,12 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
       - uses: actions-rs/toolchain@v1
         name: 🧰 Toolchain 🧰
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
           override: true
       - name: 💾 Install (cargo-all-features) 💾
         uses: actions-rs/install@v0.1
@@ -189,7 +155,7 @@ jobs:
           use-tool-cache: true
         continue-on-error: true
       - name: 🧪 Test 🧪
-        run: cargo test-all-features --target=${{ matrix.target }}
+        run: cargo test-all-features
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints
@@ -199,52 +165,20 @@ jobs:
         include:
         - os: windows-latest
           rust: 1.65.0-msvc
-          target: i686-pc-windows-msvc
         - os: windows-latest
           rust: stable-msvc
-          target: i686-pc-windows-msvc
-        - os: windows-latest
-          rust: 1.65.0-msvc
-          target: x86_64-pc-windows-msvc
-        - os: windows-latest
-          rust: stable-msvc
-          target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: beta-msvc
-          target: i686-pc-windows-msvc
-        - os: windows-latest
-          rust: beta-msvc
-          target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: nightly-msvc
-          target: i686-pc-windows-msvc
-        - os: windows-latest
-          rust: nightly-msvc
-          target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: 1.65.0-gnu
-          target: i686-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
-          target: i686-pc-windows-gnu
-        - os: windows-latest
-          rust: 1.65.0-gnu
-          target: x86_64-pc-windows-gnu
-        - os: windows-latest
-          rust: stable-gnu
-          target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: beta-gnu
-          target: i686-pc-windows-gnu
-        - os: windows-latest
-          rust: beta-gnu
-          target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: nightly-gnu
-          target: i686-pc-windows-gnu
-        - os: windows-latest
-          rust: nightly-gnu
-          target: x86_64-pc-windows-gnu
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
@@ -255,13 +189,12 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
       - uses: actions-rs/toolchain@v1
         name: 🧰 Toolchain 🧰
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
           override: true
       - name: 💾 Install (cargo-all-features) 💾
         uses: actions-rs/install@v0.1
@@ -271,4 +204,4 @@ jobs:
           use-tool-cache: true
         continue-on-error: true
       - name: 🧪 Test 🧪
-        run: cargo test-all-features --target=${{ matrix.target }}
+        run: cargo test-all-features
