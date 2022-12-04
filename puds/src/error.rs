@@ -10,6 +10,14 @@
 
 use clap::error::ErrorKind;
 
+#[derive(thiserror::Error, Debug)]
+pub(crate) enum Error {
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
+    #[error("There is no valid config directory")]
+    ConfigDir,
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn clap_or_error(err: anyhow::Error) -> i32 {
     let disp_err = || {

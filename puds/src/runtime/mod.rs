@@ -9,20 +9,42 @@
 // Runtime
 
 mod cli;
+mod config;
 
+use self::{cli::Cli, config::load};
 use anyhow::Result;
+use clap::Parser;
+use std::ffi::OsString;
 
 #[allow(clippy::unused_async)]
-pub(crate) async fn run() -> Result<()> {
+pub(crate) async fn run<I, T>(args: Option<I>) -> Result<()>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
+    // Parse the command line
+    let args = if let Some(args) = args {
+        Cli::try_parse_from(args)?
+    } else {
+        Cli::try_parse()?
+    };
+
+    // Load the configuration
+    load(&args)?;
+
     Ok(())
 }
 
 #[cfg(test)]
 mod test {
+    use crate::constants::TEST_PATH;
+
     use super::run;
 
     #[tokio::test]
     async fn success() {
-        assert!(run().await.is_ok())
+        assert!(run(Some(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH]))
+            .await
+            .is_ok())
     }
 }

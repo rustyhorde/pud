@@ -55,31 +55,30 @@ mod test {
 
     #[test]
     fn quiet_works() -> Result<()> {
-        let matches = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-qqq"])?;
-        assert_eq!(*matches.quiet(), 3);
-        assert_eq!(*matches.verbose(), 0);
-        assert!(matches.config_file_path().is_none());
+        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-qqq"])?;
+        assert_eq!(*args.quiet(), 3);
+        assert_eq!(*args.verbose(), 0);
+        assert!(args.config_file_path().is_none());
         Ok(())
     }
 
     #[test]
     fn verbose_works() -> Result<()> {
-        let matches = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-vvv"])?;
-        assert_eq!(*matches.quiet(), 0);
-        assert_eq!(*matches.verbose(), 3);
-        assert!(matches.config_file_path().is_none());
+        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-vvv"])?;
+        assert_eq!(*args.quiet(), 0);
+        assert_eq!(*args.verbose(), 3);
+        assert!(args.config_file_path().is_none());
         Ok(())
     }
 
     #[test]
     fn config_file_path_works() -> Result<()> {
-        let matches = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", "a/path/to.toml"])?;
-        assert_eq!(*matches.quiet(), 0);
-        assert_eq!(*matches.verbose(), 0);
-        assert!(matches.config_file_path().is_some());
+        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", "a/path/to.toml"])?;
+        assert_eq!(*args.quiet(), 0);
+        assert_eq!(*args.verbose(), 0);
+        assert!(args.config_file_path().is_some());
         assert_eq!(
-            matches
-                .config_file_path()
+            args.config_file_path()
                 .as_deref()
                 .unwrap_or_else(|| "error"),
             "a/path/to.toml"

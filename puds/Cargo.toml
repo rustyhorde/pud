@@ -17,12 +17,14 @@ version = "0.1.0"
 actix-web = { version = "4.2.1", features = ["rustls"] }
 anyhow = "1.0.66"
 clap = { version = "4.0.29", features = ["derive"] }
+const_format = "0.2.30"
+dirs2 = "3.0.1"
 getset = "0.1.2"
+serde = { version = "1.0.148", features = ["derive"] }
+thiserror = "1.0.37"
 tokio = { version = "1.22.0", features = ["macros"] }
+toml = "0.5.9"
 
 [build-dependencies]
 anyhow = "1.0.66"
 rustversion = "1.0.9"
-
-[dev-dependencies]
-assert_cmd = "2.0.7"

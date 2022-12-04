@@ -179,7 +179,9 @@
     )
 )]
 
+mod constants;
 mod error;
+mod model;
 mod runtime;
 
 use anyhow::Result;
@@ -188,5 +190,9 @@ use std::process;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
-    process::exit(runtime::run().await.map_or_else(clap_or_error, success))
+    process::exit(
+        runtime::run::<Vec<&str>, &str>(None)
+            .await
+            .map_or_else(clap_or_error, success),
+    )
 }
