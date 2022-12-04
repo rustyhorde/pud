@@ -68,7 +68,10 @@ mod test {
 
     const BAD_PATH: &'static str = "this/path/is/bad/config.toml";
     const BAD_TOML_TEST_PATH: &str = "test/bad.toml";
+    #[cfg(windows)]
     const BAD_CONFIG_ERROR: &str = "Could not open config file! this/path/is/bad/config.toml\n\nCaused by:\n    The system cannot find the path specified. (os error 3)";
+    #[cfg(not(windows))]
+    const BAD_CONFIG_ERROR: &str = "Could not open config file! this/path/is/bad/config.toml\n\nCaused by:\n    No such file or directory (os error 2)";
     const BAD_PARSE_ERROR: &str =
         "Could not parse config file! test/bad.toml\n\nCaused by:\n    missing field `actix`";
     const TEST_CONFIG: &'static str = r#"[actix]
