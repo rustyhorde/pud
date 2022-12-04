@@ -30,16 +30,15 @@ where
     };
 
     // Load the configuration
-    load(&args)?;
+    let _config = load(&args)?;
 
     Ok(())
 }
 
 #[cfg(test)]
 mod test {
-    use crate::constants::TEST_PATH;
-
     use super::run;
+    use crate::constants::TEST_PATH;
 
     #[tokio::test]
     async fn success() {

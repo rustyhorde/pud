@@ -8,12 +8,21 @@
 
 // Errors
 
+use std::net::AddrParseError;
+
 use clap::error::ErrorKind;
 
+#[allow(variant_size_differences)]
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum Error {
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
+    #[error("Failed to parse '{addr}'")]
+    AddrParse {
+        #[source]
+        source: AddrParseError,
+        addr: String,
+    },
     #[error("There is no valid config directory")]
     ConfigDir,
 }

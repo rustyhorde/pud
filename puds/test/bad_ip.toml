@@ -1,0 +1,7 @@
+[actix]
+workers = 8
+ip = "this!ip/jkrfj;isbad"
+port = 32276
+
+[hostlist.most]
+hostnames = ["one","two","three"]

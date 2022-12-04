@@ -12,12 +12,12 @@ use super::cli::Cli;
 use crate::{
     constants::{CONFIG_FILE_BASE_PATH, CONFIG_FILE_NAME, FILE_OPEN, READ, UNABLE},
     error::Error::ConfigDir,
-    model::config::TomlConfig,
+    model::config::{Config, TomlConfig},
 };
 use anyhow::{Context, Result};
 use std::{fs::File, io::Read, path::PathBuf};
 
-pub(crate) fn load(args: &Cli) -> Result<()> {
+pub(crate) fn load(args: &Cli) -> Result<Config> {
     // Determine the configuration file path
     let config_file_path = config_file_path(args)?;
     // Setup error handling
@@ -26,8 +26,9 @@ pub(crate) fn load(args: &Cli) -> Result<()> {
     // Read the config file
     let config_file = read_config_file(config_file_path, ctx)?;
     // Parse the config file
-    let _config: TomlConfig = toml::from_str(&config_file).with_context(|| ctx(UNABLE))?;
-    Ok(())
+    let config: TomlConfig = toml::from_str(&config_file).with_context(|| ctx(UNABLE))?;
+    // Convert the toml config to base config
+    Ok(config.try_into()?)
 }
 
 fn config_file_path(args: &Cli) -> Result<PathBuf> {
@@ -68,12 +69,15 @@ mod test {
 
     const BAD_PATH: &'static str = "this/path/is/bad/config.toml";
     const BAD_TOML_TEST_PATH: &str = "test/bad.toml";
+    const BAD_IP_TOML_TEST_PATH: &str = "test/bad_ip.toml";
     #[cfg(windows)]
     const BAD_CONFIG_ERROR: &str = "Could not open config file! this/path/is/bad/config.toml\n\nCaused by:\n    The system cannot find the path specified. (os error 3)";
     #[cfg(not(windows))]
     const BAD_CONFIG_ERROR: &str = "Could not open config file! this/path/is/bad/config.toml\n\nCaused by:\n    No such file or directory (os error 2)";
     const BAD_PARSE_ERROR: &str =
         "Could not parse config file! test/bad.toml\n\nCaused by:\n    missing field `actix`";
+    const BAD_IP_PARSE_ERROR: &str =
+        "Failed to parse 'this!ip/jkrfj;isbad'\n\nCaused by:\n    invalid IP address syntax";
     const TEST_CONFIG: &'static str = r#"[actix]
 workers = 8
 ip = "127.0.0.1"
@@ -134,6 +138,18 @@ hostnames = ["one","two","three"]"#;
             Ok(_) => Err(anyhow!("This load should fail!")),
             Err(e) => {
                 assert_eq!(format!("{e:?}"), BAD_PARSE_ERROR);
+                Ok(())
+            }
+        }
+    }
+
+    #[test]
+    fn bad_config_ip_fails() -> Result<()> {
+        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", BAD_IP_TOML_TEST_PATH])?;
+        match load(&args) {
+            Ok(_) => Err(anyhow!("This load should fail!")),
+            Err(e) => {
+                assert_eq!(format!("{e:?}"), BAD_IP_PARSE_ERROR);
                 Ok(())
             }
         }
