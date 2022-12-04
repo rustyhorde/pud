@@ -22,6 +22,8 @@ use std::{
 pub(crate) struct Config {
     workers: u8,
     socket_addr: SocketAddr,
+    cert_file_path: String,
+    key_file_path: String,
     hostlist: BTreeMap<String, Hosts>,
 }
 
@@ -29,6 +31,7 @@ impl TryFrom<TomlConfig> for Config {
     type Error = Error;
 
     fn try_from(config: TomlConfig) -> Result<Self, Self::Error> {
+        let workers = *config.actix().workers();
         let ip = config.actix().ip();
         let port = config.actix().port();
         let ip_addr: IpAddr = ip.parse().map_err(|e| AddrParse {
@@ -36,10 +39,14 @@ impl TryFrom<TomlConfig> for Config {
             addr: ip.clone(),
         })?;
         let socket_addr = SocketAddr::from((ip_addr, *port));
+        let (tls, hostlist) = config.take();
+        let (cert_file_path, key_file_path) = tls.take();
         Ok(Config {
-            workers: *config.actix().workers(),
+            workers,
             socket_addr,
-            hostlist: config.take_hostlist(),
+            cert_file_path,
+            key_file_path,
+            hostlist,
         })
     }
 }
@@ -50,14 +57,16 @@ impl TryFrom<TomlConfig> for Config {
 pub(crate) struct TomlConfig {
     /// The actix server configuration
     actix: Actix,
+    /// The TLS configuration
+    tls: Tls,
     /// A list of hosts.
     #[serde(serialize_with = "toml::ser::tables_last")]
     hostlist: BTreeMap<String, Hosts>,
 }
 
 impl TomlConfig {
-    fn take_hostlist(self) -> BTreeMap<String, Hosts> {
-        self.hostlist
+    fn take(self) -> (Tls, BTreeMap<String, Hosts>) {
+        (self.tls, self.hostlist)
     }
 }
 
@@ -71,6 +80,22 @@ pub(crate) struct Actix {
     ip: String,
     /// The port to listen on
     port: u16,
+}
+
+/// TLS configuration
+#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[getset(get = "pub(crate)")]
+pub(crate) struct Tls {
+    /// The number of workers to start
+    cert_file_path: String,
+    /// The IP address to listen on
+    key_file_path: String,
+}
+
+impl Tls {
+    fn take(self) -> (String, String) {
+        (self.cert_file_path, self.key_file_path)
+    }
 }
 
 /// hosts configuration

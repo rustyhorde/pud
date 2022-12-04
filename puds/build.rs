@@ -1,4 +1,5 @@
 use anyhow::Result;
+use vergen::{vergen, Config};
 
 pub fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=build.rs");
@@ -6,7 +7,7 @@ pub fn main() -> Result<()> {
     beta_lints();
     stable_lints();
     msrv_lints();
-    Ok(())
+    vergen(Config::default())
 }
 
 #[rustversion::nightly]

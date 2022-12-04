@@ -10,11 +10,12 @@
 
 mod cli;
 mod config;
+mod header;
 
-use self::{cli::Cli, config::load};
+use self::{cli::Cli, config::load, header::header};
 use anyhow::Result;
 use clap::Parser;
-use std::ffi::OsString;
+use std::{ffi::OsString, io};
 
 #[allow(clippy::unused_async)]
 pub(crate) async fn run<I, T>(args: Option<I>) -> Result<()>
@@ -28,6 +29,11 @@ where
     } else {
         Cli::try_parse()?
     };
+
+    // Output the pretty header
+    if *args.verbose() > 0 {
+        header(&mut io::stdout())?;
+    }
 
     // Load the configuration
     let _config = load(&args)?;
@@ -43,6 +49,13 @@ mod test {
     #[tokio::test]
     async fn success() {
         assert!(run(Some(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH]))
+            .await
+            .is_ok())
+    }
+
+    #[tokio::test]
+    async fn success_with_header() {
+        assert!(run(Some(&[env!("CARGO_PKG_NAME"), "-v", "-c", TEST_PATH]))
             .await
             .is_ok())
     }

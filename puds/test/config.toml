@@ -3,5 +3,9 @@ workers = 8
 ip = "127.0.0.1"
 port = 32276
 
+[tls]
+cert_file_path = "fullchain.pem"
+key_file_path = "privkey.pem"
+
 [hostlist.most]
 hostnames = ["one","two","three"]
