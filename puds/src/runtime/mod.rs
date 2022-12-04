@@ -8,9 +8,21 @@
 
 // Runtime
 
+mod cli;
+
 use anyhow::Result;
 
 #[allow(clippy::unused_async)]
 pub(crate) async fn run() -> Result<()> {
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::run;
+
+    #[tokio::test]
+    async fn success() {
+        assert!(run().await.is_ok())
+    }
 }

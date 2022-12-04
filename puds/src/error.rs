@@ -38,7 +38,7 @@ mod test {
     use super::{clap_or_error, success};
     use anyhow::{anyhow, Error};
     use clap::{
-        error::ErrorKind::{DisplayHelp, DisplayVersion},
+        error::ErrorKind::{self, DisplayHelp, DisplayVersion},
         Command,
     };
 
@@ -54,7 +54,7 @@ mod test {
 
     #[test]
     fn clap_or_error_is_help() {
-        let mut cmd = Command::new("muxm");
+        let mut cmd = Command::new(env!("CARGO_PKG_NAME"));
         let error = cmd.error(DisplayHelp, "help");
         let clap_error = Error::new(error);
         assert_eq!(0, clap_or_error(clap_error));
@@ -62,9 +62,17 @@ mod test {
 
     #[test]
     fn clap_or_error_is_version() {
-        let mut cmd = Command::new("muxm");
+        let mut cmd = Command::new(env!("CARGO_PKG_NAME"));
         let error = cmd.error(DisplayVersion, "1.0");
         let clap_error = Error::new(error);
         assert_eq!(0, clap_or_error(clap_error));
+    }
+
+    #[test]
+    fn clap_or_error_is_other_clap_error() {
+        let mut cmd = Command::new(env!("CARGO_PKG_NAME"));
+        let error = cmd.error(ErrorKind::InvalidValue, "Some failure case");
+        let clap_error = Error::new(error);
+        assert_eq!(1, clap_or_error(clap_error));
     }
 }
