@@ -47,4 +47,9 @@ mod test {
             .await
             .is_ok())
     }
+
+    #[tokio::test]
+    async fn error() {
+        assert!(run::<Vec<&str>, &str>(None).await.is_err());
+    }
 }
