@@ -8,6 +8,7 @@
 
 // Header
 
+use crate::model::config::Config;
 use anyhow::Result;
 use console::Style;
 use indexmap::IndexSet;
@@ -15,8 +16,6 @@ use lazy_static::lazy_static;
 use rand::Rng;
 use std::io::Write;
 use tracing::{info, Level};
-
-use crate::model::config::Config;
 
 lazy_static! {
     static ref VERGEN_MAP: IndexSet<(&'static str, &'static str, &'static str)> = {
@@ -82,41 +81,55 @@ pub(crate) fn header<T>(config: &Config, writer: Option<&mut T>) -> Result<()>
 where
     T: Write + ?Sized,
 {
-    if let Some(level) = config.level() {
+    let mut rng = rand::thread_rng();
+    let app_style = from_u8(rng.gen_range(0..7));
+    let bold_blue = Style::new().bold().blue();
+    let bold_green = Style::new().bold().green();
+    if let Some(writer) = writer {
+        output_to_writer(writer, &app_style, &bold_blue, &bold_green)?;
+    } else if let Some(level) = config.level() {
         if *level >= Level::INFO {
-            let mut rng = rand::thread_rng();
-            let app_style = from_u8(rng.gen_range(0..7));
-            let bold_blue = Style::new().bold().blue();
-            let bold_green = Style::new().bold().green();
-
-            if let Some(writer) = writer {
-                writeln!(writer, "{}", app_style.apply_to("puds"))?;
-                writeln!(writer)?;
-                writeln!(writer, "{}", bold_green.apply_to("4a61736f6e204f7a696173"))?;
-                writeln!(writer)?;
-                for (prefix, kind, value) in &*VERGEN_MAP {
-                    let key = format!("{:>16} ({:>7})", *prefix, *kind);
-                    let blue_key = bold_blue.apply_to(key);
-                    let green_val = bold_green.apply_to(*value);
-                    writeln!(writer, "{blue_key}: {green_val}")?;
-                }
-                writeln!(writer)?;
-            } else {
-                info!("{}", app_style.apply_to("puds"));
-                info!("");
-                info!("{}", bold_green.apply_to("4a61736f6e204f7a696173"));
-                info!("");
-                for (prefix, kind, value) in &*VERGEN_MAP {
-                    let key = format!("{:>16} ({:>7})", *prefix, *kind);
-                    let blue_key = bold_blue.apply_to(key);
-                    let green_val = bold_green.apply_to(*value);
-                    info!("{blue_key}: {green_val}");
-                }
-                info!("");
-            }
+            trace(&app_style, &bold_blue, &bold_green);
         }
     }
     Ok(())
+}
+
+fn output_to_writer<T>(
+    writer: &mut T,
+    app_style: &Style,
+    bold_blue: &Style,
+    bold_green: &Style,
+) -> Result<()>
+where
+    T: Write + ?Sized,
+{
+    writeln!(writer, "{}", app_style.apply_to("puds"))?;
+    writeln!(writer)?;
+    writeln!(writer, "{}", bold_green.apply_to("4a61736f6e204f7a696173"))?;
+    writeln!(writer)?;
+    for (prefix, kind, value) in &*VERGEN_MAP {
+        let key = format!("{:>16} ({:>7})", *prefix, *kind);
+        let blue_key = bold_blue.apply_to(key);
+        let green_val = bold_green.apply_to(*value);
+        writeln!(writer, "{blue_key}: {green_val}")?;
+    }
+    writeln!(writer)?;
+    Ok(())
+}
+
+fn trace(app_style: &Style, bold_blue: &Style, bold_green: &Style) {
+    info!("{}", app_style.apply_to("puds"));
+    info!("");
+    info!("{}", bold_green.apply_to("4a61736f6e204f7a696173"));
+    info!("");
+    for (prefix, kind, value) in &*VERGEN_MAP {
+        let key = format!("{:>16} ({:>7})", *prefix, *kind);
+        let blue_key = bold_blue.apply_to(key);
+        let green_val = bold_green.apply_to(*value);
+        info!("{blue_key}: {green_val}");
+    }
+    info!("");
 }
 
 #[cfg(test)]

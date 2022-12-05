@@ -16,7 +16,7 @@ use getset::{Getters, Setters};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
-    net::{IpAddr, Ipv4Addr, SocketAddr},
+    net::{IpAddr, SocketAddr},
 };
 use tracing::Level;
 
@@ -34,21 +34,6 @@ pub(crate) struct Config {
     key_file_path: String,
     hostlist: BTreeMap<String, Hosts>,
     level: Option<Level>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            quiet: u8::default(),
-            verbose: u8::default(),
-            workers: u8::default(),
-            socket_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 32276),
-            cert_file_path: String::default(),
-            key_file_path: String::default(),
-            hostlist: BTreeMap::default(),
-            level: Option::default(),
-        }
-    }
 }
 
 impl LogConfig for Config {

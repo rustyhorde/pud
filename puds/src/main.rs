@@ -213,7 +213,7 @@ mod test {
     }
 
     fn setup_config() -> Result<Config> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-v", "-c", TEST_PATH])?;
+        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let mut config = load(&args)?;
         let _ = initialize(&mut config)?;
         Ok(config)

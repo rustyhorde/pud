@@ -10,13 +10,12 @@
 
 use anyhow::Result;
 use tracing::Level;
-#[cfg(not(test))]
 use tracing_subscriber::{
     filter::LevelFilter,
     fmt::{self, time::UtcTime},
     prelude::__tracing_subscriber_SubscriberExt,
     registry,
-    util::SubscriberInitExt,
+    util::{SubscriberInitExt, TryInitError},
 };
 
 pub(crate) trait LogConfig {
@@ -26,18 +25,6 @@ pub(crate) trait LogConfig {
 }
 
 pub(crate) fn initialize<T: LogConfig>(config: &mut T) -> Result<()> {
-    register(config)
-}
-
-#[cfg(test)]
-fn register<T: LogConfig>(config: &mut T) -> Result<()> {
-    let level = get_effective_level(config.quiet(), config.verbose());
-    let _ = config.set_level(level);
-    Ok(())
-}
-
-#[cfg(not(test))]
-fn register<T: LogConfig>(config: &mut T) -> Result<()> {
     let format = fmt::layer()
         .with_level(true)
         .with_ansi(true)
@@ -49,7 +36,20 @@ fn register<T: LogConfig>(config: &mut T) -> Result<()> {
     let level = get_effective_level(config.quiet(), config.verbose());
     let _ = config.set_level(level);
     let filter_layer = LevelFilter::from(level);
-    Ok(registry().with(format).with(filter_layer).try_init()?)
+    match registry().with(format).with(filter_layer).try_init() {
+        Ok(_) => Ok(()),
+        Err(e) => ok_on_test(e),
+    }
+}
+
+#[cfg(not(test))]
+fn ok_on_test(e: TryInitError) -> Result<()> {
+    Err(e.into())
+}
+
+#[cfg(test)]
+fn ok_on_test(_e: TryInitError) -> Result<()> {
+    Ok(())
 }
 
 #[cfg(debug_assertions)]
