@@ -28,6 +28,8 @@ serde = { version = "1.0.148", features = ["derive"] }
 thiserror = "1.0.37"
 tokio = { version = "1.22.0", features = ["macros"] }
 toml = "0.5.9"
+tracing = { version = "0.1.37", features = ["max_level_trace", "release_max_level_warn"] }
+tracing-subscriber = { version = "0.3.16", features = ["time"] }
 
 [build-dependencies]
 anyhow = "1.0.66"
@@ -35,4 +37,5 @@ rustversion = "1.0.9"
 vergen = "7.4.3"
 
 [dev-dependencies]
+lazy_static = "1.4.0"
 regex = "1.7.0"

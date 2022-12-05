@@ -28,7 +28,7 @@ pub(crate) fn load(args: &Cli) -> Result<Config> {
     // Parse the config file
     let config: TomlConfig = toml::from_str(&config_file).with_context(|| ctx(UNABLE))?;
     // Convert the toml config to base config
-    Ok(config.try_into()?)
+    transform(config, *args.verbose(), *args.quiet())
 }
 
 fn config_file_path(args: &Cli) -> Result<PathBuf> {
@@ -57,6 +57,13 @@ where
     let mut file = File::open(config_file_path).with_context(|| ctx(FILE_OPEN))?;
     let _ = file.read_to_string(&mut buf).with_context(|| ctx(READ))?;
     Ok(buf)
+}
+
+fn transform(config: TomlConfig, verbose: u8, quiet: u8) -> Result<Config> {
+    let mut config: Config = config.try_into()?;
+    let _ = config.set_verbose(verbose);
+    let _ = config.set_quiet(quiet);
+    Ok(config)
 }
 
 #[cfg(test)]

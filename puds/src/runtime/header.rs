@@ -14,6 +14,9 @@ use indexmap::IndexSet;
 use lazy_static::lazy_static;
 use rand::Rng;
 use std::io::Write;
+use tracing::{info, Level};
+
+use crate::model::config::Config;
 
 lazy_static! {
     static ref VERGEN_MAP: IndexSet<(&'static str, &'static str, &'static str)> = {
@@ -75,32 +78,51 @@ fn from_u8(val: u8) -> Style {
     }
 }
 
-pub(crate) fn header<T>(writer: &mut T) -> Result<()>
+pub(crate) fn header<T>(config: &Config, writer: Option<&mut T>) -> Result<()>
 where
-    T: Write,
+    T: Write + ?Sized,
 {
-    let mut rng = rand::thread_rng();
-    let app_style = from_u8(rng.gen_range(0..7));
-    let bold_blue = Style::new().bold().blue();
-    let bold_green = Style::new().bold().green();
+    if let Some(level) = config.level() {
+        if *level >= Level::INFO {
+            let mut rng = rand::thread_rng();
+            let app_style = from_u8(rng.gen_range(0..7));
+            let bold_blue = Style::new().bold().blue();
+            let bold_green = Style::new().bold().green();
 
-    writeln!(writer, "{}", app_style.apply_to("puds"))?;
-    writeln!(writer)?;
-    writeln!(writer, "{}", bold_green.apply_to("4a61736f6e204f7a696173"))?;
-    writeln!(writer)?;
-    for (prefix, kind, value) in &*VERGEN_MAP {
-        let key = format!("{:>16} ({:>7})", *prefix, *kind);
-        let blue_key = bold_blue.apply_to(key);
-        let green_val = bold_green.apply_to(*value);
-        writeln!(writer, "{blue_key}: {green_val}")?;
+            if let Some(writer) = writer {
+                writeln!(writer, "{}", app_style.apply_to("puds"))?;
+                writeln!(writer)?;
+                writeln!(writer, "{}", bold_green.apply_to("4a61736f6e204f7a696173"))?;
+                writeln!(writer)?;
+                for (prefix, kind, value) in &*VERGEN_MAP {
+                    let key = format!("{:>16} ({:>7})", *prefix, *kind);
+                    let blue_key = bold_blue.apply_to(key);
+                    let green_val = bold_green.apply_to(*value);
+                    writeln!(writer, "{blue_key}: {green_val}")?;
+                }
+                writeln!(writer)?;
+            } else {
+                info!("{}", app_style.apply_to("puds"));
+                info!("");
+                info!("{}", bold_green.apply_to("4a61736f6e204f7a696173"));
+                info!("");
+                for (prefix, kind, value) in &*VERGEN_MAP {
+                    let key = format!("{:>16} ({:>7})", *prefix, *kind);
+                    let blue_key = bold_blue.apply_to(key);
+                    let green_val = bold_green.apply_to(*value);
+                    info!("{blue_key}: {green_val}");
+                }
+                info!("");
+            }
+        }
     }
-    writeln!(writer)?;
     Ok(())
 }
 
 #[cfg(test)]
 mod test {
     use super::{from_u8, header};
+    use crate::test::CONFIG;
     use anyhow::Result;
     use console::Style;
     use lazy_static::lazy_static;
@@ -128,7 +150,7 @@ mod test {
     #[cfg(debug_assertions)]
     fn header_writes() -> Result<()> {
         let mut buf = vec![];
-        assert!(header(&mut buf).is_ok());
+        assert!(header(&*CONFIG, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
@@ -141,7 +163,7 @@ mod test {
     #[cfg(not(debug_assertions))]
     fn header_writes() -> Result<()> {
         let mut buf = vec![];
-        assert!(header(&matches, &mut buf).is_ok());
+        assert!(header(&*CONFIG, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));

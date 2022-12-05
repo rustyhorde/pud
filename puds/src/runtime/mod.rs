@@ -8,14 +8,15 @@
 
 // Runtime
 
-mod cli;
-mod config;
+pub(crate) mod cli;
+pub(crate) mod config;
 mod header;
+pub(crate) mod log;
 
-use self::{cli::Cli, config::load, header::header};
+use self::{cli::Cli, config::load, header::header, log::initialize};
 use anyhow::Result;
 use clap::Parser;
-use std::{ffi::OsString, io};
+use std::{ffi::OsString, io::Write};
 
 #[allow(clippy::unused_async)]
 pub(crate) async fn run<I, T>(args: Option<I>) -> Result<()>
@@ -30,13 +31,14 @@ where
         Cli::try_parse()?
     };
 
-    // Output the pretty header
-    if *args.verbose() > 0 {
-        header(&mut io::stdout())?;
-    }
-
     // Load the configuration
-    let _config = load(&args)?;
+    let mut config = load(&args)?;
+
+    // Setup logging
+    initialize(&mut config)?;
+
+    // Output the pretty header
+    header::<dyn Write>(&config, None)?;
 
     Ok(())
 }

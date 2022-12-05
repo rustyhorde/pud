@@ -8,23 +8,62 @@
 
 // Configuration Models
 
-use crate::error::Error::{self, AddrParse};
-use getset::Getters;
+use crate::{
+    error::Error::{self, AddrParse},
+    runtime::log::LogConfig,
+};
+use getset::{Getters, Setters};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
-    net::{IpAddr, SocketAddr},
+    net::{IpAddr, Ipv4Addr, SocketAddr},
 };
+use tracing::Level;
 
 /// The configuration
-#[derive(Clone, Debug, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[derive(Clone, Debug, Eq, Getters, PartialEq, Setters)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct Config {
+    #[getset(set = "pub(crate)")]
+    quiet: u8,
+    #[getset(set = "pub(crate)")]
+    verbose: u8,
     workers: u8,
     socket_addr: SocketAddr,
     cert_file_path: String,
     key_file_path: String,
     hostlist: BTreeMap<String, Hosts>,
+    level: Option<Level>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            quiet: u8::default(),
+            verbose: u8::default(),
+            workers: u8::default(),
+            socket_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 32276),
+            cert_file_path: String::default(),
+            key_file_path: String::default(),
+            hostlist: BTreeMap::default(),
+            level: Option::default(),
+        }
+    }
+}
+
+impl LogConfig for Config {
+    fn quiet(&self) -> u8 {
+        self.quiet
+    }
+
+    fn verbose(&self) -> u8 {
+        self.verbose
+    }
+
+    fn set_level(&mut self, level: Level) -> &mut Self {
+        self.level = Some(level);
+        self
+    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -42,11 +81,14 @@ impl TryFrom<TomlConfig> for Config {
         let (tls, hostlist) = config.take();
         let (cert_file_path, key_file_path) = tls.take();
         Ok(Config {
+            verbose: 0,
+            quiet: 0,
             workers,
             socket_addr,
             cert_file_path,
             key_file_path,
             hostlist,
+            level: None,
         })
     }
 }

@@ -196,3 +196,26 @@ async fn main() -> Result<()> {
             .map_or_else(clap_or_error, success),
     )
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        constants::TEST_PATH,
+        model::config::Config,
+        runtime::{cli::Cli, config::load, log::initialize},
+    };
+    use anyhow::Result;
+    use clap::Parser;
+    use lazy_static::lazy_static;
+
+    lazy_static! {
+        pub(crate) static ref CONFIG: Config = setup_config().unwrap();
+    }
+
+    fn setup_config() -> Result<Config> {
+        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-v", "-c", TEST_PATH])?;
+        let mut config = load(&args)?;
+        let _ = initialize(&mut config)?;
+        Ok(config)
+    }
+}
