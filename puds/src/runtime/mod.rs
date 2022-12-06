@@ -14,9 +14,23 @@ mod header;
 pub(crate) mod log;
 
 use self::{cli::Cli, config::load, header::header, log::initialize};
+use crate::{endpoints::insecure::insecure_config, server::Server};
+use actix::Actor;
+use actix_web::{
+    middleware::Compress,
+    web::{scope, Data},
+    App, HttpServer,
+};
 use anyhow::Result;
 use clap::Parser;
-use std::{ffi::OsString, io::Write};
+use std::{
+    collections::HashMap,
+    ffi::OsString,
+    io::Write,
+    sync::{atomic::AtomicUsize, Arc},
+};
+use tracing::info;
+use tracing_actix_web::TracingLogger;
 
 #[allow(clippy::unused_async)]
 pub(crate) async fn run<I, T>(args: Option<I>) -> Result<()>
@@ -40,6 +54,39 @@ where
     // Output the pretty header
     header::<dyn Write>(&config, None)?;
 
+    // Setup and start the server actor
+    let worker_count = Arc::new(AtomicUsize::new(0));
+    // let manager_count = Arc::new(AtomicUsize::new(0));
+    let socket_addr = *config.socket_addr();
+    let workers = usize::from(*config.workers());
+    let server = Server::builder()
+        // .config(config)
+        .workers(HashMap::new())
+        .worker_count(worker_count)
+        // .manager_count(manager_count)
+        .build();
+    let server_data = Data::new(server.start());
+
+    // Startup the server
+    info!("puds configured!");
+    info!("puds starting!");
+
+    if !args.dry_run() {
+        HttpServer::new(move || {
+            App::new()
+                .app_data(server_data.clone())
+                .wrap(Compress::default())
+                .wrap(TracingLogger::default())
+                // .wrap(Timing)
+                .service(scope("/v1").configure(insecure_config))
+        })
+        .workers(workers)
+        // .bind_rustls(listen_addr, server_config)?
+        .bind(socket_addr)?
+        .run()
+        .await?;
+    }
+
     Ok(())
 }
 
@@ -48,21 +95,32 @@ mod test {
     use super::run;
     use crate::constants::TEST_PATH;
 
-    #[tokio::test]
+    #[actix_rt::test]
     async fn success() {
-        assert!(run(Some(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH]))
-            .await
-            .is_ok())
+        assert!(run(Some(&[
+            env!("CARGO_PKG_NAME"),
+            "--dry-run",
+            "-c",
+            TEST_PATH
+        ]))
+        .await
+        .is_ok())
     }
 
-    #[tokio::test]
+    #[actix_rt::test]
     async fn success_with_header() {
-        assert!(run(Some(&[env!("CARGO_PKG_NAME"), "-v", "-c", TEST_PATH]))
-            .await
-            .is_ok())
+        assert!(run(Some(&[
+            env!("CARGO_PKG_NAME"),
+            "--dry-run",
+            "-v",
+            "-c",
+            TEST_PATH
+        ]))
+        .await
+        .is_ok())
     }
 
-    #[tokio::test]
+    #[actix_rt::test]
     async fn error() {
         assert!(run::<Vec<&str>, &str>(None).await.is_err());
     }

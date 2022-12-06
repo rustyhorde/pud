@@ -33,6 +33,12 @@ pub(crate) struct Cli {
         conflicts_with = "verbose"
     )]
     quiet: u8,
+    #[clap(
+        long,
+        help = "Just test configuration, don't actually run server",
+        default_value_t = false
+    )]
+    dry_run: bool,
     #[arg(
         short = 'c',
         long,
@@ -58,6 +64,7 @@ mod test {
         let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-qqq"])?;
         assert_eq!(*args.quiet(), 3);
         assert_eq!(*args.verbose(), 0);
+        assert!(!*args.dry_run());
         assert!(args.config_file_path().is_none());
         Ok(())
     }
@@ -67,6 +74,17 @@ mod test {
         let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-vvv"])?;
         assert_eq!(*args.quiet(), 0);
         assert_eq!(*args.verbose(), 3);
+        assert!(!*args.dry_run());
+        assert!(args.config_file_path().is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn dry_run_works() -> Result<()> {
+        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-vvv", "--dry-run"])?;
+        assert_eq!(*args.quiet(), 0);
+        assert_eq!(*args.verbose(), 3);
+        assert!(*args.dry_run());
         assert!(args.config_file_path().is_none());
         Ok(())
     }
@@ -76,6 +94,7 @@ mod test {
         let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", "a/path/to.toml"])?;
         assert_eq!(*args.quiet(), 0);
         assert_eq!(*args.verbose(), 0);
+        assert!(!*args.dry_run());
         assert!(args.config_file_path().is_some());
         assert_eq!(
             args.config_file_path()

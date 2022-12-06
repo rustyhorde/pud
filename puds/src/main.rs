@@ -19,7 +19,7 @@
         bad_asm_style,
         bare_trait_objects,
         bindings_with_variant_name,
-        box_pointers,
+        // box_pointers,
         break_with_label_and_loop,
         clashing_extern_declarations,
         coherence_leak_check,
@@ -180,9 +180,12 @@
 )]
 
 mod constants;
+mod endpoints;
 mod error;
 mod model;
 mod runtime;
+mod server;
+mod worker;
 
 use anyhow::Result;
 use error::{clap_or_error, success};

@@ -1,0 +1,18 @@
+[package]
+authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
+categories = ["web-programming::websocket", "web-programming"]
+description = "Websocket based job scheduling system"
+documentation = "https://docs.rs/pudlib"
+edition = "2021"
+homepage = "https://github.com/rustyhorde/pud"
+keywords = ["job", "scheduling", "websocket", "actix"]
+license = "MIT OR Apache-2.0"
+name = "pudlib"
+readme = "README.md"
+repository = "https://github.com/rustyhorde/pud"
+resolver = "2"
+version = "0.1.0"
+
+[dependencies]
+actix = "0.13.0"
+serde = { version = "1.0.149", features = ["derive"] }

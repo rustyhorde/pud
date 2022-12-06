@@ -8,15 +8,17 @@
 
 // Errors
 
-use std::net::AddrParseError;
-
 use clap::error::ErrorKind;
+use serde::{ser::SerializeStruct, Serialize, Serializer};
+use std::{error::Error as StdError, net::AddrParseError};
 
 #[allow(variant_size_differences)]
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum Error {
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
+    #[error("actix error: {}", msg)]
+    Actix { msg: String },
     #[error("Failed to parse '{addr}'")]
     AddrParse {
         #[source]
@@ -25,6 +27,20 @@ pub(crate) enum Error {
     },
     #[error("There is no valid config directory")]
     ConfigDir,
+}
+
+impl Serialize for Error {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Error", 2)?;
+        state.serialize_field("reason", &format!("{self}"))?;
+        if let Some(source) = self.source() {
+            state.serialize_field("source", &format!("{source}"))?;
+        }
+        state.end()
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
