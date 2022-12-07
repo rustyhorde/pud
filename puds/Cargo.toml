@@ -29,6 +29,8 @@ indexmap = "1.9.2"
 lazy_static = "1.4.0"
 pudlib = { path = "../pudlib" }
 rand = "0.8.5"
+rustls = "0.20.7"
+rustls-pemfile = "1.0.1"
 serde = { version = "1.0.148", features = ["derive"] }
 thiserror = "1.0.37"
 toml = "0.5.9"

@@ -182,9 +182,11 @@
 mod constants;
 mod endpoints;
 mod error;
+mod manager;
 mod model;
 mod runtime;
 mod server;
+mod utils;
 mod worker;
 
 use anyhow::Result;

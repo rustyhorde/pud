@@ -27,6 +27,10 @@ pub(crate) enum Error {
     },
     #[error("There is no valid config directory")]
     ConfigDir,
+    #[error("Error loading chain certs")]
+    Certs,
+    #[error("Error loading private key")]
+    PrivKey,
 }
 
 impl Serialize for Error {

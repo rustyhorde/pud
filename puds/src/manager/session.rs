@@ -6,10 +6,13 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! Worker Session
+//! Manager Session
 
-use super::message::{Connect, Disconnect};
-use crate::{server::Server, utils::parse_websocat_ping};
+use crate::{
+    manager::message::{Connect, Disconnect},
+    server::Server,
+    utils::parse_websocat_ping,
+};
 use actix::{
     fut, Actor, ActorContext, ActorFutureExt, Addr, AsyncContext, ContextFutureSpawner, Handler,
     Running, StreamHandler, WrapFuture,
@@ -18,7 +21,7 @@ use actix_http::ws::Item;
 use actix_web::web::Bytes;
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::serialize;
-use pudlib::Worker;
+use pudlib::Manager;
 use std::time::{Duration, Instant};
 use tracing::{debug, error};
 use typed_builder::TypedBuilder;
@@ -48,11 +51,11 @@ pub(crate) struct Session {
 }
 
 impl Session {
-    // Heartbeat that sends ping to the worker every HEARTBEAT_INTERVAL seconds (5)
-    // Also check for activity from the worker in the past CLIENT_TIMEOUT seconds (10)
+    // Heartbeat that sends ping to the manager every HEARTBEAT_INTERVAL seconds (5)
+    // Also check for activity from the manager in the past CLIENT_TIMEOUT seconds (10)
     #[allow(clippy::unused_self)]
     fn hb(&self, ctx: &mut WebsocketContext<Self>) {
-        debug!("Starting worker session heartbeat");
+        debug!("Starting manager session heartbeat");
         let _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             debug!("checking heartbeat");
             // check heartbeat
@@ -119,11 +122,11 @@ impl Actor for Session {
 }
 
 // Handle messages from server, we simply send it to peer websocket
-impl Handler<Worker> for Session {
+impl Handler<Manager> for Session {
     type Result = ();
 
-    fn handle(&mut self, msg: Worker, ctx: &mut Self::Context) {
-        debug!("message received from server, sending on to worker");
+    fn handle(&mut self, msg: Manager, ctx: &mut Self::Context) {
+        debug!("message received from server, sending on to manager");
         if let Ok(wm_bytes) = serialize(&msg) {
             ctx.binary(wm_bytes);
         } else {
@@ -139,43 +142,34 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
         if let Ok(msg) = msg_res {
             match msg {
                 Message::Ping(bytes) => {
-                    debug!("received ping message from worker, sending pong");
+                    debug!("received ping message from manager, sending pong");
                     parse_websocat_ping(&bytes);
                     self.hb = Instant::now();
                     ctx.pong(&bytes);
                 }
                 Message::Pong(bytes) => {
-                    debug!("received pong message from worker, resetting heartbeat");
+                    debug!("received pong message from manager, resetting heartbeat");
                     debug!("pong: {}", String::from_utf8_lossy(&bytes));
                     self.hb = Instant::now();
                 }
-                Message::Text(text) => error!("unexpected text: {}", text),
+                Message::Text(text) => error!("unexpected text message: {}", text),
                 Message::Binary(bytes) => {
-                    debug!("received binary message from worker, trying to deserialize");
                     self.hb = Instant::now();
                     let _bytes_vec = bytes.to_vec();
-                    // if let Ok(stdout_msg) = deserialize::<Stdout>(&bytes_vec) {
-                    //     self.addr.do_send(Msg::Stdout(stdout_msg));
-                    // } else if let Ok(stderr_msg) = deserialize::<Stderr>(&bytes_vec) {
-                    //     self.addr.do_send(Msg::Stderr(stderr_msg));
-                    // } else if let Ok(status_msg) = deserialize::<Status>(&bytes_vec) {
-                    //     self.addr.do_send(Msg::Status(status_msg));
-                    // } else {
-                    //     let cr = CommandResponse::builder()
-                    //         .kind(CommandResponseKind::Error)
-                    //         .command(false)
-                    //         .status("invalid worker message")
-                    //         .build();
-                    //     self.addr.do_send(Msg::Command(cr));
+                    // if let Ok(mut cmd) = deserialize::<Command>(&bytes) {
+                    //     let _ = cmd.set_manager_id(self.id);
+                    //     self.addr.do_send(cmd);
+                    // } else if let Ok(mut workers) = deserialize::<Workers>(&bytes) {
+                    //     let _ = workers.set_manager_id(self.id);
+                    //     self.addr.do_send(workers);
                     // }
                 }
                 Message::Close(reason) => {
-                    debug!("received close message from worker");
                     ctx.close(reason);
                     ctx.stop();
                 }
                 Message::Continuation(item) => {
-                    debug!("received continuation message from worker");
+                    debug!("received continuation message from manager");
                     match item {
                         Item::FirstText(_bytes) => error!("unexpected text continuation"),
                         Item::FirstBinary(bytes) | Item::Continue(bytes) => {
