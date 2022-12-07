@@ -75,14 +75,14 @@ where
         .build();
     let server_data = Data::new(server.start());
 
-    // Load the TLS Keys
-    let server_config = load_tls_config(&config)?;
-
-    // Startup the server
-    info!("puds configured!");
-    info!("puds starting!");
-
     if !args.dry_run() {
+        // Load the TLS Keys
+        let server_config = load_tls_config(&config)?;
+
+        // Startup the server
+        info!("puds configured!");
+        info!("puds starting!");
+
         HttpServer::new(move || {
             App::new()
                 .app_data(server_data.clone())
