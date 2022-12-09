@@ -1,3 +1,4 @@
+name = "boba"
 retry_count = 10
 
 [actix]

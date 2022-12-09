@@ -41,6 +41,9 @@ where
 
     // Output the pretty header
     header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
+
+    // Get the server url
+    let _url = config.server_url();
     Ok(())
 }
 

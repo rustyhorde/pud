@@ -10,18 +10,11 @@
 
 use clap::error::ErrorKind;
 use serde::{ser::SerializeStruct, Serialize, Serializer};
-use std::{error::Error as StdError, net::AddrParseError};
+use std::error::Error as StdError;
 use tracing::error;
 
 #[derive(thiserror::Error, Debug)]
-pub(crate) enum Error {
-    #[error("Failed to parse '{addr}'")]
-    AddrParse {
-        #[source]
-        source: AddrParseError,
-        addr: String,
-    },
-}
+pub(crate) enum Error {}
 
 impl Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

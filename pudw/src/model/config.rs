@@ -8,11 +8,10 @@
 
 // configuration structs
 
-use crate::error::Error::{self, AddrParse};
+use crate::error::Error;
 use getset::{Getters, Setters};
 use pudlib::{LogConfig, Verbosity};
 use serde::{Deserialize, Serialize};
-use std::net::{IpAddr, SocketAddr};
 use tracing::Level;
 
 /// The configuration
@@ -24,8 +23,19 @@ pub(crate) struct Config {
     #[getset(set = "pub")]
     verbose: u8,
     retry_count: usize,
-    socket_addr: SocketAddr,
+    server_addr: String,
+    server_port: u16,
+    name: String,
     level: Option<Level>,
+}
+
+impl Config {
+    pub(crate) fn server_url(&self) -> String {
+        format!(
+            "https://{}:{}/v1/ws/worker?name={}",
+            self.server_addr, self.server_port, self.name
+        )
+    }
 }
 
 impl Verbosity for Config {
@@ -63,19 +73,17 @@ impl TryFrom<TomlConfig> for Config {
     type Error = Error;
 
     fn try_from(config: TomlConfig) -> Result<Self, Self::Error> {
-        let ip = config.actix().ip();
-        let port = config.actix().port();
+        let name = config.name().clone();
+        let server_addr = config.actix().ip().clone();
+        let server_port = *config.actix().port();
         let retry_count = *config.retry_count();
-        let ip_addr: IpAddr = ip.parse().map_err(|e| AddrParse {
-            source: e,
-            addr: ip.clone(),
-        })?;
-        let socket_addr = SocketAddr::from((ip_addr, *port));
         Ok(Config {
             verbose: 0,
             quiet: 0,
             retry_count,
-            socket_addr,
+            server_addr,
+            server_port,
+            name,
             level: None,
         })
     }
@@ -89,6 +97,8 @@ pub(crate) struct TomlConfig {
     actix: Actix,
     /// The number of time we should try reconnecting
     retry_count: usize,
+    /// The name of this worker
+    name: String,
 }
 
 /// actix client configuration
