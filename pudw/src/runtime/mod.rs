@@ -14,6 +14,13 @@ use clap::Parser;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
 use std::{ffi::OsString, io::Write};
 
+const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
+██╔══██╗██║   ██║██╔══██╗██║    ██║
+██████╔╝██║   ██║██║  ██║██║ █╗ ██║
+██╔═══╝ ██║   ██║██║  ██║██║███╗██║
+██║     ╚██████╔╝██████╔╝╚███╔███╔╝
+╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ "#;
+
 pub(crate) fn run<I, T>(args: Option<I>) -> Result<()>
 where
     I: IntoIterator<Item = T>,
@@ -33,7 +40,7 @@ where
     initialize(&mut config)?;
 
     // Output the pretty header
-    header::<Config, dyn Write>(&config, None)?;
+    header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
     Ok(())
 }
 

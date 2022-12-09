@@ -81,7 +81,7 @@ fn from_u8(val: u8) -> Style {
 ///
 /// # Errors
 ///
-pub fn header<T, U>(config: &T, writer: Option<&mut U>) -> Result<()>
+pub fn header<T, U>(config: &T, prefix: &'static str, writer: Option<&mut U>) -> Result<()>
 where
     T: LogConfig,
     U: Write + ?Sized,
@@ -91,10 +91,10 @@ where
     let bold_blue = Style::new().bold().blue();
     let bold_green = Style::new().bold().green();
     if let Some(writer) = writer {
-        output_to_writer(writer, &app_style, &bold_blue, &bold_green)?;
+        output_to_writer(writer, &app_style, &bold_blue, &bold_green, prefix)?;
     } else if let Some(level) = config.level() {
         if level >= Level::INFO {
-            trace(&app_style, &bold_blue, &bold_green);
+            trace(&app_style, &bold_blue, &bold_green, prefix);
         }
     }
     Ok(())
@@ -105,11 +105,14 @@ fn output_to_writer<T>(
     app_style: &Style,
     bold_blue: &Style,
     bold_green: &Style,
+    prefix: &'static str,
 ) -> Result<()>
 where
     T: Write + ?Sized,
 {
-    writeln!(writer, "{}", app_style.apply_to("puds"))?;
+    for line in prefix.lines() {
+        writeln!(writer, "{}", app_style.apply_to(line))?;
+    }
     writeln!(writer)?;
     writeln!(writer, "{}", bold_green.apply_to("4a61736f6e204f7a696173"))?;
     writeln!(writer)?;
@@ -123,8 +126,10 @@ where
     Ok(())
 }
 
-fn trace(app_style: &Style, bold_blue: &Style, bold_green: &Style) {
-    info!("{}", app_style.apply_to("puds"));
+fn trace(app_style: &Style, bold_blue: &Style, bold_green: &Style, prefix: &'static str) {
+    for line in prefix.lines() {
+        info!("{}", app_style.apply_to(line));
+    }
     info!("");
     info!("{}", bold_green.apply_to("4a61736f6e204f7a696173"));
     info!("");
@@ -146,6 +151,13 @@ mod test {
     use lazy_static::lazy_static;
     use regex::Regex;
     use tracing::Level;
+
+    const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
+██╔══██╗██║   ██║██╔══██╗██║    ██║
+██████╔╝██║   ██║██║  ██║██║ █╗ ██║
+██╔═══╝ ██║   ██║██║  ██║██║███╗██║
+██║     ╚██████╔╝██████╔╝╚███╔███╔╝
+╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ "#;
 
     struct TestConfig {
         verbose: u8,
@@ -204,7 +216,7 @@ mod test {
     #[cfg(debug_assertions)]
     fn header_writes() -> Result<()> {
         let mut buf = vec![];
-        assert!(header(&TestConfig::default(), Some(&mut buf)).is_ok());
+        assert!(header(&TestConfig::default(), HEADER_PREFIX, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
@@ -217,7 +229,7 @@ mod test {
     #[cfg(not(debug_assertions))]
     fn header_writes() -> Result<()> {
         let mut buf = vec![];
-        assert!(header(&TestConfig::default(), Some(&mut buf)).is_ok());
+        assert!(header(&TestConfig::default(), HEADER_PREFIX, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));

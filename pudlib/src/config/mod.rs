@@ -89,9 +89,7 @@ pub fn load<T, U>(args: &Cli, binary: PudxBinary) -> Result<U>
 where
     T: DeserializeOwned,
     U: TryFrom<T> + Verbosity,
-    <U as TryFrom<T>>::Error: std::error::Error + 'static,
-    <U as TryFrom<T>>::Error: Sync,
-    <U as TryFrom<T>>::Error: Send,
+    <U as TryFrom<T>>::Error: std::error::Error + Sync + Send + 'static,
 {
     // Load the defaults for this binary
     let defaults = match binary {
@@ -145,9 +143,7 @@ where
 fn transform<T, U>(config: T, verbose: u8, quiet: u8) -> Result<U>
 where
     U: TryFrom<T> + Verbosity,
-    <U as TryFrom<T>>::Error: std::error::Error + 'static,
-    <U as TryFrom<T>>::Error: Sync,
-    <U as TryFrom<T>>::Error: Send,
+    <U as TryFrom<T>>::Error: std::error::Error + Sync + Send + 'static,
 {
     let mut config: U = U::try_from(config)?;
     let _ = config.set_verbose(verbose);

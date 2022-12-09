@@ -15,6 +15,7 @@ use std::sync::{
 
 use anyhow::Result;
 use lazy_static::lazy_static;
+use time::format_description::well_known::Iso8601;
 use tracing::Level;
 use tracing_subscriber::{
     filter::LevelFilter,
@@ -61,7 +62,7 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
             .with_thread_ids(true)
             .with_thread_names(true)
             .with_line_number(true)
-            .with_timer(UtcTime::rfc_3339());
+            .with_timer(UtcTime::new(Iso8601::DEFAULT));
         let level = get_effective_level(config.quiet(), config.verbose());
         let _ = config.set_level(level);
         let filter_layer = LevelFilter::from(level);

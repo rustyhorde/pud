@@ -35,6 +35,13 @@ use std::{
 use tracing::info;
 use tracing_actix_web::TracingLogger;
 
+const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ███████╗
+██╔══██╗██║   ██║██╔══██╗██╔════╝
+██████╔╝██║   ██║██║  ██║███████╗
+██╔═══╝ ██║   ██║██║  ██║╚════██║
+██║     ╚██████╔╝██████╔╝███████║
+ ╚═╝      ╚═════╝ ╚═════╝ ╚══════╝"#;
+
 #[allow(clippy::unused_async)]
 pub(crate) async fn run<I, T>(args: Option<I>) -> Result<()>
 where
@@ -55,7 +62,7 @@ where
     initialize(&mut config)?;
 
     // Output the pretty header
-    header::<Config, dyn Write>(&config, None)?;
+    header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
 
     // Setup and start the server actor
     let worker_count = Arc::new(AtomicUsize::new(0));
