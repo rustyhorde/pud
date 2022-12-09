@@ -11,8 +11,8 @@
 use crate::model::config::{Config, TomlConfig};
 use anyhow::Result;
 use clap::Parser;
-use pudlib::{initialize, load, Cli, PudxBinary};
-use std::ffi::OsString;
+use pudlib::{header, initialize, load, Cli, PudxBinary};
+use std::{ffi::OsString, io::Write};
 
 pub(crate) fn run<I, T>(args: Option<I>) -> Result<()>
 where
@@ -32,6 +32,8 @@ where
     // Setup logging
     initialize(&mut config)?;
 
+    // Output the pretty header
+    header::<Config, dyn Write>(&config, None)?;
     Ok(())
 }
 

@@ -20,10 +20,13 @@ unstable = []
 actix = "0.13.0"
 anyhow = "1.0.66"
 clap = { version = "4.0.29", features = ["derive"] }
+console = "0.15.2"
 const_format = "0.2.30"
 dirs2 = "3.0.1"
 getset = "0.1.2"
+indexmap = "1.9.2"
 lazy_static = "1.4.0"
+rand = "0.8.5"
 serde = { version = "1.0.149", features = ["derive"] }
 thiserror = "1.0.37"
 toml = "0.5.9"
@@ -37,3 +40,4 @@ vergen = "7.4.3"
 
 [dev-dependencies]
 anyhow = "1.0.66"
+regex = "1.7.0"

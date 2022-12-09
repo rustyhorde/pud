@@ -8,7 +8,7 @@
 
 // Header
 
-use crate::model::config::Config;
+use crate::log::Config as LogConfig;
 use anyhow::Result;
 use console::Style;
 use indexmap::IndexSet;
@@ -77,9 +77,14 @@ fn from_u8(val: u8) -> Style {
     }
 }
 
-pub(crate) fn header<T>(config: &Config, writer: Option<&mut T>) -> Result<()>
+/// Generate a pretty header
+///
+/// # Errors
+///
+pub fn header<T, U>(config: &T, writer: Option<&mut U>) -> Result<()>
 where
-    T: Write + ?Sized,
+    T: LogConfig,
+    U: Write + ?Sized,
 {
     let mut rng = rand::thread_rng();
     let app_style = from_u8(rng.gen_range(0..7));
@@ -88,7 +93,7 @@ where
     if let Some(writer) = writer {
         output_to_writer(writer, &app_style, &bold_blue, &bold_green)?;
     } else if let Some(level) = config.level() {
-        if *level >= Level::INFO {
+        if level >= Level::INFO {
             trace(&app_style, &bold_blue, &bold_green);
         }
     }
@@ -135,11 +140,47 @@ fn trace(app_style: &Style, bold_blue: &Style, bold_green: &Style) {
 #[cfg(test)]
 mod test {
     use super::{from_u8, header};
-    use crate::test::CONFIG;
+    use crate::log::Config as LogConfig;
     use anyhow::Result;
     use console::Style;
     use lazy_static::lazy_static;
     use regex::Regex;
+    use tracing::Level;
+
+    struct TestConfig {
+        verbose: u8,
+        quiet: u8,
+        level: Option<Level>,
+    }
+
+    impl Default for TestConfig {
+        fn default() -> Self {
+            Self {
+                verbose: 3,
+                quiet: 0,
+                level: Some(Level::INFO),
+            }
+        }
+    }
+
+    impl LogConfig for TestConfig {
+        fn quiet(&self) -> u8 {
+            self.quiet
+        }
+
+        fn verbose(&self) -> u8 {
+            self.verbose
+        }
+
+        fn level(&self) -> Option<Level> {
+            self.level
+        }
+
+        fn set_level(&mut self, level: Level) -> &mut Self {
+            self.level = Some(level);
+            self
+        }
+    }
 
     lazy_static! {
         static ref BUILD_TIMESTAMP: Regex = Regex::new(r#"Timestamp \(  build\)"#).unwrap();
@@ -163,7 +204,7 @@ mod test {
     #[cfg(debug_assertions)]
     fn header_writes() -> Result<()> {
         let mut buf = vec![];
-        assert!(header(&*CONFIG, Some(&mut buf)).is_ok());
+        assert!(header(&TestConfig::default(), Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
@@ -176,7 +217,7 @@ mod test {
     #[cfg(not(debug_assertions))]
     fn header_writes() -> Result<()> {
         let mut buf = vec![];
-        assert!(header(&*CONFIG, Some(&mut buf)).is_ok());
+        assert!(header(&TestConfig::default(), Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));

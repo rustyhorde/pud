@@ -49,6 +49,10 @@ impl LogConfig for Config {
         self.verbose
     }
 
+    fn level(&self) -> Option<Level> {
+        self.level
+    }
+
     fn set_level(&mut self, level: Level) -> &mut Self {
         self.level = Some(level);
         self

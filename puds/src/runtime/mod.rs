@@ -8,9 +8,6 @@
 
 // Runtime
 
-mod header;
-
-use self::header::header;
 use crate::{
     endpoints::insecure::insecure_config,
     error::Error::{Certs, PrivKey},
@@ -25,7 +22,7 @@ use actix_web::{
 };
 use anyhow::{Context, Result};
 use clap::Parser;
-use pudlib::{initialize, load, Cli, PudxBinary};
+use pudlib::{header, initialize, load, Cli, PudxBinary};
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
@@ -58,7 +55,7 @@ where
     initialize(&mut config)?;
 
     // Output the pretty header
-    header::<dyn Write>(&config, None)?;
+    header::<Config, dyn Write>(&config, None)?;
 
     // Setup and start the server actor
     let worker_count = Arc::new(AtomicUsize::new(0));

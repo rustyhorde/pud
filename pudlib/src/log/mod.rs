@@ -30,6 +30,8 @@ pub trait Config {
     fn quiet(&self) -> u8;
     /// Get the verbose count
     fn verbose(&self) -> u8;
+    /// Get the effective tracing level
+    fn level(&self) -> Option<Level>;
     /// Allow initialization to set the effective tracing level
     fn set_level(&mut self, level: Level) -> &mut Self;
 }
