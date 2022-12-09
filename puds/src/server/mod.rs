@@ -94,6 +94,7 @@ impl Server {
         }
     }
 }
+
 // `Server` is an `actix::Actor`
 impl Actor for Server {
     type Context = Context<Self>;

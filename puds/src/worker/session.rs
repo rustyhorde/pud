@@ -9,7 +9,7 @@
 //! Worker Session
 
 use super::message::{Connect, Disconnect};
-use crate::{server::Server, utils::parse_websocat_ping};
+use crate::server::Server;
 use actix::{
     fut, Actor, ActorContext, ActorFutureExt, Addr, AsyncContext, ContextFutureSpawner, Handler,
     Running, StreamHandler, WrapFuture,
@@ -18,7 +18,7 @@ use actix_http::ws::Item;
 use actix_web::web::Bytes;
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::serialize;
-use pudlib::Worker;
+use pudlib::{parse_ts_ping, send_ts_ping, Worker};
 use std::time::{Duration, Instant};
 use tracing::{debug, error};
 use typed_builder::TypedBuilder;
@@ -45,6 +45,8 @@ pub(crate) struct Session {
     /// continuation bytes
     #[builder(default = Vec::new())]
     cont_bytes: Vec<u8>,
+    /// The start instant of this session
+    origin: Instant,
 }
 
 impl Session {
@@ -53,6 +55,7 @@ impl Session {
     #[allow(clippy::unused_self)]
     fn hb(&self, ctx: &mut WebsocketContext<Self>) {
         debug!("Starting worker session heartbeat");
+        let origin_c = self.origin;
         let _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             debug!("checking heartbeat");
             // check heartbeat
@@ -70,7 +73,7 @@ impl Session {
                 return;
             }
             debug!("sending heartbeat ping");
-            ctx.ping(b"heartbeat");
+            ctx.ping(&send_ts_ping(origin_c));
         });
     }
 }
@@ -140,7 +143,7 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
             match msg {
                 Message::Ping(bytes) => {
                     debug!("received ping message from worker, sending pong");
-                    parse_websocat_ping(&bytes);
+                    parse_ts_ping(&bytes);
                     self.hb = Instant::now();
                     ctx.pong(&bytes);
                 }

@@ -43,6 +43,7 @@ pub(crate) async fn manager(
             .name(name)
             .ip(ip)
             .hb(Instant::now())
+            .origin(Instant::now())
             .build(),
         &request,
         stream,

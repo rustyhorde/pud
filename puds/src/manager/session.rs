@@ -11,7 +11,6 @@
 use crate::{
     manager::message::{Connect, Disconnect},
     server::Server,
-    utils::parse_websocat_ping,
 };
 use actix::{
     fut, Actor, ActorContext, ActorFutureExt, Addr, AsyncContext, ContextFutureSpawner, Handler,
@@ -21,7 +20,7 @@ use actix_http::ws::Item;
 use actix_web::web::Bytes;
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::serialize;
-use pudlib::Manager;
+use pudlib::{parse_ts_ping, send_ts_ping, Manager};
 use std::time::{Duration, Instant};
 use tracing::{debug, error};
 use typed_builder::TypedBuilder;
@@ -48,6 +47,8 @@ pub(crate) struct Session {
     /// continuation bytes
     #[builder(default = Vec::new())]
     cont_bytes: Vec<u8>,
+    /// The start instant of this session
+    origin: Instant,
 }
 
 impl Session {
@@ -56,6 +57,7 @@ impl Session {
     #[allow(clippy::unused_self)]
     fn hb(&self, ctx: &mut WebsocketContext<Self>) {
         debug!("Starting manager session heartbeat");
+        let origin_c = self.origin;
         let _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             debug!("checking heartbeat");
             // check heartbeat
@@ -73,7 +75,7 @@ impl Session {
                 return;
             }
             debug!("sending heartbeat ping");
-            ctx.ping(b"heartbeat");
+            ctx.ping(&send_ts_ping(origin_c));
         });
     }
 }
@@ -143,7 +145,7 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
             match msg {
                 Message::Ping(bytes) => {
                     debug!("received ping message from manager, sending pong");
-                    parse_websocat_ping(&bytes);
+                    parse_ts_ping(&bytes);
                     self.hb = Instant::now();
                     ctx.pong(&bytes);
                 }
