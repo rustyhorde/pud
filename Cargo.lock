@@ -1162,7 +1162,16 @@ name = "pudlib"
 version = "0.1.0"
 dependencies = [
  "actix",
+ "anyhow",
+ "clap",
+ "const_format",
+ "dirs2",
+ "getset",
+ "rustversion",
  "serde",
+ "thiserror",
+ "toml",
+ "vergen",
 ]
 
 [[package]]
@@ -1178,8 +1187,6 @@ dependencies = [
  "bincode",
  "clap",
  "console",
- "const_format",
- "dirs2",
  "getset",
  "indexmap",
  "lazy_static",
@@ -1197,6 +1204,21 @@ dependencies = [
  "tracing-subscriber",
  "typed-builder",
  "uuid",
+ "vergen",
+]
+
+[[package]]
+name = "pudw"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "getset",
+ "pudlib",
+ "rustversion",
+ "serde",
+ "thiserror",
+ "tracing",
  "vergen",
 ]
 

@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-// Constants
+//! Constants
 
 #[cfg(test)]
 pub(crate) const TEST_PATH: &str = "test/config.toml";

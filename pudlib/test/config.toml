@@ -1,0 +1,2 @@
+[actix]
+workers = 8

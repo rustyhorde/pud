@@ -178,49 +178,14 @@
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
 // #![cfg_attr(msrv, allow())]
 
-mod constants;
-mod endpoints;
-mod error;
-mod manager;
-mod model;
-mod runtime;
-mod server;
-mod utils;
-mod worker;
-
-use anyhow::Result;
 use error::{clap_or_error, success};
 use std::process;
 
-#[actix_web::main]
-async fn main() -> Result<()> {
-    process::exit(
-        runtime::run::<Vec<&str>, &str>(None)
-            .await
-            .map_or_else(clap_or_error, success),
-    )
-}
+mod constants;
+mod error;
+mod model;
+mod runtime;
 
-#[cfg(test)]
-mod test {
-    use crate::{
-        constants::TEST_PATH,
-        model::config::{Config, TomlConfig},
-        runtime::log::initialize,
-    };
-    use anyhow::Result;
-    use clap::Parser;
-    use lazy_static::lazy_static;
-    use pudlib::{load, Cli, PudxBinary};
-
-    lazy_static! {
-        pub(crate) static ref CONFIG: Config = setup_config().unwrap();
-    }
-
-    fn setup_config() -> Result<Config> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
-        let mut config = load::<TomlConfig, Config>(&args, PudxBinary::Puds)?;
-        let _ = initialize(&mut config)?;
-        Ok(config)
-    }
+fn main() {
+    process::exit(runtime::run::<Vec<&str>, &str>(None).map_or_else(clap_or_error, success))
 }

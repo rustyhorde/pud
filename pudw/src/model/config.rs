@@ -6,19 +6,13 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-// Configuration Models
+// configuration structs
 
-use crate::{
-    error::Error::{self, AddrParse},
-    runtime::log::LogConfig,
-};
+use crate::error::Error::{self, AddrParse};
 use getset::{Getters, Setters};
 use pudlib::Verbosity;
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::BTreeMap,
-    net::{IpAddr, SocketAddr},
-};
+use std::net::{IpAddr, SocketAddr};
 use tracing::Level;
 
 /// The configuration
@@ -29,11 +23,8 @@ pub(crate) struct Config {
     quiet: u8,
     #[getset(set = "pub")]
     verbose: u8,
-    workers: u8,
+    retry_count: usize,
     socket_addr: SocketAddr,
-    cert_file_path: String,
-    key_file_path: String,
-    hostlist: BTreeMap<String, Hosts>,
     level: Option<Level>,
 }
 
@@ -49,43 +40,38 @@ impl Verbosity for Config {
     }
 }
 
-impl LogConfig for Config {
-    fn quiet(&self) -> u8 {
-        self.quiet
-    }
+// impl LogConfig for Config {
+//     fn quiet(&self) -> u8 {
+//         self.quiet
+//     }
 
-    fn verbose(&self) -> u8 {
-        self.verbose
-    }
+//     fn verbose(&self) -> u8 {
+//         self.verbose
+//     }
 
-    fn set_level(&mut self, level: Level) -> &mut Self {
-        self.level = Some(level);
-        self
-    }
-}
+//     fn set_level(&mut self, level: Level) -> &mut Self {
+//         self.level = Some(level);
+//         self
+//     }
+// }
 
 impl TryFrom<TomlConfig> for Config {
     type Error = Error;
 
     fn try_from(config: TomlConfig) -> Result<Self, Self::Error> {
-        let workers = *config.actix().workers();
         let ip = config.actix().ip();
         let port = config.actix().port();
+        let retry_count = *config.retry_count();
         let ip_addr: IpAddr = ip.parse().map_err(|e| AddrParse {
             source: e,
             addr: ip.clone(),
         })?;
         let socket_addr = SocketAddr::from((ip_addr, *port));
-        let (tls, hostlist) = config.take();
-        let (cert_file_path, key_file_path) = tls.take();
         Ok(Config {
             verbose: 0,
             quiet: 0,
-            workers,
+            retry_count,
             socket_addr,
-            cert_file_path,
-            key_file_path,
-            hostlist,
             level: None,
         })
     }
@@ -95,53 +81,18 @@ impl TryFrom<TomlConfig> for Config {
 #[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct TomlConfig {
-    /// The actix server configuration
+    /// The actix client configuration
     actix: Actix,
-    /// The TLS configuration
-    tls: Tls,
-    /// A list of hosts.
-    #[serde(serialize_with = "toml::ser::tables_last")]
-    hostlist: BTreeMap<String, Hosts>,
+    /// The number of time we should try reconnecting
+    retry_count: usize,
 }
 
-impl TomlConfig {
-    fn take(self) -> (Tls, BTreeMap<String, Hosts>) {
-        (self.tls, self.hostlist)
-    }
-}
-
-/// hosts configuration
+/// actix client configuration
 #[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct Actix {
-    /// The number of workers to start
-    workers: u8,
-    /// The IP address to listen on
+    /// The IP address to connect to
     ip: String,
-    /// The port to listen on
+    /// The port to connect to
     port: u16,
-}
-
-/// TLS configuration
-#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
-#[getset(get = "pub(crate)")]
-pub(crate) struct Tls {
-    /// The number of workers to start
-    cert_file_path: String,
-    /// The IP address to listen on
-    key_file_path: String,
-}
-
-impl Tls {
-    fn take(self) -> (String, String) {
-        (self.cert_file_path, self.key_file_path)
-    }
-}
-
-/// hosts configuration
-#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
-#[getset(get = "pub(crate)")]
-pub(crate) struct Hosts {
-    /// The hostnames.
-    hostnames: Vec<String>,
 }

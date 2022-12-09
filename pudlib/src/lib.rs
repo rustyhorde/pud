@@ -10,6 +10,17 @@
 
 // rustc lints
 #![cfg_attr(
+    all(msrv, feature = "unstable", nightly),
+    feature(
+        c_unwind,
+        lint_reasons,
+        must_not_suspend,
+        non_exhaustive_omitted_patterns_lint,
+        rustdoc_missing_doc_code_examples,
+        strict_provenance,
+    )
+)]
+#![cfg_attr(
     msrv,
     deny(
         absolute_paths_not_starting_with_crate,
@@ -39,12 +50,8 @@
         ellipsis_inclusive_range_patterns,
         explicit_outlives_requirements,
         exported_private_dependencies,
-        // Unstable
-        // ffi_unwind_calls,
         forbidden_lint_groups,
         function_item_references,
-        // Unstable
-        // fuzzy_provenance_casts,
         illegal_floating_point_literal_pattern,
         improper_ctypes,
         improper_ctypes_definitions,
@@ -59,8 +66,6 @@
         late_bound_lifetime_arguments,
         legacy_derive_helpers,
         let_underscore_drop,
-        // Unstable
-        // lossy_provenance_casts,
         macro_use_extern_crate,
         meta_variable_misuse,
         missing_abi,
@@ -68,14 +73,10 @@
         missing_debug_implementations,
         missing_docs,
         mixed_script_confusables,
-        // Unstable
-        // must_not_suspend,
         named_arguments_used_positionally,
         no_mangle_generic_items,
         non_ascii_idents,
         non_camel_case_types,
-        // Unstable
-        // non_exhaustive_omitted_patterns,
         non_fmt_panics,
         non_shorthand_field_patterns,
         non_snake_case,
@@ -107,8 +108,6 @@
         uncommon_codepoints,
         unconditional_recursion,
         unexpected_cfgs,
-        // Unstable
-        // unfulfilled_lint_expectations,
         uninhabited_static,
         unknown_lints,
         unnameable_test_items,
@@ -117,7 +116,6 @@
         unreachable_pub,
         unsafe_code,
         unsafe_op_in_unsafe_fn,
-        unstable_features,
         unstable_name_collisions,
         unstable_syntax_pre_expansion,
         unsupported_calling_conventions,
@@ -126,7 +124,7 @@
         unused_attributes,
         unused_braces,
         unused_comparisons,
-        // unused_crate_dependencies,
+        unused_crate_dependencies,
         unused_doc_comments,
         unused_extern_crates,
         unused_features,
@@ -148,19 +146,35 @@
         where_clauses_object_safety,
         while_true,
 ))]
+// If nightly and unstable, allow `unstable_features`
+#![cfg_attr(all(msrv, feature = "unstable", nightly), allow(unstable_features))]
+// The unstable features
+#![cfg_attr(
+    all(msrv, feature = "unstable", nightly),
+    deny(
+        ffi_unwind_calls,
+        fuzzy_provenance_casts,
+        lossy_provenance_casts,
+        must_not_suspend,
+        non_exhaustive_omitted_patterns,
+        unfulfilled_lint_expectations,
+    )
+)]
+// If nightly and not unstable, deny `unstable_features`
+#![cfg_attr(all(msrv, not(feature = "unstable"), nightly), deny(unstable_features))]
 // nightly only lints
-// #![cfg_attr(all(msrv, nightly_lints),deny())]
+// #![cfg_attr(all(msrv, nightly),deny())]
 // nightly or beta only lints
 #![cfg_attr(
-    all(msrv, any(beta_lints, nightly_lints)),
+    all(msrv, any(beta, nightly)),
     deny(for_loops_over_fallibles, opaque_hidden_inferred_bound)
 )]
 // beta only lints
-// #![cfg_attr( all(msrv, beta_lints), deny())]
+// #![cfg_attr( all(msrv, beta), deny())]
 // beta or stable only lints
-// #![cfg_attr(all(msrv, any(beta_lints, stable_lints)), deny())]
+// #![cfg_attr(all(msrv, any(beta, stable)), deny())]
 // stable only lints
-// #![cfg_attr(all(msrv, stable_lints), deny())]
+// #![cfg_attr(all(msrv, stable), deny())]
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
 // #![cfg_attr(msrv, allow())]
@@ -173,14 +187,26 @@
         rustdoc::invalid_codeblock_attributes,
         rustdoc::invalid_html_tags,
         rustdoc::missing_crate_level_docs,
-        rustdoc::missing_doc_code_examples,
         rustdoc::private_doc_tests,
         rustdoc::private_intra_doc_links,
     )
 )]
+// The unstable rustdoc features
+#![cfg_attr(
+    all(msrv, feature = "unstable", nightly),
+    deny(rustdoc::missing_doc_code_examples)
+)]
 
+mod cli;
+mod config;
+mod constants;
+mod error;
 mod manager;
 mod worker;
 
+pub use cli::Cli;
+pub use config::load;
+pub use config::PudxBinary;
+pub use config::Verbosity;
 pub use manager::message::Manager;
 pub use worker::message::Worker;

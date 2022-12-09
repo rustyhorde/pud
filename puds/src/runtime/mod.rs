@@ -8,16 +8,14 @@
 
 // Runtime
 
-pub(crate) mod cli;
-pub(crate) mod config;
 mod header;
 pub(crate) mod log;
 
-use self::{cli::Cli, config::load, header::header, log::initialize};
+use self::{header::header, log::initialize};
 use crate::{
     endpoints::insecure::insecure_config,
     error::Error::{Certs, PrivKey},
-    model::config::Config,
+    model::config::{Config, TomlConfig},
     server::Server,
 };
 use actix::Actor;
@@ -28,6 +26,7 @@ use actix_web::{
 };
 use anyhow::{Context, Result};
 use clap::Parser;
+use pudlib::{load, Cli, PudxBinary};
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
@@ -54,7 +53,7 @@ where
     };
 
     // Load the configuration
-    let mut config = load(&args)?;
+    let mut config = load::<TomlConfig, Config>(&args, PudxBinary::Puds)?;
 
     // Setup logging
     initialize(&mut config)?;

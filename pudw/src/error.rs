@@ -13,23 +13,14 @@ use serde::{ser::SerializeStruct, Serialize, Serializer};
 use std::{error::Error as StdError, net::AddrParseError};
 use tracing::error;
 
-#[allow(variant_size_differences)]
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum Error {
-    #[error(transparent)]
-    Anyhow(#[from] anyhow::Error),
-    #[error("actix error: {}", msg)]
-    Actix { msg: String },
     #[error("Failed to parse '{addr}'")]
     AddrParse {
         #[source]
         source: AddrParseError,
         addr: String,
     },
-    #[error("Error loading chain certs")]
-    Certs,
-    #[error("Error loading private key")]
-    PrivKey,
 }
 
 impl Serialize for Error {
