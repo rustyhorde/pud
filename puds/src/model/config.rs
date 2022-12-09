@@ -8,12 +8,9 @@
 
 // Configuration Models
 
-use crate::{
-    error::Error::{self, AddrParse},
-    runtime::log::LogConfig,
-};
+use crate::error::Error::{self, AddrParse};
 use getset::{Getters, Setters};
-use pudlib::Verbosity;
+use pudlib::{LogConfig, Verbosity};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,

@@ -8,7 +8,13 @@
 
 // Logging
 
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex,
+};
+
 use anyhow::Result;
+use lazy_static::lazy_static;
 use tracing::Level;
 use tracing_subscriber::{
     filter::LevelFilter,
@@ -18,27 +24,52 @@ use tracing_subscriber::{
     util::{SubscriberInitExt, TryInitError},
 };
 
-pub(crate) trait LogConfig {
+/// Supply quiet, verbose and allow tracing level setting
+pub trait Config {
+    /// Get the quiet count
     fn quiet(&self) -> u8;
+    /// Get the verbose count
     fn verbose(&self) -> u8;
+    /// Allow initialization to set the effective tracing level
     fn set_level(&mut self, level: Level) -> &mut Self;
 }
 
-pub(crate) fn initialize<T: LogConfig>(config: &mut T) -> Result<()> {
-    let format = fmt::layer()
-        .with_level(true)
-        .with_ansi(true)
-        .with_target(true)
-        .with_thread_ids(true)
-        .with_thread_names(true)
-        .with_line_number(true)
-        .with_timer(UtcTime::rfc_3339());
-    let level = get_effective_level(config.quiet(), config.verbose());
-    let _ = config.set_level(level);
-    let filter_layer = LevelFilter::from(level);
-    match registry().with(format).with(filter_layer).try_init() {
-        Ok(_) => Ok(()),
-        Err(e) => ok_on_test(e),
+lazy_static! {
+    static ref INIT_LOCK: Arc<Mutex<AtomicBool>> = Arc::new(Mutex::new(AtomicBool::new(false)));
+}
+
+/// Initialize tracing
+///
+/// # Errors
+/// * An error can be thrown on registry initialization
+///
+pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
+    let init = match INIT_LOCK.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    if init.load(Ordering::SeqCst) {
+        // TODO: Should probably return already initialize error?
+        Ok(())
+    } else {
+        let format = fmt::layer()
+            .with_level(true)
+            .with_ansi(true)
+            .with_target(true)
+            .with_thread_ids(true)
+            .with_thread_names(true)
+            .with_line_number(true)
+            .with_timer(UtcTime::rfc_3339());
+        let level = get_effective_level(config.quiet(), config.verbose());
+        let _ = config.set_level(level);
+        let filter_layer = LevelFilter::from(level);
+        match registry().with(format).with(filter_layer).try_init() {
+            Ok(_) => {
+                init.store(true, Ordering::SeqCst);
+                Ok(())
+            }
+            Err(e) => ok_on_test(e),
+        }
     }
 }
 

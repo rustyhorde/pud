@@ -9,9 +9,8 @@
 // Runtime
 
 mod header;
-pub(crate) mod log;
 
-use self::{header::header, log::initialize};
+use self::header::header;
 use crate::{
     endpoints::insecure::insecure_config,
     error::Error::{Certs, PrivKey},
@@ -26,7 +25,7 @@ use actix_web::{
 };
 use anyhow::{Context, Result};
 use clap::Parser;
-use pudlib::{load, Cli, PudxBinary};
+use pudlib::{initialize, load, Cli, PudxBinary};
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{

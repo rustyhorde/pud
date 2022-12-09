@@ -11,7 +11,7 @@
 use crate::model::config::{Config, TomlConfig};
 use anyhow::Result;
 use clap::Parser;
-use pudlib::{load, Cli, PudxBinary};
+use pudlib::{initialize, load, Cli, PudxBinary};
 use std::ffi::OsString;
 
 pub(crate) fn run<I, T>(args: Option<I>) -> Result<()>
@@ -27,7 +27,10 @@ where
     };
 
     // Load the configuration
-    let _config = load::<TomlConfig, Config>(&args, PudxBinary::Pudw)?;
+    let mut config = load::<TomlConfig, Config>(&args, PudxBinary::Pudw)?;
+
+    // Setup logging
+    initialize(&mut config)?;
 
     Ok(())
 }

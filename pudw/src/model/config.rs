@@ -10,7 +10,7 @@
 
 use crate::error::Error::{self, AddrParse};
 use getset::{Getters, Setters};
-use pudlib::Verbosity;
+use pudlib::{LogConfig, Verbosity};
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, SocketAddr};
 use tracing::Level;
@@ -40,20 +40,20 @@ impl Verbosity for Config {
     }
 }
 
-// impl LogConfig for Config {
-//     fn quiet(&self) -> u8 {
-//         self.quiet
-//     }
+impl LogConfig for Config {
+    fn quiet(&self) -> u8 {
+        self.quiet
+    }
 
-//     fn verbose(&self) -> u8 {
-//         self.verbose
-//     }
+    fn verbose(&self) -> u8 {
+        self.verbose
+    }
 
-//     fn set_level(&mut self, level: Level) -> &mut Self {
-//         self.level = Some(level);
-//         self
-//     }
-// }
+    fn set_level(&mut self, level: Level) -> &mut Self {
+        self.level = Some(level);
+        self
+    }
+}
 
 impl TryFrom<TomlConfig> for Config {
     type Error = Error;

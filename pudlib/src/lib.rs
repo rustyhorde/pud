@@ -201,6 +201,7 @@ mod cli;
 mod config;
 mod constants;
 mod error;
+mod log;
 mod manager;
 mod worker;
 
@@ -208,5 +209,7 @@ pub use cli::Cli;
 pub use config::load;
 pub use config::PudxBinary;
 pub use config::Verbosity;
+pub use log::initialize;
+pub use log::Config as LogConfig;
 pub use manager::message::Manager;
 pub use worker::message::Worker;

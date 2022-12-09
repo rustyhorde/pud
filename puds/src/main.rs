@@ -206,12 +206,11 @@ mod test {
     use crate::{
         constants::TEST_PATH,
         model::config::{Config, TomlConfig},
-        runtime::log::initialize,
     };
     use anyhow::Result;
     use clap::Parser;
     use lazy_static::lazy_static;
-    use pudlib::{load, Cli, PudxBinary};
+    use pudlib::{initialize, load, Cli, PudxBinary};
 
     lazy_static! {
         pub(crate) static ref CONFIG: Config = setup_config().unwrap();
