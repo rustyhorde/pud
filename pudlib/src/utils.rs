@@ -10,17 +10,17 @@
 
 use bytes::Bytes;
 use std::time::{Duration, Instant};
-use tracing::info;
 
 /// Parse a received timestamp ping
-pub fn parse_ts_ping(bytes: &Bytes) {
+pub fn parse_ts_ping(bytes: &Bytes) -> Option<Duration> {
     if bytes.len() == 12 {
         let secs_bytes = <[u8; 8]>::try_from(&bytes[0..8]).unwrap_or([0; 8]);
         let nanos_bytes = <[u8; 4]>::try_from(&bytes[8..12]).unwrap_or([0; 4]);
         let secs = u64::from_be_bytes(secs_bytes);
         let nanos = u32::from_be_bytes(nanos_bytes);
-        let dur = Duration::new(secs, nanos);
-        info!("ping duration: {}s", dur.as_secs_f64());
+        Some(Duration::new(secs, nanos))
+    } else {
+        None
     }
 }
 

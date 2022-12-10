@@ -204,6 +204,7 @@ mod error;
 mod header;
 mod log;
 mod manager;
+mod server;
 mod utils;
 mod worker;
 
@@ -215,6 +216,7 @@ pub use header::header;
 pub use log::initialize;
 pub use log::Config as LogConfig;
 pub use manager::message::Manager;
+pub use server::message::Server;
 pub use utils::parse_ts_ping;
 pub use utils::send_ts_ping;
 pub use worker::message::Worker;

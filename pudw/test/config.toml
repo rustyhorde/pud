@@ -2,5 +2,5 @@ name = "boba"
 retry_count = 10
 
 [actix]
-ip = "127.0.0.1"
+ip = "localhost.ozias.net"
 port = 32276

@@ -8,11 +8,18 @@
 
 // Runtime
 
-use crate::model::config::{Config, TomlConfig};
-use anyhow::Result;
+use crate::{
+    actor::Worker,
+    model::config::{Config, TomlConfig},
+};
+use actix::{io::SinkWrite, Actor, StreamHandler, System};
+use anyhow::{Context, Result};
+use awc::{http::Version, Client};
 use clap::Parser;
+use futures::StreamExt;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
-use std::{ffi::OsString, io::Write};
+use std::{ffi::OsString, io::Write, thread::sleep, time::Duration};
+use tracing::{debug, error, info};
 
 const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
 ██╔══██╗██║   ██║██╔══██╗██║    ██║
@@ -42,8 +49,72 @@ where
     // Output the pretty header
     header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
 
-    // Get the server url
-    let _url = config.server_url();
+    // Pull values out of config
+    let url = config.server_url();
+    let mut retry_count = *config.retry_count();
+    let mut error_count = 0;
+
+    if !args.dry_run() {
+        while retry_count > 0 {
+            let sys = System::new();
+            let url_c = url.clone();
+            let config_c = config.clone();
+            sys.block_on(async move {
+                let awc = Client::builder()
+                    .max_http_version(Version::HTTP_11)
+                    .finish();
+
+                if let Ok((response, framed)) = awc.ws(&url_c).connect().await.map_err(|e| {
+                    error!("Error: {e}");
+                }) {
+                    debug!("{response:?}");
+                    let (sink, stream) = framed.split();
+                    let _addr = Worker::create(|ctx| {
+                        let _ = Worker::add_stream(stream, ctx);
+                        Worker::builder()
+                            .addr(SinkWrite::new(sink, ctx))
+                            .running(false)
+                            .config(config_c)
+                            .build()
+                    });
+
+                    // let stdout_addr = addr.clone();
+                    // let _handle = spawn(async move {
+                    //     while let Some(stdout_m) = rx_stdout.recv().await {
+                    //         stdout_addr.do_send(stdout_m);
+                    //     }
+                    // });
+
+                    // let stderr_addr = addr.clone();
+                    // let _handle = spawn(async move {
+                    //     while let Some(stderr_m) = rx_stderr.recv().await {
+                    //         stderr_addr.do_send(stderr_m);
+                    //     }
+                    // });
+
+                    // let status_addr = addr;
+                    // let _handle = spawn(async move {
+                    //     while let Some(status) = rx_status.recv().await {
+                    //         status_addr.do_send(status);
+                    //     }
+                    // });
+                } else {
+                    error!("unable to connect");
+                    System::current().stop();
+                }
+            });
+
+            if let Err(e) = sys.run().context("run failed") {
+                error!("{e}");
+            }
+            info!("worker disconnected!");
+            info!("Trying to reconnect...");
+            retry_count -= 1;
+            sleep(Duration::from_secs(2u64.pow(error_count)));
+            error_count += 1;
+        }
+    }
+
     Ok(())
 }
 

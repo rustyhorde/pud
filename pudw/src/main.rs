@@ -181,6 +181,7 @@
 use error::{clap_or_error, success};
 use std::process;
 
+mod actor;
 mod constants;
 mod error;
 mod model;

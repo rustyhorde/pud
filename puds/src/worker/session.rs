@@ -17,10 +17,10 @@ use actix::{
 use actix_http::ws::Item;
 use actix_web::web::Bytes;
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
-use bincode::serialize;
-use pudlib::{parse_ts_ping, send_ts_ping, Worker};
+use bincode::{deserialize, serialize};
+use pudlib::{parse_ts_ping, send_ts_ping, Server as ServerMessage, Worker};
 use std::time::{Duration, Instant};
-use tracing::{debug, error};
+use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -143,20 +143,27 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
             match msg {
                 Message::Ping(bytes) => {
                     debug!("received ping message from worker, sending pong");
-                    parse_ts_ping(&bytes);
+                    if let Some(dur) = parse_ts_ping(&bytes) {
+                        debug!("ping duration: {}s", dur.as_secs_f64());
+                    }
                     self.hb = Instant::now();
                     ctx.pong(&bytes);
                 }
                 Message::Pong(bytes) => {
                     debug!("received pong message from worker, resetting heartbeat");
-                    debug!("pong: {}", String::from_utf8_lossy(&bytes));
+                    if let Some(dur) = parse_ts_ping(&bytes) {
+                        debug!("pong duration: {}s", dur.as_secs_f64());
+                    }
                     self.hb = Instant::now();
                 }
                 Message::Text(text) => error!("unexpected text: {}", text),
                 Message::Binary(bytes) => {
                     debug!("received binary message from worker, trying to deserialize");
                     self.hb = Instant::now();
-                    let _bytes_vec = bytes.to_vec();
+                    let bytes_vec = bytes.to_vec();
+                    if let Ok(message) = deserialize::<ServerMessage>(&bytes_vec) {
+                        info!("message: {message:?}");
+                    }
                     // if let Ok(stdout_msg) = deserialize::<Stdout>(&bytes_vec) {
                     //     self.addr.do_send(Msg::Stdout(stdout_msg));
                     // } else if let Ok(stderr_msg) = deserialize::<Stderr>(&bytes_vec) {

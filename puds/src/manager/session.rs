@@ -22,7 +22,7 @@ use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::serialize;
 use pudlib::{parse_ts_ping, send_ts_ping, Manager};
 use std::time::{Duration, Instant};
-use tracing::{debug, error};
+use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -145,13 +145,17 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
             match msg {
                 Message::Ping(bytes) => {
                     debug!("received ping message from manager, sending pong");
-                    parse_ts_ping(&bytes);
+                    if let Some(dur) = parse_ts_ping(&bytes) {
+                        info!("ping duration: {}s", dur.as_secs_f64());
+                    }
                     self.hb = Instant::now();
                     ctx.pong(&bytes);
                 }
                 Message::Pong(bytes) => {
                     debug!("received pong message from manager, resetting heartbeat");
-                    debug!("pong: {}", String::from_utf8_lossy(&bytes));
+                    if let Some(dur) = parse_ts_ping(&bytes) {
+                        info!("pong duration: {}s", dur.as_secs_f64());
+                    }
                     self.hb = Instant::now();
                 }
                 Message::Text(text) => error!("unexpected text message: {}", text),
