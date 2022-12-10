@@ -11,6 +11,7 @@
 use actix_web::web::{get, ServiceConfig};
 use serde::Deserialize;
 
+pub(crate) mod health;
 pub(crate) mod manager;
 pub(crate) mod worker;
 
@@ -21,7 +22,7 @@ pub(crate) struct Name {
 
 pub(crate) fn insecure_config(cfg: &mut ServiceConfig) {
     let _ = cfg
-        // .route("/health", get().to(health::health))
+        .route("/health", get().to(health::health))
         // .route("/info", get().to(info::info))
         .route("/ws/worker", get().to(worker::worker))
         .route("/ws/manager", get().to(manager::manager));
