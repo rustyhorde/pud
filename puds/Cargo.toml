@@ -37,7 +37,9 @@ uuid = { version = "1.2.2", features = ["v4", "serde"] }
 unstable = []
 
 [build-dependencies]
+anyhow = "1.0.66"
 rustversion = "1.0.9"
+vergen = "7.4.3"
 
 [dev-dependencies]
 actix-rt = "2.7.0"
