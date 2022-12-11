@@ -20,10 +20,11 @@ use awc::{
     BoxedSocket,
 };
 use bincode::{deserialize, serialize};
-use bytes::Bytes;
+use bytes::{Bytes, BytesMut};
 use futures::stream::SplitSink;
 use pudlib::{
-    parse_ts_ping, send_ts_ping, Command, Schedule, ServerToWorkerClient, WorkerClientToServer,
+    parse_ts_ping, send_ts_ping, Command, Schedule, ServerToWorkerClient,
+    WorkerClientToWorkerSession,
 };
 use std::{
     collections::{BTreeMap, VecDeque},
@@ -54,8 +55,8 @@ pub(crate) struct Worker {
     #[builder(default = false)]
     running: bool,
     /// continuation bytes
-    #[builder(default = Vec::new())]
-    cont_bytes: Vec<u8>,
+    #[builder(default = BytesMut::new())]
+    cont_bytes: BytesMut,
     /// The start instant of this session
     #[builder(default = Instant::now())]
     origin: Instant,
@@ -177,16 +178,16 @@ impl Worker {
         ctx.stop();
     }
 
-    fn handle_continuation(&mut self, item: Item) {
+    fn handle_continuation(&mut self, ctx: &mut Context<Self>, item: Item) {
         debug!("handling continuation message");
         match item {
             Item::FirstText(_bytes) => error!("unexpected text continuation"),
             Item::FirstBinary(bytes) | Item::Continue(bytes) => {
-                self.cont_bytes.append(&mut bytes.to_vec());
+                self.cont_bytes.extend_from_slice(&bytes);
             }
             Item::Last(bytes) => {
-                self.cont_bytes.append(&mut bytes.to_vec());
-                // TODO: Deserialize the bytes here
+                self.cont_bytes.extend_from_slice(&bytes);
+                self.handle_binary(ctx, &bytes);
                 self.cont_bytes.clear();
             }
         }
@@ -203,7 +204,7 @@ impl Actor for Worker {
         // initialze the queue monitor
         self.queue_monitor(ctx);
         // request initialization from the server
-        if let Ok(init) = serialize(&WorkerClientToServer::Initialize) {
+        if let Ok(init) = serialize(&WorkerClientToWorkerSession::Initialize) {
             if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
                 error!("Unable to send initialize message");
             }
@@ -229,7 +230,7 @@ impl StreamHandler<Result<Frame, WsProtocolError>> for Worker {
                 Frame::Ping(bytes) => self.handle_ping(bytes),
                 Frame::Pong(bytes) => self.handle_pong(&bytes),
                 Frame::Close(reason) => self.handle_close(ctx, reason),
-                Frame::Continuation(item) => self.handle_continuation(item),
+                Frame::Continuation(item) => self.handle_continuation(ctx, item),
             }
         }
     }

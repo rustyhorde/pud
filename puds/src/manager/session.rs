@@ -17,7 +17,7 @@ use actix::{
     Running, StreamHandler, WrapFuture,
 };
 use actix_http::ws::{CloseReason, Item};
-use actix_web::web::Bytes;
+use actix_web::web::{Bytes, BytesMut};
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::serialize;
 use bytestring::ByteString;
@@ -46,8 +46,8 @@ pub(crate) struct Session {
     /// the session name
     name: String,
     /// continuation bytes
-    #[builder(default = Vec::new())]
-    cont_bytes: Vec<u8>,
+    #[builder(default = BytesMut::new())]
+    cont_bytes: BytesMut,
     /// The start instant of this session
     origin: Instant,
 }
@@ -121,11 +121,11 @@ impl Session {
         match item {
             Item::FirstText(_bytes) => error!("unexpected text continuation"),
             Item::FirstBinary(bytes) | Item::Continue(bytes) => {
-                self.cont_bytes.append(&mut bytes.to_vec());
+                self.cont_bytes.extend_from_slice(&bytes);
             }
             Item::Last(bytes) => {
-                self.cont_bytes.append(&mut bytes.to_vec());
-                // TODO: Deserialize the bytes here
+                self.cont_bytes.extend_from_slice(&bytes);
+                self.handle_binary(&bytes);
                 self.cont_bytes.clear();
             }
         }

@@ -15,12 +15,13 @@ use actix::{
     Running, StreamHandler, WrapFuture,
 };
 use actix_http::ws::{CloseReason, Item};
-use actix_web::web::Bytes;
+use actix_web::web::{Bytes, BytesMut};
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::{deserialize, serialize};
 use bytestring::ByteString;
 use pudlib::{
-    parse_ts_ping, send_ts_ping, ServerToWorkerClient, WorkerClientToServer, WorkerSessionToServer,
+    parse_ts_ping, send_ts_ping, ServerToWorkerClient, WorkerClientToWorkerSession,
+    WorkerSessionToServer,
 };
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info};
@@ -46,8 +47,8 @@ pub(crate) struct Session {
     /// the session name
     name: String,
     /// continuation bytes
-    #[builder(default = Vec::new())]
-    cont_bytes: Vec<u8>,
+    #[builder(default = BytesMut::new())]
+    cont_bytes: BytesMut,
     /// The start instant of this session
     origin: Instant,
 }
@@ -107,10 +108,10 @@ impl Session {
         debug!("handling binary message");
         self.hb = Instant::now();
         let bytes_vec = bytes.to_vec();
-        if let Ok(message) = deserialize::<WorkerClientToServer>(&bytes_vec) {
+        if let Ok(message) = deserialize::<WorkerClientToWorkerSession>(&bytes_vec) {
             match message {
-                WorkerClientToServer::Text(msg) => info!("{msg}"),
-                WorkerClientToServer::Initialize => {
+                WorkerClientToWorkerSession::Text(msg) => info!("{msg}"),
+                WorkerClientToWorkerSession::Initialize => {
                     self.addr.do_send(WorkerSessionToServer::Initialize {
                         id: self.id,
                         name: self.name.clone(),
@@ -132,11 +133,11 @@ impl Session {
         match item {
             Item::FirstText(_bytes) => error!("unexpected text continuation"),
             Item::FirstBinary(bytes) | Item::Continue(bytes) => {
-                self.cont_bytes.append(&mut bytes.to_vec());
+                self.cont_bytes.extend_from_slice(&bytes);
             }
             Item::Last(bytes) => {
-                self.cont_bytes.append(&mut bytes.to_vec());
-                // TODO: Deserialize the bytes here
+                self.cont_bytes.extend_from_slice(&bytes);
+                self.handle_binary(&bytes);
                 self.cont_bytes.clear();
             }
         }
