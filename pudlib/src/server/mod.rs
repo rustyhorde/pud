@@ -46,7 +46,7 @@ pub enum Schedule {
         /// Seconds after the worker clients starts to run the first command
         on_boot_sec: Duration,
         /// Seconds after the first run to run the command again
-        on_unit_activ_sec: Duration,
+        on_unit_active_sec: Duration,
         /// The commands to run
         cmds: Vec<String>,
     },
@@ -59,4 +59,52 @@ pub enum Schedule {
         /// The commands to run
         cmds: Vec<String>,
     },
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Schedule, Schedules};
+    use anyhow::Result;
+    use toml::from_str;
+
+    const SCHEDULES: &str = r#"schedules = [ 
+    { Realtime = { on_calendar = "*-*-* 4:00:00", persistent = false, cmds = ["python"] } },
+    { Realtime = { on_calendar = "*-*-* 4:30:00", persistent = false, cmds = ["tmux"] } },
+    { Monotonic = { on_boot_sec = { secs = 1, nanos = 0 }, on_unit_active_sec = { secs = 1, nanos = 0 }, cmds = ["updall"] } } 
+]"#;
+
+    #[test]
+    fn deserialize_schedule() -> Result<()> {
+        let schedules: Schedules = from_str(SCHEDULES)?;
+        let realtime: Vec<Schedule> = schedules
+            .schedules()
+            .iter()
+            .cloned()
+            .filter(|x| match x {
+                Schedule::Realtime {
+                    on_calendar: _,
+                    persistent: _,
+                    cmds: _,
+                } => true,
+                _ => false,
+            })
+            .collect::<Vec<Schedule>>();
+        let monotonic: Vec<Schedule> = schedules
+            .schedules()
+            .iter()
+            .cloned()
+            .filter(|x| match x {
+                Schedule::Monotonic {
+                    on_boot_sec: _,
+                    on_unit_active_sec: _,
+                    cmds: _,
+                } => true,
+                _ => false,
+            })
+            .collect::<Vec<Schedule>>();
+        assert_eq!(3, schedules.schedules().len());
+        assert_eq!(2, realtime.len());
+        assert_eq!(1, monotonic.len());
+        Ok(())
+    }
 }
