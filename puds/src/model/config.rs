@@ -10,7 +10,7 @@
 
 use crate::error::Error::{self, AddrParse};
 use getset::{Getters, Setters};
-use pudlib::{Command, LogConfig, Verbosity};
+use pudlib::{Command, LogConfig, Schedules, Verbosity};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
@@ -34,6 +34,7 @@ pub(crate) struct Config {
     level: Option<Level>,
     default: BTreeMap<String, Command>,
     overrides: BTreeMap<String, BTreeMap<String, Command>>,
+    schedules: BTreeMap<String, Schedules>,
 }
 
 impl Verbosity for Config {
@@ -79,7 +80,7 @@ impl TryFrom<TomlConfig> for Config {
             addr: ip.clone(),
         })?;
         let socket_addr = SocketAddr::from((ip_addr, *port));
-        let (tls, hostlist, default, overrides) = config.take();
+        let (tls, hostlist, default, overrides, schedules) = config.take();
         let (cert_file_path, key_file_path) = tls.take();
         Ok(Config {
             verbose: 0,
@@ -92,6 +93,7 @@ impl TryFrom<TomlConfig> for Config {
             level: None,
             default,
             overrides,
+            schedules,
         })
     }
 }
@@ -111,6 +113,9 @@ pub(crate) struct TomlConfig {
     default: BTreeMap<String, Command>,
     /// The overrides for specific workers
     overrides: BTreeMap<String, BTreeMap<String, Command>>,
+    /// The schedules for specific workers
+    #[serde(serialize_with = "toml::ser::tables_last")]
+    schedules: BTreeMap<String, Schedules>,
 }
 
 type TomlConfigTake = (
@@ -118,11 +123,18 @@ type TomlConfigTake = (
     BTreeMap<String, Hosts>,
     BTreeMap<String, Command>,
     BTreeMap<String, BTreeMap<String, Command>>,
+    BTreeMap<String, Schedules>,
 );
 
 impl TomlConfig {
     fn take(self) -> TomlConfigTake {
-        (self.tls, self.hostlist, self.default, self.overrides)
+        (
+            self.tls,
+            self.hostlist,
+            self.default,
+            self.overrides,
+            self.schedules,
+        )
     }
 }
 

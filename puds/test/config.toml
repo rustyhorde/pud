@@ -10,6 +10,7 @@ key_file_path = "privkey.pem"
 [hostlist.most]
 hostnames = ["one","two","three"]
 
+# Default commands
 [default.uname]
 cmd = "uname -a"
 
@@ -59,11 +60,24 @@ cmd = "cdp tmux; and sudo make clean"
 [default.tmux]
 cmd = "cdp tmux; and git pull; and make; and sudo make install"
 
+# bb8 overrides
 [overrides.bb8.'mosh-clean']
 cmd = "echo 'mosh-clean not configured'"
-
 [overrides.bb8.mosh]
 cmd = "echo 'mosh not configured'"
 
-[overrides.boba.mosh]
+# fett overrides
+[overrides.fett.mosh]
 cmd = "cdp mosh; and git pull; and set -lx CXX clang++; and make; and sudo make install"
+
+# Schedules
+# bb8 schedules
+[schedules.bb8]
+schedules = []
+
+# kylo schedules
+[schedules.kylo]
+schedules = [ 
+    { Realtime = { on_calendar = "test", persistent = false, cmds = ["python"] } },
+    { Realtime = { on_calendar = "test", persistent = false, cmds = ["tmux"] } } 
+]

@@ -219,6 +219,8 @@ pub use manager::message::Manager;
 pub use server::message::WorkerClientToServer;
 pub use server::message::WorkerSessionToServer;
 pub use server::Command;
+pub use server::Schedule;
+pub use server::Schedules;
 pub use utils::parse_ts_ping;
 pub use utils::send_ts_ping;
 pub use worker::message::ServerToWorkerClient;

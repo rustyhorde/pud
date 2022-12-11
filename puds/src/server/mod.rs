@@ -192,7 +192,7 @@ impl Handler<WorkerSessionToServer> for Server {
                 if let Some(overrides) = self.config.overrides().get(&name) {
                     for (name, cmd) in overrides {
                         let cmd_c = cmd.clone();
-                        *commands.entry(name.clone()).or_insert(cmd.clone()) = cmd_c;
+                        *commands.entry(name.clone()).or_insert_with(|| cmd.clone()) = cmd_c;
                     }
                 }
                 self.direct_worker_message(ServerToWorkerClient::Initialize(commands), &id);
