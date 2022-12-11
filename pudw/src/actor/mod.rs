@@ -24,7 +24,7 @@ use bytes::Bytes;
 use futures::stream::SplitSink;
 use pudlib::{parse_ts_ping, send_ts_ping, Command, ServerToWorkerClient, WorkerClientToServer};
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{BTreeMap, VecDeque},
     time::{Duration, Instant},
 };
 use tracing::{debug, error, info};
@@ -57,8 +57,8 @@ pub(crate) struct Worker {
     /// The start instant of this session
     #[builder(default = Instant::now())]
     origin: Instant,
-    #[builder(default = HashMap::new())]
-    commands: HashMap<String, Command>,
+    #[builder(default = BTreeMap::new())]
+    commands: BTreeMap<String, Command>,
 }
 
 impl Worker {
@@ -160,6 +160,9 @@ impl StreamHandler<Result<Frame, WsProtocolError>> for Worker {
                             ServerToWorkerClient::Text(msg) => info!("{msg}"),
                             ServerToWorkerClient::Initialize(commands) => {
                                 self.commands = commands;
+                                for (name, cmd) in &self.commands {
+                                    info!("{name}: {}", cmd.cmd());
+                                }
                                 info!("initialization complete");
                             }
                         }

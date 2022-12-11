@@ -32,8 +32,8 @@ pub(crate) struct Config {
     key_file_path: String,
     hostlist: BTreeMap<String, Hosts>,
     level: Option<Level>,
-    default: HashMap<String, Command>,
-    overrides: HashMap<String, HashMap<String, Command>>,
+    default: BTreeMap<String, Command>,
+    overrides: BTreeMap<String, BTreeMap<String, Command>>,
 }
 
 impl Verbosity for Config {
@@ -108,16 +108,16 @@ pub(crate) struct TomlConfig {
     #[serde(serialize_with = "toml::ser::tables_last")]
     hostlist: BTreeMap<String, Hosts>,
     /// The defaults commands
-    default: HashMap<String, Command>,
+    default: BTreeMap<String, Command>,
     /// The overrides for specific workers
-    overrides: HashMap<String, HashMap<String, Command>>,
+    overrides: BTreeMap<String, BTreeMap<String, Command>>,
 }
 
 type TomlConfigTake = (
     Tls,
     BTreeMap<String, Hosts>,
-    HashMap<String, Command>,
-    HashMap<String, HashMap<String, Command>>,
+    BTreeMap<String, Command>,
+    BTreeMap<String, BTreeMap<String, Command>>,
 );
 
 impl TomlConfig {

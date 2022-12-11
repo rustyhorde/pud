@@ -13,11 +13,51 @@ hostnames = ["one","two","three"]
 [default.uname]
 cmd = "uname -a"
 
+[default.updall]
+cmd = "updall -l"
+
+[default.cacl]
+cmd = "cdpr; and cacl"
+
+[default.rustup]
+cmd = "rustup update"
+[default.'rustup-add']
+cmd = "rustup component add rust-analysis rust-src; and rustup component add rust-analysis rust-src --toolchain beta; and rustup component add rust-analysis rust-src --toolchain stable; and rustup target add asmjs-unknown-emscripten wasm32-unknown-emscripten x86_64-unknown-linux-musl; and rustup target add asmjs-unknown-emscripten wasm32-unknown-emscripten x86_64-unknown-linux-musl --toolchain beta; and rustup target add asmjs-unknown-emscripten wasm32-unknown-emscripten x86_64-unknown-linux-musl --toolchain stable"
+
+[default.bar]
+cmd = "bar"
+
+[default.'mosh-autogen']
+cmd = "cdp mosh; and ./autogen.sh"
+[default.'mosh-config']
+cmd = "cdp mosh; and ./configure --prefix=/opt/mosh-master"
 [default.'mosh-clean']
 cmd = "cdp mosh; and sudo make clean"
-
 [default.mosh]
 cmd = "cdp mosh; and git pull; and make; and sudo make install"
+
+[default.'nginx-clean']
+cmd = "cdp nginx; and sudo make clean"
+[default.'nginx-config']
+cmd = "cdp nginx; and git pull; and auto/configure --prefix=/opt/nginx-master --with-select_module --with-poll_module --with-threads --with-file-aio --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module --with-http_image_filter_module --with-http_geoip_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_auth_request_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_stub_status_module --with-http_perl_module --with-mail --with-mail_ssl_module --with-stream --with-stream_ssl_module --with-google_perftools_module --with-cpp_test_module"
+[default.nginx]
+cmd = "cdp nginx; and git pull; and sudo make; and sudo make install"
+
+[default.'python-clean']
+cmd = "cdp cpython; and sudo make clean"
+[default.'python-config']
+cmd = "cdp cpython; and git pull; and set -lx CXX g++; and ./configure --prefix=/opt/python-master"
+[default.python]
+cmd = "cdp cpython; and git pull; and make; and sudo -H make install"
+
+[default.'tmux-autogen']
+cmd = "cdp tmux; and ./autogen.sh"
+[default.'tmux-config']
+cmd = "cdp tmux; and ./configure --prefix=/opt/tmux-master"
+[default.'tmux-clean']
+cmd = "cdp tmux; and sudo make clean"
+[default.tmux]
+cmd = "cdp tmux; and git pull; and make; and sudo make install"
 
 [overrides.bb8.'mosh-clean']
 cmd = "echo 'mosh-clean not configured'"

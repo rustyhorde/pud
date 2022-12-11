@@ -11,7 +11,7 @@
 use crate::server::Command;
 use actix::Message;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// A message from a server to a worker client
 #[derive(Clone, Debug, Deserialize, Message, Serialize)]
@@ -20,5 +20,5 @@ pub enum ServerToWorkerClient {
     /// A text message for a worker
     Text(String),
     /// initialize response for a worker
-    Initialize(HashMap<String, Command>),
+    Initialize(BTreeMap<String, Command>),
 }
