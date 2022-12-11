@@ -18,7 +18,9 @@ use actix_http::ws::Item;
 use actix_web::web::Bytes;
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::{deserialize, serialize};
-use pudlib::{parse_ts_ping, send_ts_ping, Server as ServerMessage, Worker};
+use pudlib::{
+    parse_ts_ping, send_ts_ping, ServerToWorkerClient, WorkerClientToServer, WorkerSessionToServer,
+};
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
@@ -122,10 +124,10 @@ impl Actor for Session {
 }
 
 // Handle messages from server, we simply send it to peer websocket
-impl Handler<Worker> for Session {
+impl Handler<ServerToWorkerClient> for Session {
     type Result = ();
 
-    fn handle(&mut self, msg: Worker, ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: ServerToWorkerClient, ctx: &mut Self::Context) {
         debug!("message received from server, sending on to worker");
         if let Ok(wm_bytes) = serialize(&msg) {
             ctx.binary(wm_bytes);
@@ -161,23 +163,17 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
                     debug!("received binary message from worker, trying to deserialize");
                     self.hb = Instant::now();
                     let bytes_vec = bytes.to_vec();
-                    if let Ok(message) = deserialize::<ServerMessage>(&bytes_vec) {
-                        info!("message: {message:?}");
+                    if let Ok(message) = deserialize::<WorkerClientToServer>(&bytes_vec) {
+                        match message {
+                            WorkerClientToServer::Text(msg) => info!("{msg}"),
+                            WorkerClientToServer::Initialize => {
+                                self.addr.do_send(WorkerSessionToServer::Initialize {
+                                    id: self.id,
+                                    name: self.name.clone(),
+                                });
+                            }
+                        }
                     }
-                    // if let Ok(stdout_msg) = deserialize::<Stdout>(&bytes_vec) {
-                    //     self.addr.do_send(Msg::Stdout(stdout_msg));
-                    // } else if let Ok(stderr_msg) = deserialize::<Stderr>(&bytes_vec) {
-                    //     self.addr.do_send(Msg::Stderr(stderr_msg));
-                    // } else if let Ok(status_msg) = deserialize::<Status>(&bytes_vec) {
-                    //     self.addr.do_send(Msg::Status(status_msg));
-                    // } else {
-                    //     let cr = CommandResponse::builder()
-                    //         .kind(CommandResponseKind::Error)
-                    //         .command(false)
-                    //         .status("invalid worker message")
-                    //         .build();
-                    //     self.addr.do_send(Msg::Command(cr));
-                    // }
                 }
                 Message::Close(reason) => {
                     debug!("received close message from worker");

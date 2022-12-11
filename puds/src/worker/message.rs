@@ -10,7 +10,7 @@
 
 use actix::{Message, Recipient};
 use getset::CopyGetters;
-use pudlib::Worker as WorkerMessage;
+use pudlib::ServerToWorkerClient;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -18,13 +18,13 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Message, TypedBuilder)]
 #[rtype(result = "Uuid")]
 pub(crate) struct Connect {
-    addr: Recipient<WorkerMessage>,
+    addr: Recipient<ServerToWorkerClient>,
     ip: String,
     name: String,
 }
 
 impl Connect {
-    pub(crate) fn take(self) -> (Recipient<WorkerMessage>, String, String) {
+    pub(crate) fn take(self) -> (Recipient<ServerToWorkerClient>, String, String) {
         (self.addr, self.ip, self.name)
     }
 }

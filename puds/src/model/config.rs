@@ -10,10 +10,10 @@
 
 use crate::error::Error::{self, AddrParse};
 use getset::{Getters, Setters};
-use pudlib::{LogConfig, Verbosity};
+use pudlib::{Command, LogConfig, Verbosity};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, HashMap},
     net::{IpAddr, SocketAddr},
 };
 use tracing::Level;
@@ -32,6 +32,8 @@ pub(crate) struct Config {
     key_file_path: String,
     hostlist: BTreeMap<String, Hosts>,
     level: Option<Level>,
+    default: HashMap<String, Command>,
+    overrides: HashMap<String, HashMap<String, Command>>,
 }
 
 impl Verbosity for Config {
@@ -77,7 +79,7 @@ impl TryFrom<TomlConfig> for Config {
             addr: ip.clone(),
         })?;
         let socket_addr = SocketAddr::from((ip_addr, *port));
-        let (tls, hostlist) = config.take();
+        let (tls, hostlist, default, overrides) = config.take();
         let (cert_file_path, key_file_path) = tls.take();
         Ok(Config {
             verbose: 0,
@@ -88,6 +90,8 @@ impl TryFrom<TomlConfig> for Config {
             key_file_path,
             hostlist,
             level: None,
+            default,
+            overrides,
         })
     }
 }
@@ -103,11 +107,22 @@ pub(crate) struct TomlConfig {
     /// A list of hosts.
     #[serde(serialize_with = "toml::ser::tables_last")]
     hostlist: BTreeMap<String, Hosts>,
+    /// The defaults commands
+    default: HashMap<String, Command>,
+    /// The overrides for specific workers
+    overrides: HashMap<String, HashMap<String, Command>>,
 }
 
+type TomlConfigTake = (
+    Tls,
+    BTreeMap<String, Hosts>,
+    HashMap<String, Command>,
+    HashMap<String, HashMap<String, Command>>,
+);
+
 impl TomlConfig {
-    fn take(self) -> (Tls, BTreeMap<String, Hosts>) {
-        (self.tls, self.hostlist)
+    fn take(self) -> TomlConfigTake {
+        (self.tls, self.hostlist, self.default, self.overrides)
     }
 }
 
@@ -145,4 +160,11 @@ impl Tls {
 pub(crate) struct Hosts {
     /// The hostnames.
     hostnames: Vec<String>,
+}
+
+/// actix client configuration
+#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[getset(get = "pub(crate)")]
+pub(crate) struct Override {
+    cmds: HashMap<String, Command>,
 }

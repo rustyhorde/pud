@@ -9,3 +9,21 @@ key_file_path = "privkey.pem"
 
 [hostlist.most]
 hostnames = ["one","two","three"]
+
+[default.uname]
+cmd = "uname -a"
+
+[default.'mosh-clean']
+cmd = "cdp mosh; and sudo make clean"
+
+[default.mosh]
+cmd = "cdp mosh; and git pull; and make; and sudo make install"
+
+[overrides.bb8.'mosh-clean']
+cmd = "echo 'mosh-clean not configured'"
+
+[overrides.bb8.mosh]
+cmd = "echo 'mosh not configured'"
+
+[overrides.boba.mosh]
+cmd = "cdp mosh; and git pull; and set -lx CXX clang++; and make; and sudo make install"

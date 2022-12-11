@@ -8,4 +8,15 @@
 
 // shared server code
 
+use getset::Getters;
+use serde::{Deserialize, Serialize};
+
 pub(crate) mod message;
+
+/// A command to run on a worker
+#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[getset(get = "pub")]
+pub struct Command {
+    /// The command to run
+    cmd: String,
+}

@@ -19,18 +19,16 @@ use awc::{
     ws::{Codec, Frame, Message},
     BoxedSocket,
 };
-use bincode::serialize;
+use bincode::{deserialize, serialize};
 use bytes::Bytes;
 use futures::stream::SplitSink;
-use pudlib::{parse_ts_ping, send_ts_ping, Server};
+use pudlib::{parse_ts_ping, send_ts_ping, Command, ServerToWorkerClient, WorkerClientToServer};
 use std::{
-    collections::VecDeque,
+    collections::{HashMap, VecDeque},
     time::{Duration, Instant},
 };
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
-
-use crate::model::config::Config;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -42,7 +40,6 @@ pub(crate) struct Worker {
     #[builder(default = Instant::now())]
     hb: Instant,
     addr: SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>,
-    config: Config,
     // tx_stdout: UnboundedSender<Stdout>,
     // tx_stderr: UnboundedSender<Stderr>,
     // tx_status: UnboundedSender<Status>,
@@ -52,6 +49,7 @@ pub(crate) struct Worker {
     stdout_queue: VecDeque<Vec<u8>>,
     #[builder(default = Instant::now())]
     stdout_last: Instant,
+    #[builder(default = false)]
     running: bool,
     /// continuation bytes
     #[builder(default = Vec::new())]
@@ -59,10 +57,12 @@ pub(crate) struct Worker {
     /// The start instant of this session
     #[builder(default = Instant::now())]
     origin: Instant,
+    #[builder(default = HashMap::new())]
+    commands: HashMap<String, Command>,
 }
 
 impl Worker {
-    // Heartbeat that sends ping to the worker every HEARTBEAT_INTERVAL seconds (5)
+    // Heartbeat that sends ping to the server every HEARTBEAT_INTERVAL seconds (5)
     // Also check for activity from the worker in the past CLIENT_TIMEOUT seconds (10)
     #[allow(clippy::unused_self)]
     fn hb(&self, ctx: &mut Context<Self>) {
@@ -131,8 +131,7 @@ impl Actor for Worker {
         // initialze the queue monitor
         self.queue_monitor(ctx);
         // request initialization from the server
-        let message = Server::Initialize(self.config.name().clone());
-        if let Ok(init) = serialize(&message) {
+        if let Ok(init) = serialize(&WorkerClientToServer::Initialize) {
             if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
                 error!("Unable to send initialize message");
             }
@@ -152,9 +151,18 @@ impl StreamHandler<Result<Frame, WsProtocolError>> for Worker {
     fn handle(&mut self, msg: Result<Frame, WsProtocolError>, ctx: &mut Self::Context) {
         if let Ok(message) = msg {
             match message {
-                Frame::Binary(_bytes) => {
+                Frame::Binary(bytes) => {
                     if self.stdout_handle.is_none() {
                         self.stdout_handle = Some(self.stdout_queue(ctx));
+                    }
+                    if let Ok(msg) = deserialize::<ServerToWorkerClient>(&bytes) {
+                        match msg {
+                            ServerToWorkerClient::Text(msg) => info!("{msg}"),
+                            ServerToWorkerClient::Initialize(commands) => {
+                                self.commands = commands;
+                                info!("initialization complete");
+                            }
+                        }
                     }
                 }
                 Frame::Text(_bytes) => {}

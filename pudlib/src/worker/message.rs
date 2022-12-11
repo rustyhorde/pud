@@ -8,13 +8,17 @@
 
 //! Worker Actix Message
 
+use crate::server::Command;
 use actix::Message;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-/// A message for a worker
+/// A message from a server to a worker client
 #[derive(Clone, Debug, Deserialize, Message, Serialize)]
 #[rtype(result = "()")]
-pub enum Worker {
+pub enum ServerToWorkerClient {
     /// A text message for a worker
     Text(String),
+    /// initialize response for a worker
+    Initialize(HashMap<String, Command>),
 }

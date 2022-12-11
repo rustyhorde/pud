@@ -11,7 +11,7 @@
 use self::message::Connect;
 use actix::Recipient;
 use getset::Getters;
-use pudlib::Worker as WorkerMessage;
+use pudlib::ServerToWorkerClient;
 
 pub(crate) mod message;
 pub(crate) mod session;
@@ -20,7 +20,7 @@ pub(crate) mod session;
 #[derive(Clone, Debug, Getters)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct Worker {
-    addr: Recipient<WorkerMessage>,
+    addr: Recipient<ServerToWorkerClient>,
 }
 
 impl From<Connect> for Worker {

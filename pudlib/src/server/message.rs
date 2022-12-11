@@ -10,13 +10,27 @@
 
 use actix::Message;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-/// A message for a server
+/// A message from a worker client to a server
 #[derive(Clone, Debug, Deserialize, Message, Serialize)]
 #[rtype(result = "()")]
-pub enum Server {
+pub enum WorkerClientToServer {
     /// A text message for a server
     Text(String),
     /// An initialization request from a worker
-    Initialize(String),
+    Initialize,
+}
+
+/// A message from a worker session to the server actor
+#[derive(Clone, Debug, Deserialize, Message, Serialize)]
+#[rtype(result = "()")]
+pub enum WorkerSessionToServer {
+    /// An initialization request from the worker client
+    Initialize {
+        /// The id of the worker client
+        id: Uuid,
+        /// The name of the worker client
+        name: String,
+    },
 }

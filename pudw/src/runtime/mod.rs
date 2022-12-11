@@ -58,7 +58,6 @@ where
         while retry_count > 0 {
             let sys = System::new();
             let url_c = url.clone();
-            let config_c = config.clone();
             sys.block_on(async move {
                 let awc = Client::builder()
                     .max_http_version(Version::HTTP_11)
@@ -71,11 +70,7 @@ where
                     let (sink, stream) = framed.split();
                     let _addr = Worker::create(|ctx| {
                         let _ = Worker::add_stream(stream, ctx);
-                        Worker::builder()
-                            .addr(SinkWrite::new(sink, ctx))
-                            .running(false)
-                            .config(config_c)
-                            .build()
+                        Worker::builder().addr(SinkWrite::new(sink, ctx)).build()
                     });
 
                     // let stdout_addr = addr.clone();

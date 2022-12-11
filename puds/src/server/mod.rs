@@ -13,6 +13,7 @@ use crate::{
         message::{Connect as ManagerConnect, Disconnect as ManagerDisconnect},
         Manager,
     },
+    model::config::Config,
     worker::{
         message::{Connect as WorkerConnect, Disconnect as WorkerDisconnect},
         Worker,
@@ -20,6 +21,7 @@ use crate::{
 };
 use actix::{Actor, Context, Handler, MessageResult};
 use getset::Getters;
+use pudlib::{ServerToWorkerClient, WorkerSessionToServer};
 use std::{
     collections::HashMap,
     sync::{
@@ -35,7 +37,7 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Getters, TypedBuilder)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct Server {
-    // config: Config,
+    config: Config,
     workers: HashMap<Uuid, Worker>,
     managers: HashMap<Uuid, Manager>,
     worker_count: Arc<AtomicUsize>,
@@ -55,10 +57,10 @@ impl Server {
         for id in self.workers.keys() {
             if let Some(skip_ids) = &skip_ids {
                 if !skip_ids.contains(id) {
-                    self.direct_worker_message(message, id);
+                    self.direct_worker_message(ServerToWorkerClient::Text(message.to_string()), id);
                 }
             } else {
-                self.direct_worker_message(message, id);
+                self.direct_worker_message(ServerToWorkerClient::Text(message.to_string()), id);
             }
         }
     }
@@ -76,10 +78,9 @@ impl Server {
         }
     }
 
-    pub(crate) fn direct_worker_message(&self, message: &str, id: &Uuid) {
+    pub(crate) fn direct_worker_message(&self, message: ServerToWorkerClient, id: &Uuid) {
         if let Some(worker) = self.workers.get(id) {
-            let wm = pudlib::Worker::Text(message.to_string());
-            worker.addr().do_send(wm);
+            worker.addr().do_send(message);
         } else {
             error!("cannont send message to worker: {}", id);
         }
@@ -176,6 +177,26 @@ impl Handler<ManagerDisconnect> for Server {
             // broadcast manager count to all
             let count = self.manager_count.fetch_sub(1, Ordering::SeqCst);
             self.broadcast(&format!("total managers {}", count - 1), &None);
+        }
+    }
+}
+
+// Handler for message bound for a worker
+impl Handler<WorkerSessionToServer> for Server {
+    type Result = ();
+
+    fn handle(&mut self, msg: WorkerSessionToServer, _: &mut Context<Self>) {
+        match msg {
+            WorkerSessionToServer::Initialize { id, name } => {
+                let mut commands = self.config.default().clone();
+                if let Some(overrides) = self.config.overrides().get(&name) {
+                    for (name, cmd) in overrides {
+                        let cmd_c = cmd.clone();
+                        *commands.entry(name.clone()).or_insert(cmd.clone()) = cmd_c;
+                    }
+                }
+                self.direct_worker_message(ServerToWorkerClient::Initialize(commands), &id);
+            }
         }
     }
 }

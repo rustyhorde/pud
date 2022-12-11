@@ -74,8 +74,13 @@ where
         .managers(HashMap::new())
         .worker_count(worker_count)
         .manager_count(manager_count)
+        .config(config.clone())
         .build();
     let server_data = Data::new(server.start());
+
+    // Add config to app data
+    let config_c = config.clone();
+    let config_data = Data::new(config_c);
 
     if !args.dry_run() {
         // Load the TLS Keys
@@ -88,6 +93,7 @@ where
         HttpServer::new(move || {
             App::new()
                 .app_data(server_data.clone())
+                .app_data(config_data.clone())
                 .wrap(Compress::default())
                 .wrap(TracingLogger::default())
                 // .wrap(Timing)
