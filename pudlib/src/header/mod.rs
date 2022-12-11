@@ -192,6 +192,22 @@ mod test {
             self.level = Some(level);
             self
         }
+
+        fn target(&self) -> bool {
+            false
+        }
+
+        fn thread_id(&self) -> bool {
+            false
+        }
+
+        fn thread_names(&self) -> bool {
+            false
+        }
+
+        fn line_numbers(&self) -> bool {
+            false
+        }
     }
 
     lazy_static! {

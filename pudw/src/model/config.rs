@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use tracing::Level;
 
 /// The configuration
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Eq, Getters, PartialEq, Setters)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct Config {
@@ -22,6 +23,10 @@ pub(crate) struct Config {
     quiet: u8,
     #[getset(set = "pub")]
     verbose: u8,
+    target: bool,
+    thread_id: bool,
+    thread_names: bool,
+    line_numbers: bool,
     retry_count: usize,
     server_addr: String,
     server_port: u16,
@@ -67,6 +72,22 @@ impl LogConfig for Config {
         self.level = Some(level);
         self
     }
+
+    fn target(&self) -> bool {
+        self.target
+    }
+
+    fn thread_id(&self) -> bool {
+        self.thread_id
+    }
+
+    fn thread_names(&self) -> bool {
+        self.thread_names
+    }
+
+    fn line_numbers(&self) -> bool {
+        self.line_numbers
+    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -77,9 +98,24 @@ impl TryFrom<TomlConfig> for Config {
         let server_addr = config.actix().ip().clone();
         let server_port = *config.actix().port();
         let retry_count = *config.retry_count();
+        let (target, thread_id, thread_names, line_numbers) =
+            if let Some(tracing) = config.tracing() {
+                (
+                    *tracing.target(),
+                    *tracing.thread_id(),
+                    *tracing.thread_names(),
+                    *tracing.line_numbers(),
+                )
+            } else {
+                (false, false, false, false)
+            };
         Ok(Config {
             verbose: 0,
             quiet: 0,
+            target,
+            thread_id,
+            thread_names,
+            line_numbers,
             retry_count,
             server_addr,
             server_port,
@@ -95,6 +131,8 @@ impl TryFrom<TomlConfig> for Config {
 pub(crate) struct TomlConfig {
     /// The actix client configuration
     actix: Actix,
+    /// The tracing configuration
+    tracing: Option<Tracing>,
     /// The number of time we should try reconnecting
     retry_count: usize,
     /// The name of this worker
@@ -109,4 +147,19 @@ pub(crate) struct Actix {
     ip: String,
     /// The port to connect to
     port: u16,
+}
+
+/// tracing configuration
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[getset(get = "pub(crate)")]
+pub(crate) struct Tracing {
+    /// Should we trace the event target
+    target: bool,
+    /// Should we trace the thread id
+    thread_id: bool,
+    /// Should we trace the thread names
+    thread_names: bool,
+    /// Should we trace the line numbers
+    line_numbers: bool,
 }

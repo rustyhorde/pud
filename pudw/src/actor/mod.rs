@@ -40,28 +40,36 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(TypedBuilder)]
 pub(crate) struct Worker {
+    // current heartbeat instant
     #[builder(default = Instant::now())]
     hb: Instant,
+    // The addr used to send messages back to the worker session
     addr: SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>,
     // tx_stdout: UnboundedSender<Stdout>,
     // tx_stderr: UnboundedSender<Stderr>,
     // tx_status: UnboundedSender<Status>,
+    // handle to the stdout queue future
     #[builder(default = None)]
     stdout_handle: Option<SpawnHandle>,
     #[builder(default = VecDeque::new())]
+    // the stdout queue
     stdout_queue: VecDeque<Vec<u8>>,
+    // the last instant a stdout message was received
     #[builder(default = Instant::now())]
     stdout_last: Instant,
+    // Is there currently a command running?
     #[builder(default = false)]
     running: bool,
-    /// continuation bytes
+    // continuation bytes
     #[builder(default = BytesMut::new())]
     cont_bytes: BytesMut,
-    /// The start instant of this session
+    // The start instant of this session
     #[builder(default = Instant::now())]
     origin: Instant,
+    // The commands loaded in this worker
     #[builder(default = BTreeMap::new())]
     commands: BTreeMap<String, Command>,
+    // The schedules for the commands
     #[builder(default = Vec::new())]
     schedules: Vec<Schedule>,
 }
@@ -145,6 +153,7 @@ impl Worker {
                     info!("worker loaded {} commands", self.commands.len());
                     info!("worker loaded {} schedules", self.schedules.len());
                     info!("worker initialization complete");
+                    self.start_schedules(ctx);
                 }
             }
         }
@@ -191,6 +200,50 @@ impl Worker {
                 self.cont_bytes.clear();
             }
         }
+    }
+
+    fn start_schedules(&self, ctx: &mut Context<Self>) {
+        for schedule in &self.schedules {
+            match schedule {
+                Schedule::Monotonic {
+                    on_boot_sec,
+                    on_unit_active_sec,
+                    cmds,
+                } => self.launch_monotonic(ctx, *on_boot_sec, *on_unit_active_sec, cmds),
+                Schedule::Realtime {
+                    on_calendar: _,
+                    persistent: _,
+                    cmds: _,
+                } => {}
+            }
+        }
+    }
+
+    #[allow(clippy::unused_self)]
+    fn launch_monotonic(
+        &self,
+        ctx: &mut Context<Worker>,
+        on_boot_sec: Duration,
+        on_unit_active_sec: Duration,
+        cmds: &[String],
+    ) {
+        info!(
+            "launching monotonic schedule in {}s, re-running every {}",
+            on_boot_sec.as_secs_f64(),
+            on_unit_active_sec.as_secs_f64(),
+        );
+        let cmds_c = cmds.to_owned();
+        let _ = ctx.run_later(on_boot_sec, move |_, ctx| {
+            let inner_cmds = cmds_c.clone();
+            let _ = ctx.run_interval(on_unit_active_sec, move |_act, _ctx| {
+                for cmd in &inner_cmds {
+                    info!("running {cmd}");
+                }
+            });
+            for cmd in &cmds_c {
+                info!("running {cmd}");
+            }
+        });
     }
 }
 

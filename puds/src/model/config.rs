@@ -19,6 +19,7 @@ use std::{
 use tracing::Level;
 
 /// The configuration
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Eq, Getters, PartialEq, Setters)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct Config {
@@ -26,6 +27,10 @@ pub(crate) struct Config {
     quiet: u8,
     #[getset(set = "pub")]
     verbose: u8,
+    target: bool,
+    thread_id: bool,
+    thread_names: bool,
+    line_numbers: bool,
     workers: u8,
     socket_addr: SocketAddr,
     cert_file_path: String,
@@ -66,6 +71,22 @@ impl LogConfig for Config {
         self.level = Some(level);
         self
     }
+
+    fn target(&self) -> bool {
+        self.target
+    }
+
+    fn thread_id(&self) -> bool {
+        self.thread_id
+    }
+
+    fn thread_names(&self) -> bool {
+        self.thread_names
+    }
+
+    fn line_numbers(&self) -> bool {
+        self.line_numbers
+    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -79,12 +100,27 @@ impl TryFrom<TomlConfig> for Config {
             source: e,
             addr: ip.clone(),
         })?;
+        let (target, thread_id, thread_names, line_numbers) =
+            if let Some(tracing) = config.tracing() {
+                (
+                    *tracing.target(),
+                    *tracing.thread_id(),
+                    *tracing.thread_names(),
+                    *tracing.line_numbers(),
+                )
+            } else {
+                (false, false, false, false)
+            };
         let socket_addr = SocketAddr::from((ip_addr, *port));
         let (tls, hostlist, default, overrides, schedules) = config.take();
         let (cert_file_path, key_file_path) = tls.take();
         Ok(Config {
             verbose: 0,
             quiet: 0,
+            target,
+            thread_id,
+            thread_names,
+            line_numbers,
             workers,
             socket_addr,
             cert_file_path,
@@ -106,6 +142,8 @@ pub(crate) struct TomlConfig {
     actix: Actix,
     /// The TLS configuration
     tls: Tls,
+    /// The tracing configuration
+    tracing: Option<Tracing>,
     /// A list of hosts.
     #[serde(serialize_with = "toml::ser::tables_last")]
     hostlist: BTreeMap<String, Hosts>,
@@ -148,6 +186,21 @@ pub(crate) struct Actix {
     ip: String,
     /// The port to listen on
     port: u16,
+}
+
+/// tracing configuration
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[getset(get = "pub(crate)")]
+pub(crate) struct Tracing {
+    /// Should we trace the event target
+    target: bool,
+    /// Should we trace the thread id
+    thread_id: bool,
+    /// Should we trace the thread names
+    thread_names: bool,
+    /// Should we trace the line numbers
+    line_numbers: bool,
 }
 
 /// TLS configuration

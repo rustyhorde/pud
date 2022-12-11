@@ -31,6 +31,14 @@ pub trait Config {
     fn quiet(&self) -> u8;
     /// Get the verbose count
     fn verbose(&self) -> u8;
+    /// Should we log the event target?
+    fn target(&self) -> bool;
+    /// Should we log the thread id?
+    fn thread_id(&self) -> bool;
+    /// Should we log the thread names?
+    fn thread_names(&self) -> bool;
+    /// Should we log the line numbers?
+    fn line_numbers(&self) -> bool;
     /// Get the effective tracing level
     fn level(&self) -> Option<Level>;
     /// Allow initialization to set the effective tracing level
@@ -58,10 +66,10 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
         let format = fmt::layer()
             .with_level(true)
             .with_ansi(true)
-            .with_target(true)
-            .with_thread_ids(true)
-            .with_thread_names(true)
-            .with_line_number(true)
+            .with_target(config.target())
+            .with_thread_ids(config.thread_id())
+            .with_thread_names(config.thread_names())
+            .with_line_number(config.line_numbers())
             .with_timer(UtcTime::new(Iso8601::DEFAULT));
         let level = get_effective_level(config.quiet(), config.verbose());
         let _ = config.set_level(level);
