@@ -14,10 +14,11 @@ use actix::{
     fut, Actor, ActorContext, ActorFutureExt, Addr, AsyncContext, ContextFutureSpawner, Handler,
     Running, StreamHandler, WrapFuture,
 };
-use actix_http::ws::Item;
+use actix_http::ws::{CloseReason, Item};
 use actix_web::web::Bytes;
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::{deserialize, serialize};
+use bytestring::ByteString;
 use pudlib::{
     parse_ts_ping, send_ts_ping, ServerToWorkerClient, WorkerClientToServer, WorkerSessionToServer,
 };
@@ -78,22 +79,89 @@ impl Session {
             ctx.ping(&send_ts_ping(origin_c));
         });
     }
+
+    #[allow(clippy::unused_self)]
+    fn handle_text(&mut self, byte_string: &ByteString) {
+        debug!("handling text message");
+        error!("invalid text received: {byte_string}");
+    }
+
+    fn handle_ping(&mut self, ctx: &mut WebsocketContext<Self>, bytes: &Bytes) {
+        debug!("handling ping message");
+        if let Some(dur) = parse_ts_ping(bytes) {
+            debug!("ping duration: {}s", dur.as_secs_f64());
+        }
+        self.hb = Instant::now();
+        ctx.pong(bytes);
+    }
+
+    fn handle_pong(&mut self, bytes: &Bytes) {
+        debug!("handling pong message");
+        if let Some(dur) = parse_ts_ping(bytes) {
+            debug!("pong duration: {}s", dur.as_secs_f64());
+        }
+        self.hb = Instant::now();
+    }
+
+    fn handle_binary(&mut self, bytes: &Bytes) {
+        debug!("handling binary message");
+        self.hb = Instant::now();
+        let bytes_vec = bytes.to_vec();
+        if let Ok(message) = deserialize::<WorkerClientToServer>(&bytes_vec) {
+            match message {
+                WorkerClientToServer::Text(msg) => info!("{msg}"),
+                WorkerClientToServer::Initialize => {
+                    self.addr.do_send(WorkerSessionToServer::Initialize {
+                        id: self.id,
+                        name: self.name.clone(),
+                    });
+                }
+            }
+        }
+    }
+
+    #[allow(clippy::unused_self)]
+    fn handle_close(&mut self, ctx: &mut WebsocketContext<Self>, reason: Option<CloseReason>) {
+        debug!("handling close message");
+        ctx.close(reason);
+        ctx.stop();
+    }
+
+    fn handle_continuation(&mut self, item: Item) {
+        debug!("handling continuation message");
+        match item {
+            Item::FirstText(_bytes) => error!("unexpected text continuation"),
+            Item::FirstBinary(bytes) | Item::Continue(bytes) => {
+                self.cont_bytes.append(&mut bytes.to_vec());
+            }
+            Item::Last(bytes) => {
+                self.cont_bytes.append(&mut bytes.to_vec());
+                // TODO: Deserialize the bytes here
+                self.cont_bytes.clear();
+            }
+        }
+    }
+
+    #[allow(clippy::unused_self)]
+    fn handle_no_op(&mut self) {
+        debug!("handling no op message");
+    }
 }
 
 impl Actor for Session {
     type Context = WebsocketContext<Self>;
 
     // Method is called on actor start.
-    // We register mux worker session with the mux server
+    // We register the worker session with the server
     fn started(&mut self, ctx: &mut Self::Context) {
-        debug!("worker session started");
+        info!("worker session started");
         // start the heartbeat
         self.hb(ctx);
 
         // Get our address and send a connect worker
         // message to the server.  After registration
         // our id has been set
-        debug!("registering with the server");
+        debug!("registering worker with the server");
         let addr = ctx.address();
         self.addr
             .send(
@@ -113,11 +181,11 @@ impl Actor for Session {
                 fut::ready(())
             })
             .wait(ctx);
-        debug!("server registration complete: {}", self.id);
+        debug!("worker registration complete: {}", self.id);
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        debug!("session stopping, sending Disconnect to server");
+        info!("worker session stopping");
         self.addr.do_send(Disconnect::builder().id(self.id).build());
         Running::Stop
     }
@@ -128,7 +196,7 @@ impl Handler<ServerToWorkerClient> for Session {
     type Result = ();
 
     fn handle(&mut self, msg: ServerToWorkerClient, ctx: &mut Self::Context) {
-        debug!("message received from server, sending on to worker");
+        debug!("handling message from server actor to worker client");
         if let Ok(wm_bytes) = serialize(&msg) {
             ctx.binary(wm_bytes);
         } else {
@@ -143,61 +211,25 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
     fn handle(&mut self, msg_res: Result<Message, ProtocolError>, ctx: &mut Self::Context) {
         if let Ok(msg) = msg_res {
             match msg {
-                Message::Ping(bytes) => {
-                    debug!("received ping message from worker, sending pong");
-                    if let Some(dur) = parse_ts_ping(&bytes) {
-                        debug!("ping duration: {}s", dur.as_secs_f64());
-                    }
-                    self.hb = Instant::now();
-                    ctx.pong(&bytes);
-                }
-                Message::Pong(bytes) => {
-                    debug!("received pong message from worker, resetting heartbeat");
-                    if let Some(dur) = parse_ts_ping(&bytes) {
-                        debug!("pong duration: {}s", dur.as_secs_f64());
-                    }
-                    self.hb = Instant::now();
-                }
-                Message::Text(text) => error!("unexpected text: {}", text),
-                Message::Binary(bytes) => {
-                    debug!("received binary message from worker, trying to deserialize");
-                    self.hb = Instant::now();
-                    let bytes_vec = bytes.to_vec();
-                    if let Ok(message) = deserialize::<WorkerClientToServer>(&bytes_vec) {
-                        match message {
-                            WorkerClientToServer::Text(msg) => info!("{msg}"),
-                            WorkerClientToServer::Initialize => {
-                                self.addr.do_send(WorkerSessionToServer::Initialize {
-                                    id: self.id,
-                                    name: self.name.clone(),
-                                });
-                            }
-                        }
-                    }
-                }
-                Message::Close(reason) => {
-                    debug!("received close message from worker");
-                    ctx.close(reason);
-                    ctx.stop();
-                }
-                Message::Continuation(item) => {
-                    debug!("received continuation message from worker");
-                    match item {
-                        Item::FirstText(_bytes) => error!("unexpected text continuation"),
-                        Item::FirstBinary(bytes) | Item::Continue(bytes) => {
-                            self.cont_bytes.append(&mut bytes.to_vec());
-                        }
-                        Item::Last(bytes) => {
-                            self.cont_bytes.append(&mut bytes.to_vec());
-                            // TODO: Deserialize the bytes here
-                            self.cont_bytes.clear();
-                        }
-                    }
-                }
-                Message::Nop => (),
+                Message::Ping(bytes) => self.handle_ping(ctx, &bytes),
+                Message::Pong(bytes) => self.handle_pong(&bytes),
+                Message::Text(byte_string) => self.handle_text(&byte_string),
+                Message::Binary(bytes) => self.handle_binary(&bytes),
+                Message::Close(reason) => self.handle_close(ctx, reason),
+                Message::Continuation(item) => self.handle_continuation(item),
+                Message::Nop => self.handle_no_op(),
             }
         } else {
             ctx.stop();
         }
+    }
+
+    fn started(&mut self, _ctx: &mut Self::Context) {
+        info!("worker session stream handler started");
+    }
+
+    fn finished(&mut self, ctx: &mut Self::Context) {
+        info!("worker session stream handler finished");
+        ctx.stop();
     }
 }

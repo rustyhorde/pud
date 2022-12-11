@@ -23,10 +23,19 @@ pub struct Command {
 }
 
 /// The schedule to run commands on a given worker client
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[getset(get = "pub")]
 pub struct Schedules {
     /// All of the schedules for a worker client
     schedules: Vec<Schedule>,
+}
+
+impl Schedules {
+    /// Take the schedules from the struct
+    #[must_use]
+    pub fn take(self) -> Vec<Schedule> {
+        self.schedules
+    }
 }
 
 /// The schedule to run commands on a given worker client

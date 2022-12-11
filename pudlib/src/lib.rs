@@ -215,7 +215,7 @@ pub use config::Verbosity;
 pub use header::header;
 pub use log::initialize;
 pub use log::Config as LogConfig;
-pub use manager::message::Manager;
+pub use manager::message::ServerToManagerClient;
 pub use server::message::WorkerClientToServer;
 pub use server::message::WorkerSessionToServer;
 pub use server::Command;

@@ -1,0 +1,6 @@
+name = "fett"
+retry_count = 10
+
+[actix]
+ip = "localhost.ozias.net"
+port = 32276

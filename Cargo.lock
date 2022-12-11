@@ -1290,6 +1290,7 @@ dependencies = [
  "actix-web-actors",
  "anyhow",
  "bincode",
+ "bytestring",
  "clap",
  "getset",
  "lazy_static",

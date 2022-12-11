@@ -11,7 +11,7 @@
 use self::message::Connect;
 use actix::Recipient;
 use getset::Getters;
-use pudlib::Manager as ManagerMessage;
+use pudlib::ServerToManagerClient as ManagerMessage;
 
 pub(crate) mod message;
 pub(crate) mod session;

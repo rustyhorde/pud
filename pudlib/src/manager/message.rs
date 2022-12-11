@@ -14,7 +14,13 @@ use serde::{Deserialize, Serialize};
 /// A message for a manager
 #[derive(Clone, Debug, Deserialize, Message, Serialize)]
 #[rtype(result = "()")]
-pub enum Manager {
-    /// A text message for a manager
-    Text(String),
+pub enum ServerToManagerClient {
+    /// A status message for a manager
+    Status(String),
+}
+
+impl From<String> for ServerToManagerClient {
+    fn from(value: String) -> Self {
+        Self::Status(value)
+    }
 }

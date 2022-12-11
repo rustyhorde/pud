@@ -13,7 +13,7 @@ use actix::{
     Actor, ActorContext, AsyncContext, Context, SpawnHandle, StreamHandler, System,
 };
 use actix_codec::Framed;
-use actix_http::ws::Item;
+use actix_http::ws::{CloseReason, Item};
 use awc::{
     error::WsProtocolError,
     ws::{Codec, Frame, Message},
@@ -22,7 +22,9 @@ use awc::{
 use bincode::{deserialize, serialize};
 use bytes::Bytes;
 use futures::stream::SplitSink;
-use pudlib::{parse_ts_ping, send_ts_ping, Command, ServerToWorkerClient, WorkerClientToServer};
+use pudlib::{
+    parse_ts_ping, send_ts_ping, Command, Schedule, ServerToWorkerClient, WorkerClientToServer,
+};
 use std::{
     collections::{BTreeMap, VecDeque},
     time::{Duration, Instant},
@@ -59,6 +61,8 @@ pub(crate) struct Worker {
     origin: Instant,
     #[builder(default = BTreeMap::new())]
     commands: BTreeMap<String, Command>,
+    #[builder(default = Vec::new())]
+    schedules: Vec<Schedule>,
 }
 
 impl Worker {
@@ -120,12 +124,80 @@ impl Worker {
             }
         })
     }
+
+    #[allow(clippy::unused_self)]
+    fn handle_text(&mut self, bytes: &Bytes) {
+        debug!("handling text message");
+        error!("invalid text received: {}", String::from_utf8_lossy(bytes));
+    }
+
+    fn handle_binary(&mut self, ctx: &mut Context<Self>, bytes: &Bytes) {
+        if self.stdout_handle.is_none() {
+            self.stdout_handle = Some(self.stdout_queue(ctx));
+        }
+        if let Ok(msg) = deserialize::<ServerToWorkerClient>(bytes) {
+            match msg {
+                ServerToWorkerClient::Status(status) => info!("Status: {status}"),
+                ServerToWorkerClient::Initialize(commands, schedules) => {
+                    self.commands = commands;
+                    self.schedules = schedules;
+                    info!("worker loaded {} commands", self.commands.len());
+                    info!("worker loaded {} schedules", self.schedules.len());
+                    info!("worker initialization complete");
+                }
+            }
+        }
+    }
+
+    fn handle_ping(&mut self, bytes: Bytes) {
+        debug!("handling ping message");
+        if let Some(dur) = parse_ts_ping(&bytes) {
+            debug!("ping duration: {}s", dur.as_secs_f64());
+        }
+        self.hb = Instant::now();
+        if let Err(e) = self.addr.write(Message::Pong(bytes)) {
+            error!("unable to send pong: {e:?}");
+        }
+    }
+
+    fn handle_pong(&mut self, bytes: &Bytes) {
+        debug!("handling pong message");
+        if let Some(dur) = parse_ts_ping(bytes) {
+            debug!("pong duration: {}s", dur.as_secs_f64());
+        }
+        self.hb = Instant::now();
+    }
+
+    #[allow(clippy::unused_self)]
+    fn handle_close(&mut self, ctx: &mut Context<Self>, reason: Option<CloseReason>) {
+        debug!("handling close message");
+        if let Some(reason) = reason {
+            info!("close reason: {reason:?}");
+        }
+        ctx.stop();
+    }
+
+    fn handle_continuation(&mut self, item: Item) {
+        debug!("handling continuation message");
+        match item {
+            Item::FirstText(_bytes) => error!("unexpected text continuation"),
+            Item::FirstBinary(bytes) | Item::Continue(bytes) => {
+                self.cont_bytes.append(&mut bytes.to_vec());
+            }
+            Item::Last(bytes) => {
+                self.cont_bytes.append(&mut bytes.to_vec());
+                // TODO: Deserialize the bytes here
+                self.cont_bytes.clear();
+            }
+        }
+    }
 }
 
 impl Actor for Worker {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
+        info!("worker actor started");
         // start heartbeat otherwise server will disconnect after 10 seconds
         self.hb(ctx);
         // initialze the queue monitor
@@ -141,6 +213,7 @@ impl Actor for Worker {
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {
+        info!("worker actor stopped");
         // Stop application on disconnect
         System::current().stop();
     }
@@ -151,69 +224,22 @@ impl StreamHandler<Result<Frame, WsProtocolError>> for Worker {
     fn handle(&mut self, msg: Result<Frame, WsProtocolError>, ctx: &mut Self::Context) {
         if let Ok(message) = msg {
             match message {
-                Frame::Binary(bytes) => {
-                    if self.stdout_handle.is_none() {
-                        self.stdout_handle = Some(self.stdout_queue(ctx));
-                    }
-                    if let Ok(msg) = deserialize::<ServerToWorkerClient>(&bytes) {
-                        match msg {
-                            ServerToWorkerClient::Text(msg) => info!("{msg}"),
-                            ServerToWorkerClient::Initialize(commands) => {
-                                self.commands = commands;
-                                for (name, cmd) in &self.commands {
-                                    info!("{name}: {}", cmd.cmd());
-                                }
-                                info!("initialization complete");
-                            }
-                        }
-                    }
-                }
-                Frame::Text(_bytes) => {}
-                Frame::Ping(bytes) => {
-                    debug!("received ping message from server, sending pong");
-                    if let Some(dur) = parse_ts_ping(&bytes) {
-                        debug!("ping duration: {}s", dur.as_secs_f64());
-                    }
-                    self.hb = Instant::now();
-                    if let Err(e) = self.addr.write(Message::Pong(bytes)) {
-                        error!("unable to send pong: {e:?}");
-                    }
-                }
-                Frame::Pong(bytes) => {
-                    debug!("received pong message from server, resetting heartbeat");
-                    if let Some(dur) = parse_ts_ping(&bytes) {
-                        debug!("pong duration: {}s", dur.as_secs_f64());
-                    }
-                    self.hb = Instant::now();
-                }
-                Frame::Close(reason) => {
-                    debug!("received close message from worker");
-                    if let Some(reason) = reason {
-                        info!("close reason: {reason:?}");
-                    }
-                    ctx.stop();
-                }
-                Frame::Continuation(item) => {
-                    debug!("received continuation message from worker");
-                    match item {
-                        Item::FirstText(_bytes) => error!("unexpected text continuation"),
-                        Item::FirstBinary(bytes) | Item::Continue(bytes) => {
-                            self.cont_bytes.append(&mut bytes.to_vec());
-                        }
-                        Item::Last(bytes) => {
-                            self.cont_bytes.append(&mut bytes.to_vec());
-                            // TODO: Deserialize the bytes here
-                            self.cont_bytes.clear();
-                        }
-                    }
-                }
+                Frame::Binary(bytes) => self.handle_binary(ctx, &bytes),
+                Frame::Text(bytes) => self.handle_text(&bytes),
+                Frame::Ping(bytes) => self.handle_ping(bytes),
+                Frame::Pong(bytes) => self.handle_pong(&bytes),
+                Frame::Close(reason) => self.handle_close(ctx, reason),
+                Frame::Continuation(item) => self.handle_continuation(item),
             }
         }
     }
 
-    fn started(&mut self, _ctx: &mut Self::Context) {}
+    fn started(&mut self, _ctx: &mut Self::Context) {
+        info!("worker stream handler started");
+    }
 
     fn finished(&mut self, ctx: &mut Self::Context) {
+        info!("worker stream handler finished");
         ctx.stop();
     }
 }

@@ -8,7 +8,7 @@
 
 //! Worker Actix Message
 
-use crate::server::Command;
+use crate::{server::Command, Schedule};
 use actix::Message;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -17,8 +17,14 @@ use std::collections::BTreeMap;
 #[derive(Clone, Debug, Deserialize, Message, Serialize)]
 #[rtype(result = "()")]
 pub enum ServerToWorkerClient {
-    /// A text message for a worker
-    Text(String),
+    /// A status message for a worker
+    Status(String),
     /// initialize response for a worker
-    Initialize(BTreeMap<String, Command>),
+    Initialize(BTreeMap<String, Command>, Vec<Schedule>),
+}
+
+impl From<String> for ServerToWorkerClient {
+    fn from(value: String) -> Self {
+        Self::Status(value)
+    }
 }

@@ -10,7 +10,7 @@
 
 use actix::{Message, Recipient};
 use getset::CopyGetters;
-use pudlib::Manager as ManagerMessage;
+use pudlib::ServerToManagerClient as ManagerMessage;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 

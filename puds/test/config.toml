@@ -1,12 +1,15 @@
+# actix-web configuration
 [actix]
 workers = 8
 ip = "127.0.0.1"
 port = 32276
 
+# actix-web TLS configuration
 [tls]
 cert_file_path = "fullchain.pem"
 key_file_path = "privkey.pem"
 
+# Host list
 [hostlist.most]
 hostnames = ["one","two","three"]
 
@@ -30,10 +33,10 @@ cmd = "bar"
 
 [default.'mosh-autogen']
 cmd = "cdp mosh; and ./autogen.sh"
-[default.'mosh-config']
-cmd = "cdp mosh; and ./configure --prefix=/opt/mosh-master"
 [default.'mosh-clean']
 cmd = "cdp mosh; and sudo make clean"
+[default.'mosh-config']
+cmd = "cdp mosh; and ./configure --prefix=/opt/mosh-master"
 [default.mosh]
 cmd = "cdp mosh; and git pull; and make; and sudo make install"
 
@@ -60,9 +63,14 @@ cmd = "cdp tmux; and sudo make clean"
 [default.tmux]
 cmd = "cdp tmux; and git pull; and make; and sudo make install"
 
+# Overrides
 # bb8 overrides
+[overrides.bb8.'mosh-autogen']
+cmd = "echo 'mosh-autogen not configured'"
 [overrides.bb8.'mosh-clean']
 cmd = "echo 'mosh-clean not configured'"
+[overrides.bb8.'mosh-config']
+cmd = "echo 'mosh-config not configured'"
 [overrides.bb8.mosh]
 cmd = "echo 'mosh not configured'"
 
@@ -78,6 +86,6 @@ schedules = []
 # kylo schedules
 [schedules.kylo]
 schedules = [ 
-    { Realtime = { on_calendar = "test", persistent = false, cmds = ["python"] } },
-    { Realtime = { on_calendar = "test", persistent = false, cmds = ["tmux"] } } 
+    { Realtime = { on_calendar = "*-*-* 4:00:00", persistent = false, cmds = ["python"] } },
+    { Realtime = { on_calendar = "*-*-* 4:30:00", persistent = false, cmds = ["tmux"] } } 
 ]
