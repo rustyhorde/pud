@@ -18,8 +18,32 @@ use uuid::Uuid;
 pub enum WorkerClientToWorkerSession {
     /// A text message for a server
     Text(String),
+    /// A stdout line from a command
+    Stdout(String),
+    /// A stderr line from a command
+    Stderr(String),
+    /// A status from a command
+    Status(usize),
     /// An initialization request from a worker
     Initialize,
+}
+
+impl WorkerClientToWorkerSession {
+    /// Convert a value into a `WorkerClientToWorkerSession::Stdout` message
+    pub fn into_stdout<T>(value: T) -> Self
+    where
+        T: Into<String>,
+    {
+        Self::Stdout(value.into())
+    }
+
+    /// Convert a value into a `WorkerClientToWorkerSession::Stderr` message
+    pub fn into_stderr<T>(value: T) -> Self
+    where
+        T: Into<String>,
+    {
+        Self::Stderr(value.into())
+    }
 }
 
 /// A message from a worker session to the server actor

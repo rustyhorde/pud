@@ -108,8 +108,8 @@ impl Session {
         debug!("handling binary message");
         self.hb = Instant::now();
         let bytes_vec = bytes.to_vec();
-        if let Ok(message) = deserialize::<WorkerClientToWorkerSession>(&bytes_vec) {
-            match message {
+        match deserialize::<WorkerClientToWorkerSession>(&bytes_vec) {
+            Ok(message) => match message {
                 WorkerClientToWorkerSession::Text(msg) => info!("{msg}"),
                 WorkerClientToWorkerSession::Initialize => {
                     self.addr.do_send(WorkerSessionToServer::Initialize {
@@ -117,7 +117,11 @@ impl Session {
                         name: self.name.clone(),
                     });
                 }
-            }
+                WorkerClientToWorkerSession::Stdout(line) => info!("{line}"),
+                WorkerClientToWorkerSession::Stderr(line) => error!("{line}"),
+                WorkerClientToWorkerSession::Status(status) => info!("status: {status}"),
+            },
+            Err(e) => error!("{e}"),
         }
     }
 

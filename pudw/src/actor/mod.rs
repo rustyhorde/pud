@@ -10,7 +10,7 @@
 
 use actix::{
     io::{SinkWrite, WriteHandler},
-    Actor, ActorContext, AsyncContext, Context, SpawnHandle, StreamHandler, System,
+    Actor, ActorContext, AsyncContext, Context, Handler, SpawnHandle, StreamHandler, System,
 };
 use actix_codec::Framed;
 use actix_http::ws::{CloseReason, Item};
@@ -28,10 +28,14 @@ use pudlib::{
 };
 use std::{
     collections::{BTreeMap, VecDeque},
+    sync::{Arc, Mutex, RwLock},
+    thread,
     time::{Duration, Instant},
 };
+use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
+use uuid::Uuid;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -45,12 +49,15 @@ pub(crate) struct Worker {
     hb: Instant,
     // The addr used to send messages back to the worker session
     addr: SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>,
-    // tx_stdout: UnboundedSender<Stdout>,
-    // tx_stderr: UnboundedSender<Stderr>,
-    // tx_status: UnboundedSender<Status>,
+    // the sender for stdout from running commands
+    tx_stdout: UnboundedSender<WorkerClientToWorkerSession>,
+    // the sender for stderr from running commands
+    tx_stderr: UnboundedSender<WorkerClientToWorkerSession>,
+    // the sender for a command status
+    tx_status: UnboundedSender<WorkerClientToWorkerSession>,
     // handle to the stdout queue future
-    #[builder(default = None)]
-    stdout_handle: Option<SpawnHandle>,
+    #[builder(default = Arc::new(Mutex::new(None)))]
+    stdout_handle: Arc<Mutex<Option<SpawnHandle>>>,
     #[builder(default = VecDeque::new())]
     // the stdout queue
     stdout_queue: VecDeque<Vec<u8>>,
@@ -58,8 +65,8 @@ pub(crate) struct Worker {
     #[builder(default = Instant::now())]
     stdout_last: Instant,
     // Is there currently a command running?
-    #[builder(default = false)]
-    running: bool,
+    #[builder(default = Arc::new(RwLock::new(Vec::new())))]
+    running: Arc<RwLock<Vec<Uuid>>>,
     // continuation bytes
     #[builder(default = BytesMut::new())]
     cont_bytes: BytesMut,
@@ -108,22 +115,27 @@ impl Worker {
     #[allow(clippy::unused_self)]
     fn queue_monitor(&self, ctx: &mut Context<Self>) {
         let _ = ctx.run_interval(Duration::from_secs(10), move |act, ctx| {
-            if !act.running
-                && Instant::now().duration_since(act.stdout_last) > Duration::from_secs(30)
-            {
-                if let Some(sh) = act.stdout_handle {
-                    info!("Cancelling stdout_queue");
-                    if !ctx.cancel_future(sh) {
-                        error!("Unable to kill stdout_queue");
+            if let Ok(running) = act.running.read() {
+                if running.len() == 0
+                    && Instant::now().duration_since(act.stdout_last) > Duration::from_secs(30)
+                {
+                    let mut sh_opt = match act.stdout_handle.lock() {
+                        Ok(guard) => guard,
+                        Err(poisoned) => poisoned.into_inner(),
+                    };
+                    if let Some(sh) = *sh_opt {
+                        debug!("Cancelling stdout_queue");
+                        if !ctx.cancel_future(sh) {
+                            error!("Unable to kill stdout_queue");
+                        }
+                        *sh_opt = None;
                     }
-                    act.stdout_handle = None;
                 }
             }
         });
     }
 
-    #[allow(clippy::unused_self)]
-    fn stdout_queue(&self, ctx: &mut Context<Self>) -> SpawnHandle {
+    fn stdout_queue(ctx: &mut Context<Self>) -> SpawnHandle {
         ctx.run_interval(Duration::from_millis(1), |act, _ctx| {
             if let Some(front) = act.stdout_queue.pop_front() {
                 act.stdout_last = Instant::now();
@@ -141,9 +153,6 @@ impl Worker {
     }
 
     fn handle_binary(&mut self, ctx: &mut Context<Self>, bytes: &Bytes) {
-        if self.stdout_handle.is_none() {
-            self.stdout_handle = Some(self.stdout_queue(ctx));
-        }
         if let Ok(msg) = deserialize::<ServerToWorkerClient>(bytes) {
             match msg {
                 ServerToWorkerClient::Status(status) => info!("Status: {status}"),
@@ -202,8 +211,9 @@ impl Worker {
         }
     }
 
-    fn start_schedules(&self, ctx: &mut Context<Self>) {
-        for schedule in &self.schedules {
+    fn start_schedules(&mut self, ctx: &mut Context<Self>) {
+        let schedules_c = self.schedules.clone();
+        for schedule in &schedules_c {
             match schedule {
                 Schedule::Monotonic {
                     on_boot_sec,
@@ -221,28 +231,71 @@ impl Worker {
 
     #[allow(clippy::unused_self)]
     fn launch_monotonic(
-        &self,
+        &mut self,
         ctx: &mut Context<Worker>,
         on_boot_sec: Duration,
         on_unit_active_sec: Duration,
         cmds: &[String],
     ) {
         info!(
-            "launching monotonic schedule in {}s, re-running every {}",
+            "launching monotonic schedule in {}s, re-running every {}s",
             on_boot_sec.as_secs_f64(),
             on_unit_active_sec.as_secs_f64(),
         );
         let cmds_c = cmds.to_owned();
+        let stdout_handle_c = self.stdout_handle.clone();
+        let tx_stdout_c = self.tx_stdout.clone();
+        let tx_stderr_c = self.tx_stderr.clone();
+        let tx_status_c = self.tx_status.clone();
+        let running_c = self.running.clone();
+
         let _ = ctx.run_later(on_boot_sec, move |_, ctx| {
             let inner_cmds = cmds_c.clone();
-            let _ = ctx.run_interval(on_unit_active_sec, move |_act, _ctx| {
-                for cmd in &inner_cmds {
-                    info!("running {cmd}");
+            let stdout_handle_c_c = stdout_handle_c.clone();
+            let mut sh_opt = match stdout_handle_c.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => poisoned.into_inner(),
+            };
+            if sh_opt.is_none() {
+                *sh_opt = Some(Worker::stdout_queue(ctx));
+            }
+            let _ = ctx.run_interval(on_unit_active_sec, move |_act, ctx| {
+                for _cmd in &inner_cmds {
+                    let shc = stdout_handle_c_c.clone();
+                    let tx_stdout_c_c = tx_stdout_c.clone();
+                    let _tx_stderr_c_c = tx_stderr_c.clone();
+                    let _tx_status_c_c = tx_status_c.clone();
+                    let running_c_c = running_c.clone();
+                    let mut running_lck = match running_c.write() {
+                        Ok(guard) => guard,
+                        Err(poisoned) => poisoned.into_inner(),
+                    };
+                    let mut sh_opt = match shc.lock() {
+                        Ok(guard) => guard,
+                        Err(poisoned) => poisoned.into_inner(),
+                    };
+                    if sh_opt.is_none() {
+                        *sh_opt = Some(Worker::stdout_queue(ctx));
+                    }
+                    let uuid = Uuid::new_v4();
+                    running_lck.push(uuid);
+                    let _b = thread::spawn(move || {
+                        // Simulating a command running
+                        thread::sleep(Duration::from_secs(5));
+                        let msg = WorkerClientToWorkerSession::into_stdout("test");
+                        let _res = tx_stdout_c_c.send(msg);
+                        let mut running_lck = match running_c_c.write() {
+                            Ok(guard) => guard,
+                            Err(poisoned) => poisoned.into_inner(),
+                        };
+                        *running_lck = running_lck
+                            .drain(..)
+                            .filter(|id| *id != uuid)
+                            .collect::<Vec<Uuid>>();
+                    });
                 }
             });
-            for cmd in &cmds_c {
-                info!("running {cmd}");
-            }
+            // TODO: Run the command the first time here
         });
     }
 }
@@ -299,3 +352,14 @@ impl StreamHandler<Result<Frame, WsProtocolError>> for Worker {
 }
 
 impl WriteHandler<WsProtocolError> for Worker {}
+
+impl Handler<WorkerClientToWorkerSession> for Worker {
+    type Result = ();
+
+    fn handle(&mut self, msg: WorkerClientToWorkerSession, _ctx: &mut Context<Self>) {
+        match serialize(&msg) {
+            Ok(msg_bytes) => self.stdout_queue.push_back(msg_bytes),
+            Err(e) => error!("{e}"),
+        }
+    }
+}
