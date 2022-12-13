@@ -28,14 +28,16 @@ use pudlib::{
 };
 use std::{
     collections::{BTreeMap, VecDeque},
-    sync::{Arc, Mutex, RwLock},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
     thread,
     time::{Duration, Instant},
 };
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -61,12 +63,12 @@ pub(crate) struct Worker {
     #[builder(default = VecDeque::new())]
     // the stdout queue
     stdout_queue: VecDeque<Vec<u8>>,
-    // the last instant a stdout message was received
+    // the last instant a queue message was drained
     #[builder(default = Instant::now())]
     stdout_last: Instant,
-    // Is there currently a command running?
-    #[builder(default = Arc::new(RwLock::new(Vec::new())))]
-    running: Arc<RwLock<Vec<Uuid>>>,
+    // the last instant a stdout message was received
+    #[builder(default = AtomicBool::new(false))]
+    queue_running: AtomicBool,
     // continuation bytes
     #[builder(default = BytesMut::new())]
     cont_bytes: BytesMut,
@@ -114,28 +116,37 @@ impl Worker {
 
     #[allow(clippy::unused_self)]
     fn queue_monitor(&self, ctx: &mut Context<Self>) {
-        let _ = ctx.run_interval(Duration::from_secs(10), move |act, ctx| {
-            if let Ok(running) = act.running.read() {
-                if running.len() == 0
-                    && Instant::now().duration_since(act.stdout_last) > Duration::from_secs(30)
-                {
-                    let mut sh_opt = match act.stdout_handle.lock() {
-                        Ok(guard) => guard,
-                        Err(poisoned) => poisoned.into_inner(),
-                    };
-                    if let Some(sh) = *sh_opt {
-                        debug!("Cancelling stdout_queue");
-                        if !ctx.cancel_future(sh) {
-                            error!("Unable to kill stdout_queue");
-                        }
-                        *sh_opt = None;
+        let _ = ctx.run_interval(Duration::from_secs(2), move |act, ctx| {
+            if !act.stdout_queue.is_empty() && !act.queue_running.load(Ordering::SeqCst) {
+                info!("Starting stdout queue drain");
+                act.queue_running.store(true, Ordering::SeqCst);
+                let handle = Worker::start_stdout_drain(ctx);
+                let mut sh_opt = match act.stdout_handle.lock() {
+                    Ok(guard) => guard,
+                    Err(poisoned) => poisoned.into_inner(),
+                };
+                *sh_opt = Some(handle);
+            } else if act.stdout_queue.is_empty()
+                && act.queue_running.load(Ordering::SeqCst)
+                && Instant::now().duration_since(act.stdout_last) > Duration::from_secs(30)
+            {
+                let mut sh_opt = match act.stdout_handle.lock() {
+                    Ok(guard) => guard,
+                    Err(poisoned) => poisoned.into_inner(),
+                };
+                if let Some(sh) = *sh_opt {
+                    info!("Stopping stdout queue drain");
+                    if !ctx.cancel_future(sh) {
+                        error!("Unable to kill stdout_queue");
                     }
+                    act.queue_running.store(false, Ordering::SeqCst);
+                    *sh_opt = None;
                 }
             }
         });
     }
 
-    fn stdout_queue(ctx: &mut Context<Self>) -> SpawnHandle {
+    fn start_stdout_drain(ctx: &mut Context<Self>) -> SpawnHandle {
         ctx.run_interval(Duration::from_millis(1), |act, _ctx| {
             if let Some(front) = act.stdout_queue.pop_front() {
                 act.stdout_last = Instant::now();
@@ -229,7 +240,6 @@ impl Worker {
         }
     }
 
-    #[allow(clippy::unused_self)]
     fn launch_monotonic(
         &mut self,
         ctx: &mut Context<Worker>,
@@ -242,60 +252,47 @@ impl Worker {
             on_boot_sec.as_secs_f64(),
             on_unit_active_sec.as_secs_f64(),
         );
-        let cmds_c = cmds.to_owned();
-        let stdout_handle_c = self.stdout_handle.clone();
-        let tx_stdout_c = self.tx_stdout.clone();
-        let tx_stderr_c = self.tx_stderr.clone();
-        let tx_status_c = self.tx_status.clone();
-        let running_c = self.running.clone();
+        // clone everything to move into the initial run later future
+        let cmds_later = cmds.to_owned();
+        let tx_stdout_later = self.tx_stdout.clone();
+        let tx_stderr_later = self.tx_stderr.clone();
+        let tx_status_later = self.tx_status.clone();
 
-        let _ = ctx.run_later(on_boot_sec, move |_, ctx| {
-            let inner_cmds = cmds_c.clone();
-            let stdout_handle_c_c = stdout_handle_c.clone();
-            let mut sh_opt = match stdout_handle_c.lock() {
-                Ok(guard) => guard,
-                Err(poisoned) => poisoned.into_inner(),
-            };
-            if sh_opt.is_none() {
-                *sh_opt = Some(Worker::stdout_queue(ctx));
-            }
-            let _ = ctx.run_interval(on_unit_active_sec, move |_act, ctx| {
-                for _cmd in &inner_cmds {
-                    let shc = stdout_handle_c_c.clone();
-                    let tx_stdout_c_c = tx_stdout_c.clone();
-                    let _tx_stderr_c_c = tx_stderr_c.clone();
-                    let _tx_status_c_c = tx_status_c.clone();
-                    let running_c_c = running_c.clone();
-                    let mut running_lck = match running_c.write() {
-                        Ok(guard) => guard,
-                        Err(poisoned) => poisoned.into_inner(),
-                    };
-                    let mut sh_opt = match shc.lock() {
-                        Ok(guard) => guard,
-                        Err(poisoned) => poisoned.into_inner(),
-                    };
-                    if sh_opt.is_none() {
-                        *sh_opt = Some(Worker::stdout_queue(ctx));
-                    }
-                    let uuid = Uuid::new_v4();
-                    running_lck.push(uuid);
-                    let _b = thread::spawn(move || {
+        let _ = ctx.run_later(on_boot_sec, move |_act, ctx| {
+            let cmds_interval = cmds_later.clone();
+            let tx_stdout_interval = tx_stdout_later.clone();
+            let _tx_stderr_interval = tx_stderr_later.clone();
+            let _tx_status_interval = tx_status_later.clone();
+
+            let _ = ctx.run_interval(on_unit_active_sec, move |_act, _ctx| {
+                let cmds_thread = cmds_interval.clone();
+                let tx_stdout_thread = tx_stdout_interval.clone();
+
+                // Run the long running commands in a separate thread
+                let _b = thread::spawn(move || {
+                    // Run the commands sequentially
+                    for _cmd in &cmds_thread {
                         // Simulating a command running
+                        info!("Running 'interval' command");
                         thread::sleep(Duration::from_secs(5));
                         let msg = WorkerClientToWorkerSession::into_stdout("test");
-                        let _res = tx_stdout_c_c.send(msg);
-                        let mut running_lck = match running_c_c.write() {
-                            Ok(guard) => guard,
-                            Err(poisoned) => poisoned.into_inner(),
-                        };
-                        *running_lck = running_lck
-                            .drain(..)
-                            .filter(|id| *id != uuid)
-                            .collect::<Vec<Uuid>>();
-                    });
-                }
+                        if let Err(e) = tx_stdout_thread.send(msg) {
+                            error!("Error running command: {e}");
+                        }
+                    }
+                });
             });
-            // TODO: Run the command the first time here
+
+            // Run the commands sequentially
+            for _cmd in &cmds_later {
+                // Simulating a command running
+                info!("Running 'later' command");
+                thread::sleep(Duration::from_secs(5));
+                let msg = WorkerClientToWorkerSession::into_stdout("test");
+                if let Err(e) = tx_stdout_later.send(msg) {
+                    error!("Error running command: {e}");
+                }
+            }
         });
     }
 }
