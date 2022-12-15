@@ -97,7 +97,6 @@ schedules = [
 # kylo schedules
 [schedules.kylo]
 schedules = [ 
-    { Realtime = { on_calendar = "*-*-* *:0/2:13", persistent = false, cmds = ["uname"] } },
-    { Realtime = { on_calendar = "*-*-* *:0/5:39", persistent = false, cmds = ["uname","python"] } },
+    { Realtime = { on_calendar = "*-*-* 0/4:37:13", persistent = false, cmds = ["rustup"] } },
     { Monotonic = { on_boot_sec = { secs = 60, nanos = 0 }, on_unit_active_sec = { secs = 3600, nanos = 0 }, cmds = ["uname"] } } 
 ]

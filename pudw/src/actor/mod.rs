@@ -29,6 +29,9 @@ use pudlib::{
 };
 use std::{
     collections::{BTreeMap, HashMap, VecDeque},
+    env,
+    io::{BufRead, BufReader},
+    process::Stdio,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
@@ -39,6 +42,7 @@ use std::{
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
+use uuid::Uuid;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -125,7 +129,27 @@ impl Worker {
             let now = OffsetDateTime::now_utc();
             for (rt, cmds) in &act.rt {
                 if rt.should_run(now) {
-                    info!("running realtime schedule: {}", cmds.len());
+                    let cmds_thread = cmds.clone();
+                    let commands_thread = act.commands.clone();
+                    let tx_stdout_thread = act.tx_stdout.clone();
+                    let tx_stderr_thread = act.tx_stderr.clone();
+                    let tx_status_thread = act.tx_status.clone();
+
+                    // Run the long running commands in a separate thread
+                    let _b = thread::spawn(move || {
+                        // Run the commands sequentially
+                        for cmd_name in &cmds_thread {
+                            if let Some(cmd) = commands_thread.get(cmd_name) {
+                                run_cmd(
+                                    cmd_name,
+                                    cmd.cmd(),
+                                    &tx_stdout_thread,
+                                    &tx_stderr_thread,
+                                    &tx_status_thread,
+                                );
+                            }
+                        }
+                    });
                 }
             }
         });
@@ -133,9 +157,9 @@ impl Worker {
 
     #[allow(clippy::unused_self)]
     fn queue_monitor(&self, ctx: &mut Context<Self>) {
-        let _ = ctx.run_interval(Duration::from_secs(10), move |act, ctx| {
+        let _ = ctx.run_interval(Duration::from_secs(2), move |act, ctx| {
             if !act.stdout_queue.is_empty() && !act.queue_running.load(Ordering::SeqCst) {
-                info!("Starting stdout queue drain");
+                debug!("Starting stdout queue drain");
                 act.queue_running.store(true, Ordering::SeqCst);
                 let handle = Worker::start_stdout_drain(ctx);
                 let mut sh_opt = match act.stdout_handle.lock() {
@@ -152,7 +176,7 @@ impl Worker {
                     Err(poisoned) => poisoned.into_inner(),
                 };
                 if let Some(sh) = *sh_opt {
-                    info!("Stopping stdout queue drain");
+                    debug!("Stopping stdout queue drain");
                     if !ctx.cancel_future(sh) {
                         error!("Unable to kill stdout_queue");
                     }
@@ -256,7 +280,7 @@ impl Worker {
                     cmds,
                 } => {
                     has_realtime = true;
-                    self.store_realtime(ctx, on_calendar, *persistent, cmds);
+                    self.store_realtime(on_calendar, *persistent, cmds);
                 }
             }
         }
@@ -280,56 +304,64 @@ impl Worker {
         );
         // clone everything to move into the initial run later future
         let cmds_later = cmds.to_owned();
+        let commands_later = self.commands.clone();
         let tx_stdout_later = self.tx_stdout.clone();
         let tx_stderr_later = self.tx_stderr.clone();
         let tx_status_later = self.tx_status.clone();
 
         let _ = ctx.run_later(on_boot_sec, move |_act, ctx| {
+            // clone everything to move into the interval future
             let cmds_interval = cmds_later.clone();
+            let commands_interval = commands_later.clone();
             let tx_stdout_interval = tx_stdout_later.clone();
-            let _tx_stderr_interval = tx_stderr_later.clone();
-            let _tx_status_interval = tx_status_later.clone();
+            let tx_stderr_interval = tx_stderr_later.clone();
+            let tx_status_interval = tx_status_later.clone();
 
             let _ = ctx.run_interval(on_unit_active_sec, move |_act, _ctx| {
+                // clone everything to move into the command thread
                 let cmds_thread = cmds_interval.clone();
+                let commands_thread = commands_interval.clone();
                 let tx_stdout_thread = tx_stdout_interval.clone();
+                let tx_stderr_thread = tx_stderr_interval.clone();
+                let tx_status_thread = tx_status_interval.clone();
 
                 // Run the long running commands in a separate thread
                 let _b = thread::spawn(move || {
                     // Run the commands sequentially
-                    for _cmd in &cmds_thread {
-                        // Simulating a command running
-                        info!("Running 'interval' command");
-                        thread::sleep(Duration::from_secs(5));
-                        let msg = WorkerClientToWorkerSession::into_stdout("test");
-                        if let Err(e) = tx_stdout_thread.send(msg) {
-                            error!("Error running command: {e}");
+                    for cmd_name in &cmds_thread {
+                        if let Some(cmd) = commands_thread.get(cmd_name) {
+                            run_cmd(
+                                cmd_name,
+                                cmd.cmd(),
+                                &tx_stdout_thread,
+                                &tx_stderr_thread,
+                                &tx_status_thread,
+                            );
                         }
                     }
                 });
             });
 
-            // Run the commands sequentially
-            for _cmd in &cmds_later {
-                // Simulating a command running
-                info!("Running 'later' command");
-                thread::sleep(Duration::from_secs(5));
-                let msg = WorkerClientToWorkerSession::into_stdout("test");
-                if let Err(e) = tx_stdout_later.send(msg) {
-                    error!("Error running command: {e}");
+            // Run the long running commands in a separate thread
+            let _b = thread::spawn(move || {
+                // Run the commands sequentially
+                for cmd_name in &cmds_later {
+                    if let Some(cmd) = commands_later.get(cmd_name) {
+                        run_cmd(
+                            cmd_name,
+                            cmd.cmd(),
+                            &tx_stdout_later,
+                            &tx_stderr_later,
+                            &tx_status_later,
+                        );
+                    }
                 }
-            }
+            });
         });
     }
 
-    fn store_realtime(
-        &mut self,
-        _ctx: &mut Context<Worker>,
-        on_calendar: &str,
-        _persistent: bool,
-        cmds: &[String],
-    ) {
-        info!("launching realtime schedule for calendar '{on_calendar}'");
+    fn store_realtime(&mut self, on_calendar: &str, _persistent: bool, cmds: &[String]) {
+        info!("adding realtime schedule for calendar '{on_calendar}'");
         match parse_calendar(on_calendar) {
             Ok(rt) => {
                 let _prev = self.rt.insert(rt, cmds.to_vec());
@@ -400,5 +432,86 @@ impl Handler<WorkerClientToWorkerSession> for Worker {
             Ok(msg_bytes) => self.stdout_queue.push_back(msg_bytes),
             Err(e) => error!("{e}"),
         }
+    }
+}
+
+fn run_cmd(
+    name: &str,
+    command: &str,
+    tx_stdout: &UnboundedSender<WorkerClientToWorkerSession>,
+    tx_stderr: &UnboundedSender<WorkerClientToWorkerSession>,
+    tx_status: &UnboundedSender<WorkerClientToWorkerSession>,
+) {
+    if let Some(shell_path) = env::var_os("SHELL") {
+        let command_id = Uuid::new_v4();
+        info!("Running '{name}'");
+        let shell = shell_path.to_string_lossy().to_string();
+        let mut cmd = std::process::Command::new(shell);
+        let _ = cmd.arg("-c");
+        let _ = cmd.arg(command);
+        let _ = cmd.stdout(Stdio::piped());
+        let _ = cmd.stderr(Stdio::piped());
+
+        if let Ok(mut child) = cmd.spawn() {
+            let _stdout_handle_opt = if let Some(child_stdout) = child.stdout.take() {
+                let tx_stdout = tx_stdout.clone();
+                let stdout_handle = thread::spawn(move || {
+                    let stdout_reader = BufReader::new(child_stdout);
+                    for line in stdout_reader.lines().flatten() {
+                        let stdout_m = WorkerClientToWorkerSession::Stdout {
+                            id: command_id,
+                            line,
+                        };
+                        if let Err(e) = tx_stdout.send(stdout_m) {
+                            error!("{e}");
+                        }
+                    }
+                });
+                Some(stdout_handle)
+            } else {
+                error!("Unable to produce stdout!");
+                None
+            };
+
+            let _stderr_handle_opt = if let Some(child_stderr) = child.stderr.take() {
+                let tx_stderr = tx_stderr.clone();
+                let stderr_handle = thread::spawn(move || {
+                    let stderr_reader = BufReader::new(child_stderr);
+                    for line in stderr_reader.lines().flatten() {
+                        let stderr_m = WorkerClientToWorkerSession::Stderr {
+                            id: command_id,
+                            line,
+                        };
+                        if let Err(e) = tx_stderr.send(stderr_m) {
+                            error!("{e}");
+                        }
+                    }
+                });
+                Some(stderr_handle)
+            } else {
+                error!("Unable to produce stderr!");
+                None
+            };
+
+            match child.wait() {
+                Ok(status) => {
+                    if let Some(code) = status.code() {
+                        info!("command result: {}", code);
+                        let status_msg = WorkerClientToWorkerSession::Status {
+                            id: command_id,
+                            code,
+                        };
+                        if let Err(e) = tx_status.send(status_msg) {
+                            error!("{e}");
+                        }
+                    }
+                }
+                Err(e) => error!("{e}"),
+            }
+        } else {
+            error!("unable to spawn command");
+        }
+    } else {
+        error!("no shell defined!");
     }
 }

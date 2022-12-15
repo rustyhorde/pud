@@ -117,9 +117,9 @@ impl Session {
                         name: self.name.clone(),
                     });
                 }
-                WorkerClientToWorkerSession::Stdout(line) => info!("{line}"),
-                WorkerClientToWorkerSession::Stderr(line) => error!("{line}"),
-                WorkerClientToWorkerSession::Status(status) => info!("status: {status}"),
+                WorkerClientToWorkerSession::Stdout { id: _, line } => info!("{line}"),
+                WorkerClientToWorkerSession::Stderr { id: _, line } => error!("{line}"),
+                WorkerClientToWorkerSession::Status { id: _, code } => info!("status: {code}"),
             },
             Err(e) => error!("{e}"),
         }

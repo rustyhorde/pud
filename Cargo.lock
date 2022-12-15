@@ -1331,6 +1331,7 @@ dependencies = [
  "tokio",
  "tracing",
  "typed-builder",
+ "uuid",
 ]
 
 [[package]]

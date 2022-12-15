@@ -19,11 +19,26 @@ pub enum WorkerClientToWorkerSession {
     /// A text message for a server
     Text(String),
     /// A stdout line from a command
-    Stdout(String),
+    Stdout {
+        /// The command id associated with this line
+        id: Uuid,
+        /// The stdout line
+        line: String,
+    },
     /// A stderr line from a command
-    Stderr(String),
+    Stderr {
+        /// The command id associated with this line
+        id: Uuid,
+        /// The stderr line
+        line: String,
+    },
     /// A status from a command
-    Status(usize),
+    Status {
+        /// The command id associated with this status
+        id: Uuid,
+        /// The status code
+        code: i32,
+    },
     /// An initialization request from a worker
     Initialize,
 }
@@ -34,7 +49,10 @@ impl WorkerClientToWorkerSession {
     where
         T: Into<String>,
     {
-        Self::Stdout(value.into())
+        Self::Stdout {
+            id: Uuid::new_v4(),
+            line: value.into(),
+        }
     }
 
     /// Convert a value into a `WorkerClientToWorkerSession::Stderr` message
@@ -42,7 +60,10 @@ impl WorkerClientToWorkerSession {
     where
         T: Into<String>,
     {
-        Self::Stderr(value.into())
+        Self::Stderr {
+            id: Uuid::new_v4(),
+            line: value.into(),
+        }
     }
 }
 
