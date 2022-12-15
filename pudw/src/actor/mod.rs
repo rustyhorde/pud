@@ -23,7 +23,7 @@ use bincode::{deserialize, serialize};
 use bytes::{Bytes, BytesMut};
 use futures::stream::SplitSink;
 use pudlib::{
-    parse_ts_ping, send_ts_ping, Command, Schedule, ServerToWorkerClient,
+    parse_calendar, parse_ts_ping, send_ts_ping, Command, Schedule, ServerToWorkerClient,
     WorkerClientToWorkerSession,
 };
 use std::{
@@ -232,10 +232,10 @@ impl Worker {
                     cmds,
                 } => self.launch_monotonic(ctx, *on_boot_sec, *on_unit_active_sec, cmds),
                 Schedule::Realtime {
-                    on_calendar: _,
-                    persistent: _,
-                    cmds: _,
-                } => {}
+                    on_calendar,
+                    persistent,
+                    cmds,
+                } => self.launch_realtime(ctx, on_calendar, *persistent, cmds),
             }
         }
     }
@@ -294,6 +294,21 @@ impl Worker {
                 }
             }
         });
+    }
+
+    #[allow(clippy::unused_self)]
+    fn launch_realtime(
+        &mut self,
+        _ctx: &mut Context<Worker>,
+        on_calendar: &str,
+        _persistent: bool,
+        _cmds: &[String],
+    ) {
+        info!("launching realtime schedule for calendar '{on_calendar}'");
+        match parse_calendar(on_calendar) {
+            Ok(_rt) => {}
+            Err(e) => error!("{e}"),
+        }
     }
 }
 

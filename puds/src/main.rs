@@ -147,7 +147,7 @@
 ))]
 // If nightly and unstable, allow `unstable_features`
 #![cfg_attr(all(msrv, feature = "unstable", nightly), allow(unstable_features))]
-// The unstable features
+// The unstable lints
 #![cfg_attr(
     all(msrv, feature = "unstable", nightly),
     deny(

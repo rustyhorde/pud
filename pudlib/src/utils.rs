@@ -8,6 +8,7 @@
 
 // Utilities
 
+use anyhow::Result;
 use bytes::Bytes;
 use std::time::{Duration, Instant};
 
@@ -33,4 +34,15 @@ pub fn send_ts_ping(origin: Instant) -> [u8; 12] {
     ts[0..8].copy_from_slice(&ts1.to_be_bytes());
     ts[8..12].copy_from_slice(&ts2.to_be_bytes());
     ts
+}
+
+#[allow(clippy::mut_mut)]
+pub(crate) fn until_err<T>(err: &mut &mut Result<()>, item: Result<T>) -> Option<T> {
+    match item {
+        Ok(item) => Some(item),
+        Err(e) => {
+            **err = Err(e);
+            None
+        }
+    }
 }
