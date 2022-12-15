@@ -17,7 +17,7 @@ const MINUTES_PER_HOUR: u8 = 60;
 const SECONDS_PER_MINUTE: u8 = 60;
 
 /// The hour for a realtime schedule
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Hour {
     /// Every hour
     All,
@@ -53,7 +53,7 @@ impl From<u8> for Hour {
 }
 
 /// The minute for a realtime schedule
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Minute {
     /// Every minute
     All,
@@ -89,7 +89,7 @@ impl From<u8> for Minute {
 }
 
 /// The seconds for a realtime schedule
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Second {
     /// Every second
     All,

@@ -52,7 +52,7 @@ trait All {
 }
 
 /// A realtime schedule
-#[derive(Clone, Debug, Eq, PartialEq, TypedBuilder)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, TypedBuilder)]
 pub struct Realtime {
     /// The day(s) of the week to run
     #[builder(default = DayOfWeek::All, setter(into))]
@@ -92,8 +92,9 @@ impl Default for Realtime {
 }
 
 impl Realtime {
-    #[allow(dead_code)]
-    pub(crate) fn should_run(&self, now: OffsetDateTime) -> bool {
+    /// Should this schedule run at this time
+    #[must_use]
+    pub fn should_run(&self, now: OffsetDateTime) -> bool {
         self.day_of_week.matches(now.weekday())
             && self.year.matches(now.year())
             && self.month.matches(now.month().into())

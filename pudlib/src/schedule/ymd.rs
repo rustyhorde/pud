@@ -17,7 +17,7 @@ const MONTHS_PER_YEAR: u8 = 12;
 const DAYS_PER_MONTH: u8 = 31;
 
 /// The year for a realtime schedule
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Year {
     /// Every year
     All,
@@ -57,7 +57,7 @@ impl Year {
 }
 
 /// The month for a realtime schedule
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Month {
     /// Every month
     All,
@@ -93,7 +93,7 @@ impl From<u8> for Month {
 }
 
 /// The date for a realtime schedule
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Day {
     /// Every day
     All,

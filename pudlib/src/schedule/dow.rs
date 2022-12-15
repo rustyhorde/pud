@@ -24,7 +24,7 @@ lazy_static! {
 }
 
 /// The day of the week for a realtime schedule
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum DayOfWeek {
     /// Every day of the week
     All,

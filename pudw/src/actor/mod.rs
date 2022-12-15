@@ -15,6 +15,7 @@ use actix::{
 use actix_codec::Framed;
 use actix_http::ws::{CloseReason, Item};
 use awc::{
+    cookie::time::OffsetDateTime,
     error::WsProtocolError,
     ws::{Codec, Frame, Message},
     BoxedSocket,
@@ -23,11 +24,11 @@ use bincode::{deserialize, serialize};
 use bytes::{Bytes, BytesMut};
 use futures::stream::SplitSink;
 use pudlib::{
-    parse_calendar, parse_ts_ping, send_ts_ping, Command, Schedule, ServerToWorkerClient,
+    parse_calendar, parse_ts_ping, send_ts_ping, Command, Realtime, Schedule, ServerToWorkerClient,
     WorkerClientToWorkerSession,
 };
 use std::{
-    collections::{BTreeMap, VecDeque},
+    collections::{BTreeMap, HashMap, VecDeque},
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
@@ -81,6 +82,9 @@ pub(crate) struct Worker {
     // The schedules for the commands
     #[builder(default = Vec::new())]
     schedules: Vec<Schedule>,
+    // The realtime schedules
+    #[builder(default = HashMap::new())]
+    rt: HashMap<Realtime, Vec<String>>,
 }
 
 impl Worker {
@@ -115,8 +119,21 @@ impl Worker {
     }
 
     #[allow(clippy::unused_self)]
+    fn start_rt_monitor(&self, ctx: &mut Context<Self>) {
+        info!("starting realtime schedule monitor");
+        let _ = ctx.run_interval(Duration::from_secs(1), move |act, _ctx| {
+            let now = OffsetDateTime::now_utc();
+            for (rt, cmds) in &act.rt {
+                if rt.should_run(now) {
+                    info!("running realtime schedule: {}", cmds.len());
+                }
+            }
+        });
+    }
+
+    #[allow(clippy::unused_self)]
     fn queue_monitor(&self, ctx: &mut Context<Self>) {
-        let _ = ctx.run_interval(Duration::from_secs(2), move |act, ctx| {
+        let _ = ctx.run_interval(Duration::from_secs(10), move |act, ctx| {
             if !act.stdout_queue.is_empty() && !act.queue_running.load(Ordering::SeqCst) {
                 info!("Starting stdout queue drain");
                 act.queue_running.store(true, Ordering::SeqCst);
@@ -224,6 +241,8 @@ impl Worker {
 
     fn start_schedules(&mut self, ctx: &mut Context<Self>) {
         let schedules_c = self.schedules.clone();
+        let mut has_realtime = false;
+
         for schedule in &schedules_c {
             match schedule {
                 Schedule::Monotonic {
@@ -235,8 +254,15 @@ impl Worker {
                     on_calendar,
                     persistent,
                     cmds,
-                } => self.launch_realtime(ctx, on_calendar, *persistent, cmds),
+                } => {
+                    has_realtime = true;
+                    self.store_realtime(ctx, on_calendar, *persistent, cmds);
+                }
             }
+        }
+
+        if has_realtime {
+            self.start_rt_monitor(ctx);
         }
     }
 
@@ -296,17 +322,18 @@ impl Worker {
         });
     }
 
-    #[allow(clippy::unused_self)]
-    fn launch_realtime(
+    fn store_realtime(
         &mut self,
         _ctx: &mut Context<Worker>,
         on_calendar: &str,
         _persistent: bool,
-        _cmds: &[String],
+        cmds: &[String],
     ) {
         info!("launching realtime schedule for calendar '{on_calendar}'");
         match parse_calendar(on_calendar) {
-            Ok(_rt) => {}
+            Ok(rt) => {
+                let _prev = self.rt.insert(rt, cmds.to_vec());
+            }
             Err(e) => error!("{e}"),
         }
     }
