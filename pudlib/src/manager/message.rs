@@ -11,16 +11,10 @@
 use actix::Message;
 use serde::{Deserialize, Serialize};
 
-/// A message for a manager
-#[derive(Clone, Debug, Deserialize, Message, Serialize)]
+/// A message from a manger client to a manager session
+#[derive(Clone, Copy, Debug, Deserialize, Message, Serialize)]
 #[rtype(result = "()")]
-pub enum ServerToManagerClient {
-    /// A status message for a manager
-    Status(String),
-}
-
-impl From<String> for ServerToManagerClient {
-    fn from(value: String) -> Self {
-        Self::Status(value)
-    }
+pub enum ManagerClientToManagerSession {
+    /// An initialization request from a manager
+    Initialize,
 }

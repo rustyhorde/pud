@@ -8,6 +8,8 @@
 
 // configuration structs
 
+use std::path::PathBuf;
+
 use crate::error::Error;
 use getset::{Getters, Setters};
 use pudlib::{LogConfig, Verbosity};
@@ -23,6 +25,7 @@ pub(crate) struct Config {
     quiet: u8,
     #[getset(set = "pub")]
     verbose: u8,
+    path: PathBuf,
     target: bool,
     thread_id: bool,
     thread_names: bool,
@@ -51,6 +54,11 @@ impl Verbosity for Config {
 
     fn set_verbose(&mut self, verbose: u8) -> &mut Self {
         self.verbose = verbose;
+        self
+    }
+
+    fn set_config_file_path(&mut self, config_file_path: PathBuf) -> &mut Self {
+        self.path = config_file_path;
         self
     }
 }
@@ -112,6 +120,7 @@ impl TryFrom<TomlConfig> for Config {
         Ok(Config {
             verbose: 0,
             quiet: 0,
+            path: PathBuf::new(),
             target,
             thread_id,
             thread_names,

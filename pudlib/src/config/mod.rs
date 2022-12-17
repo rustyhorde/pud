@@ -27,6 +27,8 @@ pub trait Verbosity {
     fn set_quiet(&mut self, quiet: u8) -> &mut Self;
     /// Set the level of verbose.
     fn set_verbose(&mut self, verbose: u8) -> &mut Self;
+    /// Set the path to this config
+    fn set_config_file_path(&mut self, config_file_path: PathBuf) -> &mut Self;
 }
 
 /// The binary we are configuring
@@ -104,11 +106,36 @@ where
     let path = config_file_path.clone();
     let ctx = |msg: &'static str| -> String { format!("{msg} {}", path.display()) };
     // Read the config file
-    let config_file = read_config_file(config_file_path, ctx)?;
+    let config_file = read_config_file(&config_file_path, ctx)?;
     // Parse the config file
     let config: T = toml::from_str(&config_file).with_context(|| ctx(UNABLE))?;
     // Convert the toml config to base config
-    transform(config, *args.verbose(), *args.quiet())
+    transform(config, config_file_path, *args.verbose(), *args.quiet())
+}
+
+/// Reload configuration at the given path
+///
+/// # Errors
+/// * I/O error if the default config path cannot be determined (via `dirs2`)
+/// * I/O error if the file cannot be read
+/// * TOML parse errors
+/// * `std::from::TryFrom` error if the TOML cannot be converted to the final config.
+///
+pub fn reload<T, U>(path: PathBuf, verbose: u8, quiet: u8) -> Result<U>
+where
+    T: DeserializeOwned,
+    U: TryFrom<T> + Verbosity,
+    <U as TryFrom<T>>::Error: std::error::Error + Sync + Send + 'static,
+{
+    // Setup error handling
+    let path_c = path.clone();
+    let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
+    // Read the config file
+    let config_file = read_config_file(&path, ctx)?;
+    // Parse the config file
+    let config: T = toml::from_str(&config_file).with_context(|| ctx(UNABLE))?;
+    // Convert the toml config to base config
+    transform(config, path, verbose, quiet)
 }
 
 fn config_file_path(args: &Cli, defaults: Defaults) -> Result<PathBuf> {
@@ -130,7 +157,7 @@ fn to_path_buf(path: &String) -> Result<PathBuf> {
     Ok(PathBuf::from(path))
 }
 
-fn read_config_file<F>(config_file_path: PathBuf, ctx: F) -> Result<String>
+fn read_config_file<F>(config_file_path: &PathBuf, ctx: F) -> Result<String>
 where
     F: FnOnce(&'static str) -> String + Copy,
 {
@@ -140,7 +167,7 @@ where
     Ok(buf)
 }
 
-fn transform<T, U>(config: T, verbose: u8, quiet: u8) -> Result<U>
+fn transform<T, U>(config: T, config_file_path: PathBuf, verbose: u8, quiet: u8) -> Result<U>
 where
     U: TryFrom<T> + Verbosity,
     <U as TryFrom<T>>::Error: std::error::Error + Sync + Send + 'static,
@@ -148,6 +175,7 @@ where
     let mut config: U = U::try_from(config)?;
     let _ = config.set_verbose(verbose);
     let _ = config.set_quiet(quiet);
+    let _ = config.set_config_file_path(config_file_path);
     Ok(config)
 }
 
@@ -186,6 +214,7 @@ mod test {
         quiet: u8,
         verbose: u8,
         workers: u8,
+        path: PathBuf,
     }
 
     impl Verbosity for Config {
@@ -196,6 +225,11 @@ mod test {
 
         fn set_verbose(&mut self, verbose: u8) -> &mut Self {
             self.verbose = verbose;
+            self
+        }
+
+        fn set_config_file_path(&mut self, config_file_path: PathBuf) -> &mut Self {
+            self.path = config_file_path;
             self
         }
     }
@@ -209,6 +243,7 @@ mod test {
                 verbose: 0,
                 quiet: 0,
                 workers,
+                path: PathBuf::new(),
             })
         }
     }
@@ -254,7 +289,7 @@ workers = 8
         let path = config_file_path(&args, defaults)?;
         let path_c = path.clone();
         let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
-        let file_contents = read_config_file(path, &ctx)?;
+        let file_contents = read_config_file(&path, &ctx)?;
         for (actual, expected) in file_contents.lines().zip(TEST_CONFIG.lines()) {
             assert_eq!(actual, expected);
         }
@@ -268,7 +303,7 @@ workers = 8
         let path = config_file_path(&args, defaults)?;
         let path_c = path.clone();
         let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
-        match read_config_file(path, &ctx) {
+        match read_config_file(&path, &ctx) {
             Ok(_) => Err(anyhow!("This config file shouldn't exist!")),
             Err(e) => {
                 assert_eq!(format!("{e:?}"), BAD_CONFIG_ERROR);

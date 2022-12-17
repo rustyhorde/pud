@@ -13,7 +13,7 @@ use crate::{
         message::{Connect as ManagerConnect, Disconnect as ManagerDisconnect},
         Manager,
     },
-    model::config::Config,
+    model::config::{Config, TomlConfig},
     worker::{
         message::{Connect as WorkerConnect, Disconnect as WorkerDisconnect},
         Worker,
@@ -21,7 +21,10 @@ use crate::{
 };
 use actix::{Actor, Context, Handler, MessageResult};
 use getset::Getters;
-use pudlib::{Schedules, ServerToManagerClient, ServerToWorkerClient, WorkerSessionToServer};
+use pudlib::{
+    reload, ManagerSessionToServer, Schedules, ServerToManagerClient, ServerToWorkerClient,
+    WorkerSessionToServer,
+};
 use std::{
     collections::HashMap,
     sync::{
@@ -221,6 +224,29 @@ impl Handler<WorkerSessionToServer> for Server {
                     ServerToWorkerClient::Initialize(commands, schedule),
                     &id,
                 );
+            }
+        }
+    }
+}
+
+impl Handler<ManagerSessionToServer> for Server {
+    type Result = ();
+
+    fn handle(&mut self, msg: ManagerSessionToServer, _: &mut Context<Self>) {
+        debug!("handling message from a manager session");
+
+        match msg {
+            ManagerSessionToServer::Initialize { id: _, name: _ } => todo!(),
+            ManagerSessionToServer::Reload => {
+                let path = self.config.path();
+                let quiet = self.config.quiet();
+                let verbose = self.config.verbose();
+
+                if let Ok(config) = reload::<TomlConfig, Config>(path.clone(), *quiet, *verbose) {
+                    self.config = config;
+                }
+
+                // TODO: Broadcast message to all workers and managers
             }
         }
     }

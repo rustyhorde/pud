@@ -8,64 +8,11 @@
 
 // Actix messages for a server
 
+use crate::{Command, Schedule};
 use actix::Message;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use uuid::Uuid;
-
-/// A message from a worker client to a worker session
-#[derive(Clone, Debug, Deserialize, Message, Serialize)]
-#[rtype(result = "()")]
-pub enum WorkerClientToWorkerSession {
-    /// A text message for a server
-    Text(String),
-    /// A stdout line from a command
-    Stdout {
-        /// The command id associated with this line
-        id: Uuid,
-        /// The stdout line
-        line: String,
-    },
-    /// A stderr line from a command
-    Stderr {
-        /// The command id associated with this line
-        id: Uuid,
-        /// The stderr line
-        line: String,
-    },
-    /// A status from a command
-    Status {
-        /// The command id associated with this status
-        id: Uuid,
-        /// The status code
-        code: i32,
-    },
-    /// An initialization request from a worker
-    Initialize,
-}
-
-impl WorkerClientToWorkerSession {
-    /// Convert a value into a `WorkerClientToWorkerSession::Stdout` message
-    pub fn into_stdout<T>(value: T) -> Self
-    where
-        T: Into<String>,
-    {
-        Self::Stdout {
-            id: Uuid::new_v4(),
-            line: value.into(),
-        }
-    }
-
-    /// Convert a value into a `WorkerClientToWorkerSession::Stderr` message
-    pub fn into_stderr<T>(value: T) -> Self
-    where
-        T: Into<String>,
-    {
-        Self::Stderr {
-            id: Uuid::new_v4(),
-            line: value.into(),
-        }
-    }
-}
 
 /// A message from a worker session to the server actor
 #[derive(Clone, Debug, Deserialize, Message, Serialize)]
@@ -78,4 +25,49 @@ pub enum WorkerSessionToServer {
         /// The name of the worker client
         name: String,
     },
+}
+
+/// A message from a server to a worker client
+#[derive(Clone, Debug, Deserialize, Message, Serialize)]
+#[rtype(result = "()")]
+pub enum ServerToWorkerClient {
+    /// A status message for a worker
+    Status(String),
+    /// initialize response for a worker
+    Initialize(BTreeMap<String, Command>, Vec<Schedule>),
+}
+
+impl From<String> for ServerToWorkerClient {
+    fn from(value: String) -> Self {
+        Self::Status(value)
+    }
+}
+
+/// A message from a manager session to the server actor
+#[derive(Clone, Debug, Deserialize, Message, Serialize)]
+#[rtype(result = "()")]
+pub enum ManagerSessionToServer {
+    /// An initialization request from the manager client
+    Initialize {
+        /// The id of the worker client
+        id: Uuid,
+        /// The name of the worker client
+        name: String,
+    },
+    /// Reload the server configuration
+    Reload,
+}
+
+/// A message for a manager
+#[derive(Clone, Debug, Deserialize, Message, Serialize)]
+#[rtype(result = "()")]
+pub enum ServerToManagerClient {
+    /// A status message for a manager
+    Status(String),
+}
+
+impl From<String> for ServerToManagerClient {
+    fn from(value: String) -> Self {
+        Self::Status(value)
+    }
 }

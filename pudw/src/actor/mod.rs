@@ -89,6 +89,9 @@ pub(crate) struct Worker {
     // The realtime schedules
     #[builder(default = HashMap::new())]
     rt: HashMap<Realtime, Vec<String>>,
+    // Current futures handles
+    #[builder(default = Vec::new())]
+    fut_handles: Vec<SpawnHandle>,
 }
 
 impl Worker {
@@ -122,10 +125,9 @@ impl Worker {
         });
     }
 
-    #[allow(clippy::unused_self)]
-    fn start_rt_monitor(&self, ctx: &mut Context<Self>) {
+    fn start_rt_monitor(&mut self, ctx: &mut Context<Self>) {
         info!("starting realtime schedule monitor");
-        let _ = ctx.run_interval(Duration::from_secs(1), move |act, _ctx| {
+        let rt_handle = ctx.run_interval(Duration::from_secs(1), move |act, _ctx| {
             let now = OffsetDateTime::now_utc();
             for (rt, cmds) in &act.rt {
                 if rt.should_run(now) {
@@ -153,11 +155,11 @@ impl Worker {
                 }
             }
         });
+        self.fut_handles.push(rt_handle);
     }
 
-    #[allow(clippy::unused_self)]
-    fn queue_monitor(&self, ctx: &mut Context<Self>) {
-        let _ = ctx.run_interval(Duration::from_secs(2), move |act, ctx| {
+    fn queue_monitor(&mut self, ctx: &mut Context<Self>) {
+        let queue_handle = ctx.run_interval(Duration::from_secs(2), move |act, ctx| {
             if !act.stdout_queue.is_empty() && !act.queue_running.load(Ordering::SeqCst) {
                 debug!("Starting stdout queue drain");
                 act.queue_running.store(true, Ordering::SeqCst);
@@ -185,6 +187,7 @@ impl Worker {
                 }
             }
         });
+        self.fut_handles.push(queue_handle);
     }
 
     fn start_stdout_drain(ctx: &mut Context<Self>) -> SpawnHandle {
@@ -309,7 +312,7 @@ impl Worker {
         let tx_stderr_later = self.tx_stderr.clone();
         let tx_status_later = self.tx_status.clone();
 
-        let _ = ctx.run_later(on_boot_sec, move |_act, ctx| {
+        let later_handle = ctx.run_later(on_boot_sec, move |act, ctx| {
             // clone everything to move into the interval future
             let cmds_interval = cmds_later.clone();
             let commands_interval = commands_later.clone();
@@ -317,7 +320,7 @@ impl Worker {
             let tx_stderr_interval = tx_stderr_later.clone();
             let tx_status_interval = tx_status_later.clone();
 
-            let _ = ctx.run_interval(on_unit_active_sec, move |_act, _ctx| {
+            let mono_handle = ctx.run_interval(on_unit_active_sec, move |_act, _ctx| {
                 // clone everything to move into the command thread
                 let cmds_thread = cmds_interval.clone();
                 let commands_thread = commands_interval.clone();
@@ -342,6 +345,8 @@ impl Worker {
                 });
             });
 
+            act.fut_handles.push(mono_handle);
+
             // Run the long running commands in a separate thread
             let _b = thread::spawn(move || {
                 // Run the commands sequentially
@@ -358,6 +363,8 @@ impl Worker {
                 }
             });
         });
+
+        self.fut_handles.push(later_handle);
     }
 
     fn store_realtime(&mut self, on_calendar: &str, _persistent: bool, cmds: &[String]) {
