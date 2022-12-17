@@ -64,6 +64,8 @@ pub enum ManagerSessionToServer {
 pub enum ServerToManagerClient {
     /// A status message for a manager
     Status(String),
+    /// initialize response for a manager
+    Initialize,
 }
 
 impl From<String> for ServerToManagerClient {

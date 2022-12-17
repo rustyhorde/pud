@@ -22,6 +22,10 @@ pub(crate) const CONFIG_FILE_NAME_PUDS: &str = concatcp!(CONFIG_FILE_BASE_PATH_P
 pub(crate) const CONFIG_FILE_BASE_PATH_PUDW: &str = "pudw";
 /// The configuration file base name for pudw
 pub(crate) const CONFIG_FILE_NAME_PUDW: &str = concatcp!(CONFIG_FILE_BASE_PATH_PUDW, ".toml");
+/// The configuration file base path for pudcli
+pub(crate) const CONFIG_FILE_BASE_PATH_PUDCLI: &str = "pudcli";
+/// The configuration file base name for pudcli
+pub(crate) const CONFIG_FILE_NAME_PUDCLI: &str = concatcp!(CONFIG_FILE_BASE_PATH_PUDCLI, ".toml");
 #[cfg(test)]
 /// The configuration file base path for test
 pub(crate) const CONFIG_FILE_BASE_PATH_TEST: &str = "pudw";

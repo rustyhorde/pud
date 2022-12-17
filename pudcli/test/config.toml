@@ -1,0 +1,13 @@
+name = "vader"
+retry_count = 10
+
+[actix]
+ip = "localhost.ozias.net"
+port = 32276
+
+# tracing configuration
+[tracing]
+target = false
+thread_id = false
+thread_names = false
+line_numbers = false

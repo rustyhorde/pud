@@ -10,8 +10,9 @@
 
 use crate::{
     constants::{
-        CONFIG_FILE_BASE_PATH_PUDS, CONFIG_FILE_BASE_PATH_PUDW, CONFIG_FILE_NAME_PUDS,
-        CONFIG_FILE_NAME_PUDW, FILE_OPEN, READ, UNABLE,
+        CONFIG_FILE_BASE_PATH_PUDCLI, CONFIG_FILE_BASE_PATH_PUDS, CONFIG_FILE_BASE_PATH_PUDW,
+        CONFIG_FILE_NAME_PUDCLI, CONFIG_FILE_NAME_PUDS, CONFIG_FILE_NAME_PUDW, FILE_OPEN, READ,
+        UNABLE,
     },
     error::Error::ConfigDir,
     Cli,
@@ -38,6 +39,8 @@ pub enum PudxBinary {
     Puds,
     /// The pud worker binary
     Pudw,
+    /// The pud command line binary
+    Pudcli,
     #[cfg(test)]
     /// A test binary
     Test,
@@ -65,6 +68,13 @@ impl Defaults {
         Defaults {
             default_base_path: CONFIG_FILE_BASE_PATH_PUDW,
             default_file_name: CONFIG_FILE_NAME_PUDW,
+        }
+    }
+
+    pub(crate) fn pudcli_defaults() -> Self {
+        Defaults {
+            default_base_path: CONFIG_FILE_BASE_PATH_PUDCLI,
+            default_file_name: CONFIG_FILE_NAME_PUDCLI,
         }
     }
 
@@ -97,6 +107,7 @@ where
     let defaults = match binary {
         PudxBinary::Puds => Defaults::puds_defaults(),
         PudxBinary::Pudw => Defaults::pudw_defaults(),
+        PudxBinary::Pudcli => Defaults::pudcli_defaults(),
         #[cfg(test)]
         PudxBinary::Test => Defaults::test_defaults(),
     };

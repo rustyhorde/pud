@@ -8,12 +8,11 @@
 
 // configuration structs
 
-use std::path::PathBuf;
-
 use crate::error::Error;
 use getset::{Getters, Setters};
 use pudlib::{LogConfig, Verbosity};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use tracing::Level;
 
 /// The configuration

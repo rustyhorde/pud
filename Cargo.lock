@@ -1253,6 +1253,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "pudcli"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-codec",
+ "actix-http",
+ "actix-rt",
+ "anyhow",
+ "awc",
+ "bincode",
+ "bytes",
+ "clap",
+ "futures",
+ "getset",
+ "pudlib",
+ "rustversion",
+ "serde",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "typed-builder",
+ "vergen",
+]
+
+[[package]]
 name = "pudlib"
 version = "0.1.0"
 dependencies = [
