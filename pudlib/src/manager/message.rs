@@ -17,4 +17,6 @@ use serde::{Deserialize, Serialize};
 pub enum ManagerClientToManagerSession {
     /// An initialization request from a manager
     Initialize,
+    /// A reload request from a manager
+    Reload,
 }

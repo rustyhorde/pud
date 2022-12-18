@@ -32,7 +32,7 @@ use std::{
         Arc,
     },
 };
-use tracing::{debug, error};
+use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -236,17 +236,22 @@ impl Handler<ManagerSessionToServer> for Server {
         debug!("handling message from a manager session");
 
         match msg {
-            ManagerSessionToServer::Initialize { id: _, name: _ } => todo!(),
-            ManagerSessionToServer::Reload => {
+            ManagerSessionToServer::Initialize { id, name: _ } => {
+                self.direct_manager_message(ServerToManagerClient::Initialize, &id);
+            }
+            ManagerSessionToServer::Reload(id) => {
                 let path = self.config.path();
                 let quiet = self.config.quiet();
                 let verbose = self.config.verbose();
 
                 if let Ok(config) = reload::<TomlConfig, Config>(path.clone(), *quiet, *verbose) {
+                    info!("server configuration reloaded");
                     self.config = config;
                 }
 
                 // TODO: Broadcast message to all workers and managers
+                self.direct_manager_message(ServerToManagerClient::Reload(true), &id);
+                self.broadcast_workers_message(&ServerToWorkerClient::Reload, &None);
             }
         }
     }

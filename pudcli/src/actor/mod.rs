@@ -52,6 +52,8 @@ pub(crate) struct CommandLine {
     tx_stderr: UnboundedSender<ManagerClientToManagerSession>,
     // the sender for a command status
     tx_status: UnboundedSender<ManagerClientToManagerSession>,
+    // the command to run on the server
+    command_to_run: ManagerClientToManagerSession,
     // handle to the stdout queue future
     #[builder(default = Arc::new(Mutex::new(None)))]
     stdout_handle: Arc<Mutex<Option<SpawnHandle>>>,
@@ -113,12 +115,27 @@ impl CommandLine {
     }
 
     #[allow(clippy::unused_self)]
-    fn handle_binary(&mut self, _ctx: &mut Context<Self>, bytes: &Bytes) {
+    fn handle_binary(&mut self, ctx: &mut Context<Self>, bytes: &Bytes) {
         if let Ok(msg) = deserialize::<ServerToManagerClient>(bytes) {
             match msg {
                 ServerToManagerClient::Status(status) => info!("Status: {status}"),
                 ServerToManagerClient::Initialize => {
                     info!("command line initialization complete");
+                    // request reload from the server
+                    if let Ok(init) = serialize(&ManagerClientToManagerSession::Reload) {
+                        if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
+                            error!("Unable to send reload message");
+                        }
+                    } else {
+                        error!("Unable to serialize reload message");
+                    }
+                }
+                ServerToManagerClient::Reload(result) => {
+                    info!(
+                        "reload was a {}",
+                        if result { "success" } else { "failure" }
+                    );
+                    ctx.stop();
                 }
             }
         }

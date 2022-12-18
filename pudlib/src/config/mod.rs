@@ -15,7 +15,6 @@ use crate::{
         UNABLE,
     },
     error::Error::ConfigDir,
-    Cli,
 };
 use anyhow::{Context, Result};
 use getset::CopyGetters;
@@ -97,7 +96,7 @@ impl Defaults {
 /// * TOML parse errors
 /// * `std::from::TryFrom` error if the TOML cannot be converted to the final config.
 ///
-pub fn load<T, U>(args: &Cli, binary: PudxBinary) -> Result<U>
+pub fn load<T, U>(path: &Option<String>, verbose: u8, quiet: u8, binary: PudxBinary) -> Result<U>
 where
     T: DeserializeOwned,
     U: TryFrom<T> + Verbosity,
@@ -112,7 +111,7 @@ where
         PudxBinary::Test => Defaults::test_defaults(),
     };
     // Determine the configuration file path
-    let config_file_path = config_file_path(args, defaults)?;
+    let config_file_path = config_file_path(path, defaults)?;
     // Setup error handling
     let path = config_file_path.clone();
     let ctx = |msg: &'static str| -> String { format!("{msg} {}", path.display()) };
@@ -121,7 +120,7 @@ where
     // Parse the config file
     let config: T = toml::from_str(&config_file).with_context(|| ctx(UNABLE))?;
     // Convert the toml config to base config
-    transform(config, config_file_path, *args.verbose(), *args.quiet())
+    transform(config, config_file_path, verbose, quiet)
 }
 
 /// Reload configuration at the given path
@@ -149,9 +148,9 @@ where
     transform(config, path, verbose, quiet)
 }
 
-fn config_file_path(args: &Cli, defaults: Defaults) -> Result<PathBuf> {
+fn config_file_path(config_file_path: &Option<String>, defaults: Defaults) -> Result<PathBuf> {
     let default_fn = || -> Result<PathBuf> { default_config_file_path(defaults) };
-    args.config_file_path()
+    config_file_path
         .as_ref()
         .map_or_else(default_fn, to_path_buf)
 }
@@ -278,7 +277,7 @@ workers = 8
     fn config_file_path_is_default() -> Result<()> {
         let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME")])?;
         let defaults = Defaults::test_defaults();
-        let path = config_file_path(&args, defaults)?;
+        let path = config_file_path(args.config_file_path(), defaults)?;
         assert_eq!(path, default_config_file_path(defaults)?);
         Ok(())
     }
@@ -287,7 +286,7 @@ workers = 8
     fn config_file_path_is_set() -> Result<()> {
         let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let defaults = Defaults::test_defaults();
-        let path = config_file_path(&args, defaults)?;
+        let path = config_file_path(args.config_file_path(), defaults)?;
         let expected = PathBuf::from(TEST_PATH);
         assert_eq!(path, expected);
         Ok(())
@@ -297,7 +296,7 @@ workers = 8
     fn read_config_works() -> Result<()> {
         let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let defaults = Defaults::test_defaults();
-        let path = config_file_path(&args, defaults)?;
+        let path = config_file_path(args.config_file_path(), defaults)?;
         let path_c = path.clone();
         let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
         let file_contents = read_config_file(&path, &ctx)?;
@@ -311,7 +310,7 @@ workers = 8
     fn read_config_fails() -> Result<()> {
         let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", BAD_PATH])?;
         let defaults = Defaults::test_defaults();
-        let path = config_file_path(&args, defaults)?;
+        let path = config_file_path(args.config_file_path(), defaults)?;
         let path_c = path.clone();
         let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
         match read_config_file(&path, &ctx) {
@@ -326,7 +325,12 @@ workers = 8
     #[test]
     fn parse_config_fails() -> Result<()> {
         let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", BAD_TOML_TEST_PATH])?;
-        match load::<TomlConfig, Config>(&args, PudxBinary::Test) {
+        match load::<TomlConfig, Config>(
+            args.config_file_path(),
+            *args.verbose(),
+            *args.quiet(),
+            PudxBinary::Test,
+        ) {
             Ok(_) => Err(anyhow!("This load should fail!")),
             Err(e) => {
                 assert_eq!(format!("{e:?}"), BAD_PARSE_ERROR);
@@ -339,7 +343,12 @@ workers = 8
     fn bad_config_workers_fails() -> Result<()> {
         let args =
             Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", BAD_WORKERS_TOML_TEST_PATH])?;
-        match load::<TomlConfig, Config>(&args, PudxBinary::Test) {
+        match load::<TomlConfig, Config>(
+            args.config_file_path(),
+            *args.verbose(),
+            *args.quiet(),
+            PudxBinary::Test,
+        ) {
             Ok(_) => Err(anyhow!("This load should fail!")),
             Err(e) => {
                 assert_eq!(format!("{e:?}"), BAD_WORKERS_PARSE_ERROR);

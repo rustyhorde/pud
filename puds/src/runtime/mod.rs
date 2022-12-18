@@ -56,7 +56,12 @@ where
     };
 
     // Load the configuration
-    let mut config = load::<TomlConfig, Config>(&args, PudxBinary::Puds)?;
+    let mut config = load::<TomlConfig, Config>(
+        args.config_file_path(),
+        *args.verbose(),
+        *args.quiet(),
+        PudxBinary::Puds,
+    )?;
 
     // Setup logging
     initialize(&mut config)?;

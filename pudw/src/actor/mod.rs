@@ -219,6 +219,9 @@ impl Worker {
                     info!("worker initialization complete");
                     self.start_schedules(ctx);
                 }
+                ServerToWorkerClient::Reload => {
+                    info!("a reload has been requested, sending initialization");
+                }
             }
         }
     }

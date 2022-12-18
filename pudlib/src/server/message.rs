@@ -35,6 +35,8 @@ pub enum ServerToWorkerClient {
     Status(String),
     /// initialize response for a worker
     Initialize(BTreeMap<String, Command>, Vec<Schedule>),
+    /// A reload has been requested, worker should re-initialize
+    Reload,
 }
 
 impl From<String> for ServerToWorkerClient {
@@ -55,10 +57,11 @@ pub enum ManagerSessionToServer {
         name: String,
     },
     /// Reload the server configuration
-    Reload,
+    Reload(Uuid),
 }
 
 /// A message for a manager
+#[allow(variant_size_differences)]
 #[derive(Clone, Debug, Deserialize, Message, Serialize)]
 #[rtype(result = "()")]
 pub enum ServerToManagerClient {
@@ -66,6 +69,8 @@ pub enum ServerToManagerClient {
     Status(String),
     /// initialize response for a manager
     Initialize,
+    /// Reload status
+    Reload(bool),
 }
 
 impl From<String> for ServerToManagerClient {

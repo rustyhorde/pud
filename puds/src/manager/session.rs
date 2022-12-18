@@ -19,9 +19,12 @@ use actix::{
 use actix_http::ws::{CloseReason, Item};
 use actix_web::web::{Bytes, BytesMut};
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
-use bincode::serialize;
+use bincode::{deserialize, serialize};
 use bytestring::ByteString;
-use pudlib::{parse_ts_ping, send_ts_ping, ServerToManagerClient};
+use pudlib::{
+    parse_ts_ping, send_ts_ping, ManagerClientToManagerSession, ManagerSessionToServer,
+    ServerToManagerClient,
+};
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
@@ -106,7 +109,21 @@ impl Session {
     fn handle_binary(&mut self, bytes: &Bytes) {
         debug!("handling binary message");
         self.hb = Instant::now();
-        let _bytes_vec = bytes.to_vec();
+        let bytes_vec = bytes.to_vec();
+        match deserialize::<ManagerClientToManagerSession>(&bytes_vec) {
+            Ok(message) => match message {
+                ManagerClientToManagerSession::Reload => {
+                    self.addr.do_send(ManagerSessionToServer::Reload(self.id));
+                }
+                ManagerClientToManagerSession::Initialize => {
+                    self.addr.do_send(ManagerSessionToServer::Initialize {
+                        id: self.id,
+                        name: self.name.clone(),
+                    });
+                }
+            },
+            Err(e) => error!("{e}"),
+        }
     }
 
     #[allow(clippy::unused_self)]
