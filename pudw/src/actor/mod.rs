@@ -569,7 +569,7 @@ fn run_cmd(
                             cvar.wait_timeout(running, Duration::from_millis(500))
                         {
                             if wt_res.timed_out() {
-                                info!("timed out waiting on cvar, checking running flag");
+                                debug!("timed out waiting on cvar, checking running flag");
                             }
                             // If we aren't in a running state, try to kill the child process
                             if !(*res) {
