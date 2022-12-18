@@ -13,9 +13,6 @@ repository = "https://github.com/rustyhorde/pud"
 resolver = "2"
 version = "0.1.0"
 
-[features]
-unstable = []
-
 [dependencies]
 actix = "0.13.0"
 actix-codec = "0.5.0"

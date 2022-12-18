@@ -34,9 +34,6 @@ tracing-actix-web = "0.6.2"
 typed-builder = "0.11.0"
 uuid = { version = "1.2.2", features = ["v4", "serde"] }
 
-[features]
-unstable = []
-
 [build-dependencies]
 anyhow = "1.0.66"
 rustversion = "1.0.9"

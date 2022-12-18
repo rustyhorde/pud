@@ -34,7 +34,7 @@ use std::{
     process::Stdio,
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc, Mutex,
+        Arc, Condvar, Mutex,
     },
     thread,
     time::{Duration, Instant},
@@ -92,6 +92,9 @@ pub(crate) struct Worker {
     // Current futures handles
     #[builder(default = Vec::new())]
     fut_handles: Vec<SpawnHandle>,
+    // Running condvar for stopping child process
+    #[builder(default = Arc::new((Mutex::new(false), Condvar::new())))]
+    running_pair: Arc<(Mutex<bool>, Condvar)>,
 }
 
 impl Worker {
@@ -136,6 +139,7 @@ impl Worker {
                     let tx_stdout_thread = act.tx_stdout.clone();
                     let tx_stderr_thread = act.tx_stderr.clone();
                     let tx_status_thread = act.tx_status.clone();
+                    let running_pair_c = act.running_pair.clone();
 
                     // Run the long running commands in a separate thread
                     let _b = thread::spawn(move || {
@@ -145,6 +149,7 @@ impl Worker {
                                 run_cmd(
                                     cmd_name,
                                     cmd.cmd(),
+                                    &running_pair_c,
                                     &tx_stdout_thread,
                                     &tx_stderr_thread,
                                     &tx_status_thread,
@@ -218,9 +223,19 @@ impl Worker {
                     info!("worker loaded {} schedules", self.schedules.len());
                     info!("worker initialization complete");
                     self.start_schedules(ctx);
+                    // initialize the condvar pair
+                    let (lock, _cvar) = &*self.running_pair;
+                    let mut running = match lock.lock() {
+                        Ok(guard) => guard,
+                        Err(poisoned) => poisoned.into_inner(),
+                    };
+                    *running = true;
                 }
                 ServerToWorkerClient::Reload => {
                     info!("a reload has been requested, sending initialization");
+                    self.stop_schedules(ctx);
+                    // request initialization from the server
+                    self.request_initialization();
                 }
             }
         }
@@ -269,6 +284,23 @@ impl Worker {
         }
     }
 
+    fn stop_schedules(&mut self, ctx: &mut Context<Self>) {
+        let (lock, cvar) = &*self.running_pair;
+        let mut running = match lock.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        *running = false;
+        cvar.notify_all();
+
+        while let Some(handle) = self.fut_handles.pop() {
+            if ctx.cancel_future(handle) {
+                info!("future cancelled successfully");
+            }
+        }
+        self.rt.clear();
+    }
+
     fn start_schedules(&mut self, ctx: &mut Context<Self>) {
         let schedules_c = self.schedules.clone();
         let mut has_realtime = false;
@@ -314,22 +346,21 @@ impl Worker {
         let tx_stdout_later = self.tx_stdout.clone();
         let tx_stderr_later = self.tx_stderr.clone();
         let tx_status_later = self.tx_status.clone();
+        let running_pair_later = self.running_pair.clone();
 
         let later_handle = ctx.run_later(on_boot_sec, move |act, ctx| {
             // clone everything to move into the interval future
             let cmds_interval = cmds_later.clone();
             let commands_interval = commands_later.clone();
-            let tx_stdout_interval = tx_stdout_later.clone();
-            let tx_stderr_interval = tx_stderr_later.clone();
-            let tx_status_interval = tx_status_later.clone();
 
-            let mono_handle = ctx.run_interval(on_unit_active_sec, move |_act, _ctx| {
+            let mono_handle = ctx.run_interval(on_unit_active_sec, move |act, _ctx| {
                 // clone everything to move into the command thread
                 let cmds_thread = cmds_interval.clone();
                 let commands_thread = commands_interval.clone();
-                let tx_stdout_thread = tx_stdout_interval.clone();
-                let tx_stderr_thread = tx_stderr_interval.clone();
-                let tx_status_thread = tx_status_interval.clone();
+                let tx_stdout_thread = act.tx_stdout.clone();
+                let tx_stderr_thread = act.tx_stderr.clone();
+                let tx_status_thread = act.tx_status.clone();
+                let running_pair_c = act.running_pair.clone();
 
                 // Run the long running commands in a separate thread
                 let _b = thread::spawn(move || {
@@ -339,6 +370,7 @@ impl Worker {
                             run_cmd(
                                 cmd_name,
                                 cmd.cmd(),
+                                &running_pair_c,
                                 &tx_stdout_thread,
                                 &tx_stderr_thread,
                                 &tx_status_thread,
@@ -358,6 +390,7 @@ impl Worker {
                         run_cmd(
                             cmd_name,
                             cmd.cmd(),
+                            &running_pair_later,
                             &tx_stdout_later,
                             &tx_stderr_later,
                             &tx_status_later,
@@ -379,6 +412,17 @@ impl Worker {
             Err(e) => error!("{e}"),
         }
     }
+
+    fn request_initialization(&mut self) {
+        // request initialization from the server
+        if let Ok(init) = serialize(&WorkerClientToWorkerSession::Initialize) {
+            if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
+                error!("Unable to send initialize message");
+            }
+        } else {
+            error!("Unable to serialize initialize message");
+        }
+    }
 }
 
 impl Actor for Worker {
@@ -391,13 +435,7 @@ impl Actor for Worker {
         // initialze the queue monitor
         self.queue_monitor(ctx);
         // request initialization from the server
-        if let Ok(init) = serialize(&WorkerClientToWorkerSession::Initialize) {
-            if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
-                error!("Unable to send initialize message");
-            }
-        } else {
-            error!("Unable to serialize initialize message");
-        }
+        self.request_initialization();
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {
@@ -448,6 +486,7 @@ impl Handler<WorkerClientToWorkerSession> for Worker {
 fn run_cmd(
     name: &str,
     command: &str,
+    running_pair: &Arc<(Mutex<bool>, Condvar)>,
     tx_stdout: &UnboundedSender<WorkerClientToWorkerSession>,
     tx_stderr: &UnboundedSender<WorkerClientToWorkerSession>,
     tx_status: &UnboundedSender<WorkerClientToWorkerSession>,
@@ -503,20 +542,48 @@ fn run_cmd(
                 None
             };
 
-            match child.wait() {
-                Ok(status) => {
-                    if let Some(code) = status.code() {
-                        info!("command result: {}", code);
-                        let status_msg = WorkerClientToWorkerSession::Status {
-                            id: command_id,
-                            code,
+            let pair = running_pair.clone();
+
+            loop {
+                match child.try_wait() {
+                    Ok(Some(status)) => {
+                        if let Some(code) = status.code() {
+                            info!("command result: {}", code);
+                            let status_msg = WorkerClientToWorkerSession::Status {
+                                id: command_id,
+                                code,
+                            };
+                            if let Err(e) = tx_status.send(status_msg) {
+                                error!("{e}");
+                            }
+                        }
+                        break;
+                    }
+                    Ok(None) => {
+                        let (lock, cvar) = &*pair;
+                        let running = match lock.lock() {
+                            Ok(guard) => guard,
+                            Err(poisoned) => poisoned.into_inner(),
                         };
-                        if let Err(e) = tx_status.send(status_msg) {
-                            error!("{e}");
+                        if let Ok((res, wt_res)) =
+                            cvar.wait_timeout(running, Duration::from_millis(500))
+                        {
+                            if wt_res.timed_out() {
+                                info!("timed out waiting on cvar, checking running flag");
+                            }
+                            // If we aren't in a running state, try to kill the child process
+                            if !(*res) {
+                                if let Err(e) = child.kill() {
+                                    error!("Unable to kill child process: {e}");
+                                }
+                                break;
+                            }
+                        } else {
+                            error!("condvar wait timeout error");
                         }
                     }
+                    Err(e) => error!("{e}"),
                 }
-                Err(e) => error!("{e}"),
             }
         } else {
             error!("unable to spawn command");
