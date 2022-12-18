@@ -235,7 +235,7 @@ impl Worker {
                     info!("a reload has been requested, sending initialization");
                     self.stop_schedules(ctx);
                     // request initialization from the server
-                    self.request_initialization();
+                    self.initialize(ctx);
                 }
             }
         }
@@ -413,7 +413,9 @@ impl Worker {
         }
     }
 
-    fn request_initialization(&mut self) {
+    fn initialize(&mut self, ctx: &mut Context<Self>) {
+        // initialze the queue monitor
+        self.queue_monitor(ctx);
         // request initialization from the server
         if let Ok(init) = serialize(&WorkerClientToWorkerSession::Initialize) {
             if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
@@ -432,10 +434,8 @@ impl Actor for Worker {
         info!("worker actor started");
         // start heartbeat otherwise server will disconnect after 10 seconds
         self.hb(ctx);
-        // initialze the queue monitor
-        self.queue_monitor(ctx);
         // request initialization from the server
-        self.request_initialization();
+        self.initialize(ctx);
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {

@@ -17,8 +17,8 @@ thread_names = false
 line_numbers = false
 
 # Host list
-[hostlist.most]
-hostnames = ["one","two","three"]
+[hostlist.linux]
+hostnames = ["luke","han","obi"]
 
 # Default commands
 [default.uname]
@@ -72,6 +72,15 @@ cmd = "cdp tmux; and git pull; and make; and sudo make install"
 
 # Overrides
 # bb8 overrides
+[overrides.bb8.updall]
+cmd = "echo 'updall not configured'"
+
+[overrides.bb8.cacl]
+cmd = "echo 'cacl not configured'"
+
+[overrides.bb8.bar]
+cmd = "echo 'bar not configured'"
+
 [overrides.bb8.'mosh-autogen']
 cmd = "echo 'mosh-autogen not configured'"
 [overrides.bb8.'mosh-clean']
@@ -81,19 +90,34 @@ cmd = "echo 'mosh-config not configured'"
 [overrides.bb8.mosh]
 cmd = "echo 'mosh not configured'"
 
+[overrides.bb8.'nginx-clean']
+cmd = "echo 'nginx-clean not configured'"
+[overrides.bb8.'nginx-config']
+cmd = "echo 'nginx-config not configured'"
+[overrides.bb8.nginx]
+cmd = "echo 'nginx not configured'"
+
+[overrides.bb8.'python-clean']
+cmd = "echo 'python-clean not configured'"
+[overrides.bb8.'python-config']
+cmd = "echo 'python-config not configured'"
+[overrides.bb8.python]
+cmd = "echo 'python not configured'"
+
+[overrides.bb8.'tmux-autogen']
+cmd = "echo 'tmux-autogen not configured'"
+[overrides.bb8.'tmux-config']
+cmd = "echo 'tmux-config not configured'"
+[overrides.bb8.'tmux-clean']
+cmd = "echo 'tmux-clean not configured'"
+[overrides.bb8.tmux]
+cmd = "echo 'tmux not configured'"
+
 # fett overrides
 [overrides.fett.mosh]
 cmd = "cdp mosh; and git pull; and set -lx CXX clang++; and make; and sudo make install"
 
 # Schedules
-# bb8 schedules
-[schedules.bb8]
-schedules = [ 
-    { Realtime = { on_calendar = "*-*-* 4:00:00", persistent = false, cmds = ["python"] } },
-    { Realtime = { on_calendar = "*-*-* 4:30:00", persistent = false, cmds = ["tmux"] } },
-    { Monotonic = { on_boot_sec = { secs = 900, nanos = 0 }, on_unit_active_sec = { secs = 10800, nanos = 0 }, cmds = ["updall"] } } 
-]
-
 # kylo schedules
 [schedules.kylo]
 schedules = [ 
