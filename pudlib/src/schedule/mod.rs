@@ -289,6 +289,8 @@ fn parse_value(value: &str) -> Result<Vec<u8>> {
 
 #[cfg(test)]
 mod test {
+    use crate::DayOfWeek;
+
     use super::{
         parse_calendar, Realtime, DAILY, HOURLY, MINUTELY, MONTHLY, QUARTERLY, SEMIANUALLY, WEEKLY,
         YEARLY,
@@ -407,6 +409,13 @@ mod test {
         let res = parse_calendar("*-*-* 3:00:00")?;
         let expected = Realtime::builder().hour(3).minute(0).second(0).build();
         assert_eq!(res, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn random() -> Result<()> {
+        let res = parse_calendar("*-*-* 0/2:R:R")?;
+        assert!(res.day_of_week == DayOfWeek::All);
         Ok(())
     }
 
