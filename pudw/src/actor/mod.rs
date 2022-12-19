@@ -404,9 +404,9 @@ impl Worker {
     }
 
     fn store_realtime(&mut self, on_calendar: &str, _persistent: bool, cmds: &[String]) {
-        info!("adding realtime schedule for calendar '{on_calendar}'");
         match parse_calendar(on_calendar) {
             Ok(rt) => {
+                info!("adding realtime schedule {rt:?}");
                 let _prev = self.rt.insert(rt, cmds.to_vec());
             }
             Err(e) => error!("{e}"),

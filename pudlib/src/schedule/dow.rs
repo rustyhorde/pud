@@ -15,7 +15,7 @@ use crate::{
 use anyhow::{anyhow, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt::Display};
 use time::Weekday;
 
 lazy_static! {
@@ -30,6 +30,35 @@ pub enum DayOfWeek {
     All,
     /// Specific days of the week
     Days(Vec<u8>),
+}
+
+impl Display for DayOfWeek {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DayOfWeek::All => {
+                write!(f, "*")?;
+            }
+            DayOfWeek::Days(vals) => {
+                let len = vals.len();
+                for (idx, val) in vals.iter().enumerate() {
+                    match val {
+                        0 => write!(f, "Sun")?,
+                        1 => write!(f, "Mon")?,
+                        2 => write!(f, "Tue")?,
+                        3 => write!(f, "Wed")?,
+                        4 => write!(f, "Thu")?,
+                        5 => write!(f, "Fri")?,
+                        6 => write!(f, "Sat")?,
+                        _ => write!(f, "Unk")?,
+                    }
+                    if idx < len - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 impl From<u8> for DayOfWeek {

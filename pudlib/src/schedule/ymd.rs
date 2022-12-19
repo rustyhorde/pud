@@ -11,6 +11,7 @@
 use super::{parse_time_chunk, All, RANGE_RE};
 use crate::error::Error::InvalidDate;
 use anyhow::{anyhow, Result};
+use rand::Rng;
 
 const MONTHS_PER_YEAR: u8 = 12;
 // TODO: Fix this
@@ -78,6 +79,12 @@ impl All for Month {
     fn all() -> Self {
         Self::All
     }
+
+    fn rand() -> Self {
+        let mut rng = rand::thread_rng();
+        let rand_in_range = rng.gen_range(1..13);
+        Month::Months(vec![rand_in_range])
+    }
 }
 
 impl From<Vec<u8>> for Month {
@@ -113,6 +120,12 @@ impl Day {
 impl All for Day {
     fn all() -> Self {
         Self::All
+    }
+
+    fn rand() -> Self {
+        let mut rng = rand::thread_rng();
+        let rand_in_range = rng.gen_range(1..29);
+        Day::Days(vec![rand_in_range])
     }
 }
 

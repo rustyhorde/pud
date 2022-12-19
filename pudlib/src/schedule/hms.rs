@@ -11,6 +11,7 @@
 use super::{parse_time_chunk, All};
 use crate::error::Error::InvalidTime;
 use anyhow::Result;
+use rand::Rng;
 
 const HOURS_PER_DAY: u8 = 24;
 const MINUTES_PER_HOUR: u8 = 60;
@@ -37,6 +38,12 @@ impl Hour {
 impl All for Hour {
     fn all() -> Self {
         Self::All
+    }
+
+    fn rand() -> Self {
+        let mut rng = rand::thread_rng();
+        let rand_in_range = rng.gen_range(0..24);
+        Hour::Hours(vec![rand_in_range])
     }
 }
 
@@ -74,6 +81,12 @@ impl All for Minute {
     fn all() -> Self {
         Self::All
     }
+
+    fn rand() -> Self {
+        let mut rng = rand::thread_rng();
+        let rand_in_range = rng.gen_range(0..60);
+        Minute::Minutes(vec![rand_in_range])
+    }
 }
 
 impl From<Vec<u8>> for Minute {
@@ -109,6 +122,12 @@ impl Second {
 impl All for Second {
     fn all() -> Self {
         Self::All
+    }
+
+    fn rand() -> Self {
+        let mut rng = rand::thread_rng();
+        let rand_in_range = rng.gen_range(0..60);
+        Second::Seconds(vec![rand_in_range])
     }
 }
 
@@ -185,6 +204,31 @@ mod test {
         assert_eq!(hour, Hour::Hours((9..=17).step_by(2).collect()));
         assert_eq!(minute, Minute::Minutes((12..=44).step_by(4).collect()));
         assert_eq!(second, Second::Seconds((20..=50).step_by(4).collect()));
+        Ok(())
+    }
+
+    #[test]
+    fn random() -> Result<()> {
+        let (hour, minute, second) = parse_hms("R:R:R")?;
+
+        if let Hour::Hours(vals) = hour {
+            assert_eq!(vals.len(), 1);
+            assert!(0 < vals[0] && vals[0] < 24);
+        } else {
+            return Err(anyhow!("This isn't the correct kind of hour"));
+        }
+        if let Minute::Minutes(vals) = minute {
+            assert_eq!(vals.len(), 1);
+            assert!(0 < vals[0] && vals[0] < 60);
+        } else {
+            return Err(anyhow!("This isn't the correct kind of minute"));
+        }
+        if let Second::Seconds(vals) = second {
+            assert_eq!(vals.len(), 1);
+            assert!(0 < vals[0] && vals[0] < 60);
+        } else {
+            return Err(anyhow!("This isn't the correct kind of second"));
+        }
         Ok(())
     }
 

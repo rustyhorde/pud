@@ -49,6 +49,7 @@ const YEARLY: &str = "yearly";
 
 trait All {
     fn all() -> Self;
+    fn rand() -> Self;
 }
 
 /// A realtime schedule
@@ -193,6 +194,8 @@ where
 {
     if part == "*" {
         Ok(T::all())
+    } else if part == "R" {
+        Ok(T::rand())
     } else {
         let mut err = Ok(());
         let prrv_fn = |hour: &str| -> Result<Vec<u8>> { parse_rep_range_val(hour, max, one_based) };

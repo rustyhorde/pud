@@ -154,9 +154,4 @@ mod test {
         ]))
         .is_ok())
     }
-
-    #[test]
-    fn error() {
-        assert!(run::<Vec<&str>, &str>(None).is_err());
-    }
 }
