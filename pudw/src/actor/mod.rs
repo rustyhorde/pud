@@ -295,7 +295,7 @@ impl Worker {
 
         while let Some(handle) = self.fut_handles.pop() {
             if ctx.cancel_future(handle) {
-                info!("future cancelled successfully");
+                debug!("future cancelled successfully");
             }
         }
         self.rt.clear();
