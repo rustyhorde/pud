@@ -213,19 +213,19 @@ mod test {
 
         if let Hour::Hours(vals) = hour {
             assert_eq!(vals.len(), 1);
-            assert!(0 < vals[0] && vals[0] < 24);
+            assert!(vals[0] < 24);
         } else {
             return Err(anyhow!("This isn't the correct kind of hour"));
         }
         if let Minute::Minutes(vals) = minute {
             assert_eq!(vals.len(), 1);
-            assert!(0 < vals[0] && vals[0] < 60);
+            assert!(vals[0] < 60);
         } else {
             return Err(anyhow!("This isn't the correct kind of minute"));
         }
         if let Second::Seconds(vals) = second {
             assert_eq!(vals.len(), 1);
-            assert!(0 < vals[0] && vals[0] < 60);
+            assert!(vals[0] < 60);
         } else {
             return Err(anyhow!("This isn't the correct kind of second"));
         }
