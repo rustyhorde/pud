@@ -208,6 +208,10 @@ mod test {
         fn line_numbers(&self) -> bool {
             false
         }
+
+        fn use_tokio(&self) -> bool {
+            false
+        }
     }
 
     lazy_static! {

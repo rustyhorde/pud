@@ -43,6 +43,8 @@ pub trait Config {
     fn level(&self) -> Option<Level>;
     /// Allow initialization to set the effective tracing level
     fn set_level(&mut self, level: Level) -> &mut Self;
+    /// Should we use tokio for opentelemetry
+    fn use_tokio(&self) -> bool;
 }
 
 lazy_static! {

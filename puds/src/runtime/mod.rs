@@ -62,6 +62,7 @@ where
         *args.quiet(),
         PudxBinary::Puds,
     )?;
+    let _ = config.set_use_tokio(true);
 
     // Setup logging
     initialize(&mut config)?;

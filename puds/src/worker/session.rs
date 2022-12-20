@@ -24,7 +24,7 @@ use pudlib::{
     WorkerSessionToServer,
 };
 use std::time::{Duration, Instant};
-use tracing::{debug, error, info};
+use tracing::{debug, error, error_span, info, info_span, instrument};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -33,7 +33,7 @@ const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 /// How long before lack of client response causes a timeout
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
-#[derive(TypedBuilder)]
+#[derive(Debug, TypedBuilder)]
 pub(crate) struct Session {
     // unique session id
     id: Uuid,
@@ -104,6 +104,7 @@ impl Session {
         self.hb = Instant::now();
     }
 
+    #[instrument(skip_all)]
     fn handle_binary(&mut self, bytes: &Bytes) {
         debug!("handling binary message");
         self.hb = Instant::now();
@@ -117,9 +118,24 @@ impl Session {
                         name: self.name.clone(),
                     });
                 }
-                WorkerClientToWorkerSession::Stdout { id: _, line } => info!("{line}"),
-                WorkerClientToWorkerSession::Stderr { id: _, line } => error!("{line}"),
-                WorkerClientToWorkerSession::Status { id: _, code } => info!("status: {code}"),
+                WorkerClientToWorkerSession::Stdout { id: _, line } => {
+                    let span = info_span!("STDOUT");
+                    let enter = span.enter();
+                    info!("{line}");
+                    drop(enter);
+                }
+                WorkerClientToWorkerSession::Stderr { id: _, line } => {
+                    let span = error_span!("STDERR");
+                    let enter = span.enter();
+                    error!("{line}");
+                    drop(enter);
+                }
+                WorkerClientToWorkerSession::Status { id: _, code } => {
+                    let span = info_span!("STATUS");
+                    let enter = span.enter();
+                    info!("status: {code}");
+                    drop(enter);
+                }
             },
             Err(e) => error!("{e}"),
         }
@@ -189,6 +205,7 @@ impl Actor for Session {
         debug!("worker registration complete: {}", self.id);
     }
 
+    #[instrument(name = "Worker Session Stopping", skip_all)]
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         info!("worker session stopping");
         self.addr.do_send(Disconnect::builder().id(self.id).build());
@@ -200,6 +217,7 @@ impl Actor for Session {
 impl Handler<ServerToWorkerClient> for Session {
     type Result = ();
 
+    #[instrument(name = "Handle ServerToWorkerClient", skip_all)]
     fn handle(&mut self, msg: ServerToWorkerClient, ctx: &mut Self::Context) {
         debug!("handling message from server actor to worker client");
         if let Ok(wm_bytes) = serialize(&msg) {
@@ -229,10 +247,12 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
         }
     }
 
+    #[instrument(name = "Worker StreamHandler Started", skip_all)]
     fn started(&mut self, _ctx: &mut Self::Context) {
         info!("worker session stream handler started");
     }
 
+    #[instrument(name = "Worker StreamHandler Finished", skip_all)]
     fn finished(&mut self, ctx: &mut Self::Context) {
         info!("worker session stream handler finished");
         ctx.stop();

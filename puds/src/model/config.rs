@@ -42,6 +42,8 @@ pub(crate) struct Config {
     default: BTreeMap<String, Command>,
     overrides: BTreeMap<String, BTreeMap<String, Command>>,
     schedules: BTreeMap<String, Schedules>,
+    #[getset(set = "pub")]
+    use_tokio: bool,
 }
 
 impl Verbosity for Config {
@@ -94,6 +96,10 @@ impl LogConfig for Config {
     fn line_numbers(&self) -> bool {
         self.line_numbers
     }
+
+    fn use_tokio(&self) -> bool {
+        self.use_tokio
+    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -138,6 +144,7 @@ impl TryFrom<TomlConfig> for Config {
             default,
             overrides,
             schedules,
+            use_tokio: false,
         })
     }
 }

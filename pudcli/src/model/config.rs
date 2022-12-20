@@ -34,6 +34,7 @@ pub(crate) struct Config {
     server_port: u16,
     name: String,
     level: Option<Level>,
+    use_tokio: bool,
 }
 
 impl Config {
@@ -95,6 +96,10 @@ impl LogConfig for Config {
     fn line_numbers(&self) -> bool {
         self.line_numbers
     }
+
+    fn use_tokio(&self) -> bool {
+        self.use_tokio
+    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -129,6 +134,7 @@ impl TryFrom<TomlConfig> for Config {
             server_port,
             name,
             level: None,
+            use_tokio: false,
         })
     }
 }
