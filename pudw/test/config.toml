@@ -3,7 +3,7 @@ retry_count = 10
 
 [actix]
 ip = "localhost.ozias.net"
-port = 32276
+port = 32277
 
 # tracing configuration
 [tracing]
@@ -11,3 +11,5 @@ target = false
 thread_id = false
 thread_names = false
 line_numbers = false
+log_file_path = "test"
+log_file_name = "pudw.log"

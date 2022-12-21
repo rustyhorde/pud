@@ -47,7 +47,7 @@ where
     )?;
 
     // Setup logging
-    initialize(&mut config)?;
+    let guard = initialize(&mut config)?;
 
     // Pull values out of config
     let url = config.server_url();
@@ -113,5 +113,8 @@ where
         }
     }
 
+    if let Some(guard) = guard {
+        drop(guard);
+    }
     Ok(())
 }

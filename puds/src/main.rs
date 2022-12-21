@@ -223,7 +223,7 @@ mod test {
             *args.quiet(),
             PudxBinary::Puds,
         )?;
-        let _ = initialize(&mut config)?;
+        let _guard = initialize(&mut config)?;
         Ok(config)
     }
 }

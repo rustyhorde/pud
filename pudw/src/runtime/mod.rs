@@ -50,7 +50,7 @@ where
     )?;
 
     // Setup logging
-    initialize(&mut config)?;
+    let guard = initialize(&mut config)?;
 
     // Output the pretty header
     header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
@@ -124,6 +124,9 @@ where
         }
     }
 
+    if let Some(guard) = guard {
+        drop(guard);
+    }
     Ok(())
 }
 

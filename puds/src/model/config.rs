@@ -42,8 +42,8 @@ pub(crate) struct Config {
     default: BTreeMap<String, Command>,
     overrides: BTreeMap<String, BTreeMap<String, Command>>,
     schedules: BTreeMap<String, Schedules>,
-    #[getset(set = "pub")]
-    use_tokio: bool,
+    log_file_path: PathBuf,
+    log_file_name: String,
 }
 
 impl Verbosity for Config {
@@ -97,8 +97,12 @@ impl LogConfig for Config {
         self.line_numbers
     }
 
-    fn use_tokio(&self) -> bool {
-        self.use_tokio
+    fn log_file_path(&self) -> PathBuf {
+        self.log_file_path.clone()
+    }
+
+    fn log_file_name(&self) -> String {
+        self.log_file_name.clone()
     }
 }
 
@@ -113,16 +117,25 @@ impl TryFrom<TomlConfig> for Config {
             source: e,
             addr: ip.clone(),
         })?;
-        let (target, thread_id, thread_names, line_numbers) =
+        let (target, thread_id, thread_names, line_numbers, log_file_path, log_file_name) =
             if let Some(tracing) = config.tracing() {
                 (
                     *tracing.target(),
                     *tracing.thread_id(),
                     *tracing.thread_names(),
                     *tracing.line_numbers(),
+                    PathBuf::from(tracing.log_file_path()),
+                    tracing.log_file_name().clone(),
                 )
             } else {
-                (false, false, false, false)
+                (
+                    false,
+                    false,
+                    false,
+                    false,
+                    PathBuf::from("."),
+                    "puds.log".to_string(),
+                )
             };
         let socket_addr = SocketAddr::from((ip_addr, *port));
         let (tls, hostlist, default, overrides, schedules) = config.take();
@@ -144,7 +157,8 @@ impl TryFrom<TomlConfig> for Config {
             default,
             overrides,
             schedules,
-            use_tokio: false,
+            log_file_path,
+            log_file_name,
         })
     }
 }
@@ -216,6 +230,10 @@ pub(crate) struct Tracing {
     thread_names: bool,
     /// Should we trace the line numbers
     line_numbers: bool,
+    /// Log file path
+    log_file_path: String,
+    /// Log file name
+    log_file_name: String,
 }
 
 /// TLS configuration

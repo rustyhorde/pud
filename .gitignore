@@ -2,3 +2,4 @@ target/
 *.pem
 *.exe
 puds.toml
+*.log*

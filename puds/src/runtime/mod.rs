@@ -62,10 +62,9 @@ where
         *args.quiet(),
         PudxBinary::Puds,
     )?;
-    let _ = config.set_use_tokio(true);
 
     // Setup logging
-    initialize(&mut config)?;
+    let guard = initialize(&mut config)?;
 
     // Output the pretty header
     header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
@@ -111,6 +110,9 @@ where
         .await?;
     }
 
+    if let Some(guard) = guard {
+        drop(guard);
+    }
     Ok(())
 }
 

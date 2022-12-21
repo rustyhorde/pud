@@ -8,15 +8,18 @@
 
 // Logging
 
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
-};
-
 use anyhow::Result;
 use lazy_static::lazy_static;
+use std::{
+    path::PathBuf,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
+};
 use time::format_description::well_known::Iso8601;
 use tracing::Level;
+use tracing_appender::{non_blocking::WorkerGuard, rolling::daily};
 use tracing_subscriber::{
     filter::LevelFilter,
     fmt::{self, time::UtcTime},
@@ -43,8 +46,10 @@ pub trait Config {
     fn level(&self) -> Option<Level>;
     /// Allow initialization to set the effective tracing level
     fn set_level(&mut self, level: Level) -> &mut Self;
-    /// Should we use tokio for opentelemetry
-    fn use_tokio(&self) -> bool;
+    /// Log file path
+    fn log_file_path(&self) -> PathBuf;
+    /// Log file name
+    fn log_file_name(&self) -> String;
 }
 
 lazy_static! {
@@ -56,15 +61,17 @@ lazy_static! {
 /// # Errors
 /// * An error can be thrown on registry initialization
 ///
-pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
+pub fn initialize<T: Config>(config: &mut T) -> Result<Option<WorkerGuard>> {
     let init = match INIT_LOCK.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(),
     };
     if init.load(Ordering::SeqCst) {
         // TODO: Should probably return already initialize error?
-        Ok(())
+        Ok(None)
     } else {
+        let file_appender = daily(config.log_file_path(), config.log_file_name());
+        let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
         let format = fmt::layer()
             .with_level(true)
             .with_ansi(true)
@@ -73,13 +80,28 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
             .with_thread_names(config.thread_names())
             .with_line_number(config.line_numbers())
             .with_timer(UtcTime::new(Iso8601::DEFAULT));
+        let file_format = fmt::layer()
+            .pretty()
+            .with_level(false)
+            .with_ansi(false)
+            .with_target(false)
+            .with_thread_ids(false)
+            .with_thread_names(false)
+            .with_line_number(false)
+            .with_timer(UtcTime::new(Iso8601::DEFAULT))
+            .with_writer(non_blocking);
         let level = get_effective_level(config.quiet(), config.verbose());
         let _ = config.set_level(level);
         let filter_layer = LevelFilter::from(level);
-        match registry().with(format).with(filter_layer).try_init() {
+        match registry()
+            .with(file_format)
+            .with(format)
+            .with(filter_layer)
+            .try_init()
+        {
             Ok(_) => {
                 init.store(true, Ordering::SeqCst);
-                Ok(())
+                Ok(Some(guard))
             }
             Err(e) => ok_on_test(e),
         }
@@ -87,13 +109,13 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
 }
 
 #[cfg(not(test))]
-fn ok_on_test(e: TryInitError) -> Result<()> {
+fn ok_on_test(e: TryInitError) -> Result<Option<WorkerGuard>> {
     Err(e.into())
 }
 
 #[cfg(test)]
-fn ok_on_test(_e: TryInitError) -> Result<()> {
-    Ok(())
+fn ok_on_test(_e: TryInitError) -> Result<Option<WorkerGuard>> {
+    Ok(None)
 }
 
 #[cfg(debug_assertions)]
