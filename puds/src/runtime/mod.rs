@@ -91,10 +91,10 @@ where
     if !args.dry_run() {
         // Setup a asynchronous store connection to the database
         let conn = ConnectionBuilder::default()
-            .url("https://arangodb.allthetyme.info")
-            .username("pud")
-            .password("dtJ2^0nh#MI@Lsp5r^X0VJ66QveWNQ")
-            .database("pud")
+            .url(config.db_url())
+            .username(config.db_user())
+            .password(config.db_pass())
+            .database(config.db_name())
             // .async_kind(AsyncKind::Store)
             .build()
             .await?;

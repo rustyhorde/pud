@@ -9,6 +9,13 @@ port = 32277
 cert_file_path = "fullchain.pem"
 key_file_path = "privkey.pem"
 
+# ArangoDB configuration
+[arangodb]
+url = ""
+user = ""
+password = ""
+name = ""
+
 # tracing configuration
 [tracing]
 target = false

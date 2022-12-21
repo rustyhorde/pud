@@ -44,6 +44,10 @@ pub(crate) struct Config {
     schedules: BTreeMap<String, Schedules>,
     log_file_path: PathBuf,
     log_file_name: String,
+    db_url: String,
+    db_user: String,
+    db_pass: String,
+    db_name: String,
 }
 
 impl Verbosity for Config {
@@ -117,6 +121,11 @@ impl TryFrom<TomlConfig> for Config {
             source: e,
             addr: ip.clone(),
         })?;
+        let db_url = config.arangodb().url().clone();
+        let db_user = config.arangodb().user().clone();
+        let db_pass = config.arangodb().password().clone();
+        let db_name = config.arangodb().name().clone();
+
         let (target, thread_id, thread_names, line_numbers, log_file_path, log_file_name) =
             if let Some(tracing) = config.tracing() {
                 (
@@ -159,6 +168,10 @@ impl TryFrom<TomlConfig> for Config {
             schedules,
             log_file_path,
             log_file_name,
+            db_url,
+            db_user,
+            db_pass,
+            db_name,
         })
     }
 }
@@ -171,6 +184,8 @@ pub(crate) struct TomlConfig {
     actix: Actix,
     /// The TLS configuration
     tls: Tls,
+    /// The ArangoDB configuration
+    arangodb: Arangodb,
     /// The tracing configuration
     tracing: Option<Tracing>,
     /// A list of hosts.
@@ -215,6 +230,20 @@ pub(crate) struct Actix {
     ip: String,
     /// The port to listen on
     port: u16,
+}
+
+/// hosts configuration
+#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[getset(get = "pub(crate)")]
+pub(crate) struct Arangodb {
+    /// The ArangoDB url
+    url: String,
+    /// The user
+    user: String,
+    /// The password
+    password: String,
+    /// The database name
+    name: String,
 }
 
 /// tracing configuration
