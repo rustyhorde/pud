@@ -81,7 +81,6 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<Option<WorkerGuard>> {
             .with_line_number(config.line_numbers())
             .with_timer(UtcTime::new(Iso8601::DEFAULT));
         let file_format = fmt::layer()
-            .pretty()
             .with_level(false)
             .with_ansi(false)
             .with_target(false)
