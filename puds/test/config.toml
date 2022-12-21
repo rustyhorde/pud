@@ -20,109 +20,26 @@ log_file_name = "puds.log"
 
 # Host list
 [hostlist.linux]
-hostnames = ["luke","han","obi"]
+hostnames = ["luke", "han", "obi"]
 
 # Default commands
 [default.uname]
 cmd = "uname -a"
 
-[default.updall]
-cmd = "updall -l"
-
-[default.cacl]
-cmd = "cdpr; and cacl"
-
 [default.rustup]
 cmd = "rustup update"
-[default.'rustup-add']
-cmd = "rustup component add rust-analysis rust-src; and rustup component add rust-analysis rust-src --toolchain beta; and rustup component add rust-analysis rust-src --toolchain stable; and rustup target add asmjs-unknown-emscripten wasm32-unknown-emscripten x86_64-unknown-linux-musl; and rustup target add asmjs-unknown-emscripten wasm32-unknown-emscripten x86_64-unknown-linux-musl --toolchain beta; and rustup target add asmjs-unknown-emscripten wasm32-unknown-emscripten x86_64-unknown-linux-musl --toolchain stable"
-
-[default.bar]
-cmd = "bar"
-
-[default.'mosh-autogen']
-cmd = "cdp mosh; and ./autogen.sh"
-[default.'mosh-clean']
-cmd = "cdp mosh; and sudo make clean"
-[default.'mosh-config']
-cmd = "cdp mosh; and ./configure --prefix=/opt/mosh-master"
-[default.mosh]
-cmd = "cdp mosh; and git pull; and make; and sudo make install"
-
-[default.'nginx-clean']
-cmd = "cdp nginx; and sudo make clean"
-[default.'nginx-config']
-cmd = "cdp nginx; and git pull; and auto/configure --prefix=/opt/nginx-master --with-select_module --with-poll_module --with-threads --with-file-aio --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module --with-http_image_filter_module --with-http_geoip_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_auth_request_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_stub_status_module --with-http_perl_module --with-mail --with-mail_ssl_module --with-stream --with-stream_ssl_module --with-google_perftools_module --with-cpp_test_module"
-[default.nginx]
-cmd = "cdp nginx; and git pull; and sudo make; and sudo make install"
-
-[default.'python-clean']
-cmd = "cdp cpython; and sudo make clean"
-[default.'python-config']
-cmd = "cdp cpython; and git pull; and set -lx CXX g++; and ./configure --prefix=/opt/python-master"
-[default.python]
-cmd = "cdp cpython; and git pull; and make; and sudo -H make install"
-
-[default.'tmux-autogen']
-cmd = "cdp tmux; and ./autogen.sh"
-[default.'tmux-config']
-cmd = "cdp tmux; and ./configure --prefix=/opt/tmux-master"
-[default.'tmux-clean']
-cmd = "cdp tmux; and sudo make clean"
-[default.tmux]
-cmd = "cdp tmux; and git pull; and make; and sudo make install"
 
 # Overrides
-# bb8 overrides
-[overrides.bb8.updall]
-cmd = "echo 'updall not configured'"
-
-[overrides.bb8.cacl]
-cmd = "echo 'cacl not configured'"
-
-[overrides.bb8.bar]
-cmd = "echo 'bar not configured'"
-
-[overrides.bb8.'mosh-autogen']
-cmd = "echo 'mosh-autogen not configured'"
-[overrides.bb8.'mosh-clean']
-cmd = "echo 'mosh-clean not configured'"
-[overrides.bb8.'mosh-config']
-cmd = "echo 'mosh-config not configured'"
-[overrides.bb8.mosh]
-cmd = "echo 'mosh not configured'"
-
-[overrides.bb8.'nginx-clean']
-cmd = "echo 'nginx-clean not configured'"
-[overrides.bb8.'nginx-config']
-cmd = "echo 'nginx-config not configured'"
-[overrides.bb8.nginx]
-cmd = "echo 'nginx not configured'"
-
-[overrides.bb8.'python-clean']
-cmd = "echo 'python-clean not configured'"
-[overrides.bb8.'python-config']
-cmd = "echo 'python-config not configured'"
-[overrides.bb8.python]
-cmd = "echo 'python not configured'"
-
-[overrides.bb8.'tmux-autogen']
-cmd = "echo 'tmux-autogen not configured'"
-[overrides.bb8.'tmux-config']
-cmd = "echo 'tmux-config not configured'"
-[overrides.bb8.'tmux-clean']
-cmd = "echo 'tmux-clean not configured'"
-[overrides.bb8.tmux]
-cmd = "echo 'tmux not configured'"
-
-# fett overrides
-[overrides.fett.mosh]
-cmd = "cdp mosh; and git pull; and set -lx CXX clang++; and make; and sudo make install"
+[overrides]
 
 # Schedules
-# kylo schedules
-[schedules.kylo]
-schedules = [ 
-    { Realtime = { on_calendar = "*-*-* 0/2:23:47", persistent = false, cmds = ["updall"] } },
-    { Realtime = { on_calendar = "*-*-* 5:37:13", persistent = false, cmds = ["rustup","rustup-add"] } }
+# yoda schedules
+[schedules.yoda]
+schedules = [
+    { Realtime = { on_calendar = "*-*-* *:*:R", persistent = false, cmds = [
+        "uname",
+    ] } },
+    { Realtime = { on_calendar = "*-*-* *:0/2:R", persistent = false, cmds = [
+        "rustup",
+    ] } },
 ]

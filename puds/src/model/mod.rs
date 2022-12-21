@@ -9,5 +9,6 @@
 // Models
 
 pub(crate) mod config;
+pub(crate) mod doc;
 pub(crate) mod health;
 pub(crate) mod info;

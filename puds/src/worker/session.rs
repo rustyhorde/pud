@@ -9,7 +9,7 @@
 //! Worker Session
 
 use super::message::{Connect, Disconnect};
-use crate::server::Server;
+use crate::{model::doc::Job, server::Server};
 use actix::{
     fut, Actor, ActorContext, ActorFutureExt, Addr, AsyncContext, ContextFutureSpawner, Handler,
     Running, StreamHandler, WrapFuture,
@@ -17,13 +17,19 @@ use actix::{
 use actix_http::ws::{CloseReason, Item};
 use actix_web::web::{Bytes, BytesMut};
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
+use anyhow::Result;
 use bincode::{deserialize, serialize};
 use bytestring::ByteString;
 use pudlib::{
     parse_ts_ping, send_ts_ping, ServerToWorkerClient, WorkerClientToWorkerSession,
     WorkerSessionToServer,
 };
-use std::time::{Duration, Instant};
+use ruarango::{coll, doc, Collection, Connection, DocMetaResult, Document};
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
+use time::OffsetDateTime;
 use tracing::{debug, error, error_span, info, info_span, instrument};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -51,6 +57,12 @@ pub(crate) struct Session {
     cont_bytes: BytesMut,
     /// The start instant of this session
     origin: Instant,
+    /// A connection to the database
+    #[allow(dead_code)]
+    conn: Connection,
+    /// Current jobs docs
+    #[builder(default = HashMap::new())]
+    jobs: HashMap<Uuid, Job>,
 }
 
 impl Session {
@@ -105,7 +117,7 @@ impl Session {
     }
 
     #[instrument(skip_all)]
-    fn handle_binary(&mut self, bytes: &Bytes) {
+    fn handle_binary(&mut self, ctx: &mut WebsocketContext<Self>, bytes: &Bytes) {
         debug!("handling binary message");
         self.hb = Instant::now();
         let bytes_vec = bytes.to_vec();
@@ -118,21 +130,68 @@ impl Session {
                         name: self.name.clone(),
                     });
                 }
-                WorkerClientToWorkerSession::Stdout { id: _, line } => {
+                WorkerClientToWorkerSession::JobStart { id, name } => {
+                    info!("Job '{name}' has started");
+                    let job = Job::new(self.id, &self.name, id, &name);
+                    let _old = self.jobs.insert(id, job);
+                }
+                WorkerClientToWorkerSession::JobEnd { id, name } => {
+                    info!("Job '{name}' has ended");
+                    if let Some(mut job) = self.jobs.remove(&id) {
+                        let _ = job.set_end_time(OffsetDateTime::now_utc());
+                        if let Ok(config) = doc::input::CreateConfigBuilder::default()
+                            .collection(&self.name)
+                            .document(job)
+                            .build()
+                        {
+                            let conn_c = self.conn.clone();
+                            let _ = ctx.spawn(
+                                async move {
+                                    info!("Creating Job Document");
+                                    let doc_meta_res: DocMetaResult<(), ()> =
+                                        Document::create(&conn_c, config).await;
+                                    match doc_meta_res {
+                                        Ok(doc_meta_either) => {
+                                            if let Some(doc_meta) = doc_meta_either.right() {
+                                                info!(
+                                                    "id: {}, rev: {}",
+                                                    doc_meta.id(),
+                                                    doc_meta.rev()
+                                                );
+                                            }
+                                        }
+                                        Err(e) => error!("{e}"),
+                                    }
+                                }
+                                .into_actor(self),
+                            );
+                        }
+                    }
+                }
+                WorkerClientToWorkerSession::Stdout { id, line } => {
                     let span = info_span!("STDOUT");
                     let enter = span.enter();
                     info!("{line}");
+                    if let Some(job) = self.jobs.get_mut(&id) {
+                        job.stdout_mut().push(line);
+                    }
                     drop(enter);
                 }
-                WorkerClientToWorkerSession::Stderr { id: _, line } => {
+                WorkerClientToWorkerSession::Stderr { id, line } => {
                     let span = error_span!("STDERR");
                     let enter = span.enter();
                     error!("{line}");
+                    if let Some(job) = self.jobs.get_mut(&id) {
+                        job.stderr_mut().push(line);
+                    }
                     drop(enter);
                 }
-                WorkerClientToWorkerSession::Status { id: _, code } => {
+                WorkerClientToWorkerSession::Status { id, code } => {
                     let span = info_span!("STATUS");
                     let enter = span.enter();
+                    if let Some(job) = self.jobs.get_mut(&id) {
+                        let _ = job.set_status(code);
+                    }
                     info!("status: {code}");
                     drop(enter);
                 }
@@ -148,7 +207,7 @@ impl Session {
         ctx.stop();
     }
 
-    fn handle_continuation(&mut self, item: Item) {
+    fn handle_continuation(&mut self, ctx: &mut WebsocketContext<Self>, item: Item) {
         debug!("handling continuation message");
         match item {
             Item::FirstText(_bytes) => error!("unexpected text continuation"),
@@ -157,7 +216,7 @@ impl Session {
             }
             Item::Last(bytes) => {
                 self.cont_bytes.extend_from_slice(&bytes);
-                self.handle_binary(&bytes);
+                self.handle_binary(ctx, &bytes);
                 self.cont_bytes.clear();
             }
         }
@@ -202,6 +261,26 @@ impl Actor for Session {
                 fut::ready(())
             })
             .wait(ctx);
+        if let Ok(coll_config) = coll::input::ConfigBuilder::default()
+            .name(&self.name)
+            .build()
+        {
+            let conn_c = self.conn.clone();
+            let name_c = self.name.clone();
+            let _ = ctx.spawn(
+                async move {
+                    if let Err(e) = Collection::collection(&conn_c, &name_c).await {
+                        error!("{e}");
+                        if let Err(e) = Collection::create(&conn_c, &coll_config).await {
+                            error!("{e}");
+                        } else {
+                            info!("collection '{name_c}' created successfully!");
+                        }
+                    }
+                }
+                .into_actor(self),
+            );
+        }
         debug!("worker registration complete: {}", self.id);
     }
 
@@ -237,9 +316,9 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
                 Message::Ping(bytes) => self.handle_ping(ctx, &bytes),
                 Message::Pong(bytes) => self.handle_pong(&bytes),
                 Message::Text(byte_string) => self.handle_text(&byte_string),
-                Message::Binary(bytes) => self.handle_binary(&bytes),
+                Message::Binary(bytes) => self.handle_binary(ctx, &bytes),
                 Message::Close(reason) => self.handle_close(ctx, reason),
-                Message::Continuation(item) => self.handle_continuation(item),
+                Message::Continuation(item) => self.handle_continuation(ctx, item),
                 Message::Nop => self.handle_no_op(),
             }
         } else {

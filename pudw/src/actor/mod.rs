@@ -56,12 +56,8 @@ pub(crate) struct Worker {
     hb: Instant,
     // The addr used to send messages back to the worker session
     addr: SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>,
-    // the sender for stdout from running commands
-    tx_stdout: UnboundedSender<WorkerClientToWorkerSession>,
-    // the sender for stderr from running commands
-    tx_stderr: UnboundedSender<WorkerClientToWorkerSession>,
-    // the sender for a command status
-    tx_status: UnboundedSender<WorkerClientToWorkerSession>,
+    // the sender for the worker client to worker session messages
+    tx: UnboundedSender<WorkerClientToWorkerSession>,
     // handle to the stdout queue future
     #[builder(default = Arc::new(Mutex::new(None)))]
     stdout_handle: Arc<Mutex<Option<SpawnHandle>>>,
@@ -136,9 +132,7 @@ impl Worker {
                 if rt.should_run(now) {
                     let cmds_thread = cmds.clone();
                     let commands_thread = act.commands.clone();
-                    let tx_stdout_thread = act.tx_stdout.clone();
-                    let tx_stderr_thread = act.tx_stderr.clone();
-                    let tx_status_thread = act.tx_status.clone();
+                    let tx = act.tx.clone();
                     let running_pair_c = act.running_pair.clone();
 
                     // Run the long running commands in a separate thread
@@ -146,14 +140,7 @@ impl Worker {
                         // Run the commands sequentially
                         for cmd_name in &cmds_thread {
                             if let Some(cmd) = commands_thread.get(cmd_name) {
-                                run_cmd(
-                                    cmd_name,
-                                    cmd.cmd(),
-                                    &running_pair_c,
-                                    &tx_stdout_thread,
-                                    &tx_stderr_thread,
-                                    &tx_status_thread,
-                                );
+                                run_cmd(cmd_name, cmd.cmd(), &running_pair_c, &tx);
                             }
                         }
                     });
@@ -343,9 +330,7 @@ impl Worker {
         // clone everything to move into the initial run later future
         let cmds_later = cmds.to_owned();
         let commands_later = self.commands.clone();
-        let tx_stdout_later = self.tx_stdout.clone();
-        let tx_stderr_later = self.tx_stderr.clone();
-        let tx_status_later = self.tx_status.clone();
+        let tx_later = self.tx.clone();
         let running_pair_later = self.running_pair.clone();
 
         let later_handle = ctx.run_later(on_boot_sec, move |act, ctx| {
@@ -357,9 +342,7 @@ impl Worker {
                 // clone everything to move into the command thread
                 let cmds_thread = cmds_interval.clone();
                 let commands_thread = commands_interval.clone();
-                let tx_stdout_thread = act.tx_stdout.clone();
-                let tx_stderr_thread = act.tx_stderr.clone();
-                let tx_status_thread = act.tx_status.clone();
+                let tx_thread = act.tx.clone();
                 let running_pair_c = act.running_pair.clone();
 
                 // Run the long running commands in a separate thread
@@ -367,14 +350,7 @@ impl Worker {
                     // Run the commands sequentially
                     for cmd_name in &cmds_thread {
                         if let Some(cmd) = commands_thread.get(cmd_name) {
-                            run_cmd(
-                                cmd_name,
-                                cmd.cmd(),
-                                &running_pair_c,
-                                &tx_stdout_thread,
-                                &tx_stderr_thread,
-                                &tx_status_thread,
-                            );
+                            run_cmd(cmd_name, cmd.cmd(), &running_pair_c, &tx_thread);
                         }
                     }
                 });
@@ -387,14 +363,7 @@ impl Worker {
                 // Run the commands sequentially
                 for cmd_name in &cmds_later {
                     if let Some(cmd) = commands_later.get(cmd_name) {
-                        run_cmd(
-                            cmd_name,
-                            cmd.cmd(),
-                            &running_pair_later,
-                            &tx_stdout_later,
-                            &tx_stderr_later,
-                            &tx_status_later,
-                        );
+                        run_cmd(cmd_name, cmd.cmd(), &running_pair_later, &tx_later);
                     }
                 }
             });
@@ -487,13 +456,12 @@ fn run_cmd(
     name: &str,
     command: &str,
     running_pair: &Arc<(Mutex<bool>, Condvar)>,
-    tx_stdout: &UnboundedSender<WorkerClientToWorkerSession>,
-    tx_stderr: &UnboundedSender<WorkerClientToWorkerSession>,
-    tx_status: &UnboundedSender<WorkerClientToWorkerSession>,
+    tx: &UnboundedSender<WorkerClientToWorkerSession>,
 ) {
     if let Some(shell_path) = env::var_os("SHELL") {
         let command_id = Uuid::new_v4();
-        info!("Running '{name}'");
+        record_job_start(command_id, name, tx);
+
         let shell = shell_path.to_string_lossy().to_string();
         let mut cmd = std::process::Command::new(shell);
         let _ = cmd.arg("-c");
@@ -503,7 +471,7 @@ fn run_cmd(
 
         if let Ok(mut child) = cmd.spawn() {
             let _stdout_handle_opt = if let Some(child_stdout) = child.stdout.take() {
-                let tx_stdout = tx_stdout.clone();
+                let tx_stdout = tx.clone();
                 let stdout_handle = thread::spawn(move || {
                     let stdout_reader = BufReader::new(child_stdout);
                     for line in stdout_reader.lines().flatten() {
@@ -523,7 +491,7 @@ fn run_cmd(
             };
 
             let _stderr_handle_opt = if let Some(child_stderr) = child.stderr.take() {
-                let tx_stderr = tx_stderr.clone();
+                let tx_stderr = tx.clone();
                 let stderr_handle = thread::spawn(move || {
                     let stderr_reader = BufReader::new(child_stderr);
                     for line in stderr_reader.lines().flatten() {
@@ -553,7 +521,7 @@ fn run_cmd(
                                 id: command_id,
                                 code,
                             };
-                            if let Err(e) = tx_status.send(status_msg) {
+                            if let Err(e) = tx.send(status_msg) {
                                 error!("{e}");
                             }
                         }
@@ -588,7 +556,33 @@ fn run_cmd(
         } else {
             error!("unable to spawn command");
         }
+
+        record_job_end(command_id, name, tx);
     } else {
         error!("no shell defined!");
+    }
+}
+
+fn record_job_start(
+    command_id: Uuid,
+    name: &str,
+    tx: &UnboundedSender<WorkerClientToWorkerSession>,
+) {
+    info!("Running '{name}'");
+    if let Err(e) = tx.send(WorkerClientToWorkerSession::JobStart {
+        id: command_id,
+        name: name.to_string(),
+    }) {
+        error!("{e}");
+    }
+}
+
+fn record_job_end(command_id: Uuid, name: &str, tx: &UnboundedSender<WorkerClientToWorkerSession>) {
+    info!("'{name}' has ended");
+    if let Err(e) = tx.send(WorkerClientToWorkerSession::JobEnd {
+        id: command_id,
+        name: name.to_string(),
+    }) {
+        error!("{e}");
     }
 }

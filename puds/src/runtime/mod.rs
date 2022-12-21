@@ -23,6 +23,7 @@ use actix_web::{
 use anyhow::{Context, Result};
 use clap::Parser;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
+use ruarango::ConnectionBuilder;
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
@@ -88,6 +89,19 @@ where
     let config_data = Data::new(config_c);
 
     if !args.dry_run() {
+        // Setup a asynchronous store connection to the database
+        let conn = ConnectionBuilder::default()
+            .url("https://arangodb.allthetyme.info")
+            .username("pud")
+            .password("dtJ2^0nh#MI@Lsp5r^X0VJ66QveWNQ")
+            .database("pud")
+            // .async_kind(AsyncKind::Store)
+            .build()
+            .await?;
+
+        // Add connection to app data
+        let conn_data = Data::new(conn);
+
         // Load the TLS Keys
         let server_config = load_tls_config(&config)?;
 
@@ -99,9 +113,9 @@ where
             App::new()
                 .app_data(server_data.clone())
                 .app_data(config_data.clone())
+                .app_data(conn_data.clone())
                 .wrap(Compress::default())
                 .wrap(TracingLogger::default())
-                // .wrap(Timing)
                 .service(scope("/v1").configure(insecure_config))
         })
         .workers(workers)

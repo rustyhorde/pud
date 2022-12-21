@@ -18,6 +18,20 @@ use uuid::Uuid;
 pub enum WorkerClientToWorkerSession {
     /// A text message for a server
     Text(String),
+    /// A job has started on the worker
+    JobStart {
+        /// The command id associated with this job
+        id: Uuid,
+        /// The job name
+        name: String,
+    },
+    /// A job has ended on the worker
+    JobEnd {
+        /// The command id associated with this job
+        id: Uuid,
+        /// The job name
+        name: String,
+    },
     /// A stdout line from a command
     Stdout {
         /// The command id associated with this line

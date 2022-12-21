@@ -64,9 +64,7 @@ where
         while retry_count > 0 {
             let sys = System::new();
             let url_c = url.clone();
-            let (tx_stdout, mut rx_stdout) = unbounded_channel();
-            let (tx_stderr, mut rx_stderr) = unbounded_channel();
-            let (tx_status, mut rx_status) = unbounded_channel();
+            let (tx, mut rx) = unbounded_channel();
             sys.block_on(async move {
                 let awc = Client::builder()
                     .max_http_version(Version::HTTP_11)
@@ -81,29 +79,13 @@ where
                         let _ = Worker::add_stream(stream, ctx);
                         Worker::builder()
                             .addr(SinkWrite::new(sink, ctx))
-                            .tx_stdout(tx_stdout.clone())
-                            .tx_stderr(tx_stderr.clone())
-                            .tx_status(tx_status.clone())
+                            .tx(tx.clone())
                             .build()
-                    });
-
-                    let stdout_addr = addr.clone();
-                    let _handle = spawn(async move {
-                        while let Some(line) = rx_stdout.recv().await {
-                            stdout_addr.do_send(line);
-                        }
-                    });
-
-                    let stderr_addr = addr.clone();
-                    let _handle = spawn(async move {
-                        while let Some(line) = rx_stderr.recv().await {
-                            stderr_addr.do_send(line);
-                        }
                     });
 
                     let status_addr = addr;
                     let _handle = spawn(async move {
-                        while let Some(status) = rx_status.recv().await {
+                        while let Some(status) = rx.recv().await {
                             status_addr.do_send(status);
                         }
                     });
