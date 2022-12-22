@@ -42,8 +42,6 @@ pub(crate) struct Config {
     default: BTreeMap<String, Command>,
     overrides: BTreeMap<String, BTreeMap<String, Command>>,
     schedules: BTreeMap<String, Schedules>,
-    log_file_path: PathBuf,
-    log_file_name: String,
     db_url: String,
     db_user: String,
     db_pass: String,
@@ -100,14 +98,6 @@ impl LogConfig for Config {
     fn line_numbers(&self) -> bool {
         self.line_numbers
     }
-
-    fn log_file_path(&self) -> PathBuf {
-        self.log_file_path.clone()
-    }
-
-    fn log_file_name(&self) -> String {
-        self.log_file_name.clone()
-    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -126,25 +116,16 @@ impl TryFrom<TomlConfig> for Config {
         let db_pass = config.arangodb().password().clone();
         let db_name = config.arangodb().name().clone();
 
-        let (target, thread_id, thread_names, line_numbers, log_file_path, log_file_name) =
+        let (target, thread_id, thread_names, line_numbers) =
             if let Some(tracing) = config.tracing() {
                 (
                     *tracing.target(),
                     *tracing.thread_id(),
                     *tracing.thread_names(),
                     *tracing.line_numbers(),
-                    PathBuf::from(tracing.log_file_path()),
-                    tracing.log_file_name().clone(),
                 )
             } else {
-                (
-                    false,
-                    false,
-                    false,
-                    false,
-                    PathBuf::from("."),
-                    "puds.log".to_string(),
-                )
+                (false, false, false, false)
             };
         let socket_addr = SocketAddr::from((ip_addr, *port));
         let (tls, hostlist, default, overrides, schedules) = config.take();
@@ -166,8 +147,6 @@ impl TryFrom<TomlConfig> for Config {
             default,
             overrides,
             schedules,
-            log_file_path,
-            log_file_name,
             db_url,
             db_user,
             db_pass,

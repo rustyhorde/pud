@@ -65,7 +65,7 @@ where
     )?;
 
     // Setup logging
-    let guard = initialize(&mut config)?;
+    initialize(&mut config)?;
 
     // Output the pretty header
     header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
@@ -122,10 +122,6 @@ where
         .bind_rustls(socket_addr, server_config)?
         .run()
         .await?;
-    }
-
-    if let Some(guard) = guard {
-        drop(guard);
     }
     Ok(())
 }

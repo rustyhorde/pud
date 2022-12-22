@@ -50,7 +50,7 @@ where
     )?;
 
     // Setup logging
-    let guard = initialize(&mut config)?;
+    initialize(&mut config)?;
 
     // Output the pretty header
     header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
@@ -104,10 +104,6 @@ where
             sleep(Duration::from_secs(2u64.pow(error_count)));
             error_count += 1;
         }
-    }
-
-    if let Some(guard) = guard {
-        drop(guard);
     }
     Ok(())
 }

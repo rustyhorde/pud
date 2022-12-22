@@ -47,7 +47,7 @@ where
     )?;
 
     // Setup logging
-    let guard = initialize(&mut config)?;
+    initialize(&mut config)?;
 
     // Pull values out of config
     let url = config.server_url();
@@ -111,10 +111,6 @@ where
         if let Err(e) = sys.run().context("run failed") {
             error!("{e}");
         }
-    }
-
-    if let Some(guard) = guard {
-        drop(guard);
     }
     Ok(())
 }

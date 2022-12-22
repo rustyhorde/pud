@@ -1663,7 +1663,6 @@ dependencies = [
  "time",
  "toml",
  "tracing",
- "tracing-appender",
  "tracing-subscriber",
  "typed-builder",
  "uuid",
@@ -2383,17 +2382,6 @@ dependencies = [
  "pin-project",
  "tracing",
  "uuid",
-]
-
-[[package]]
-name = "tracing-appender"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09d48f71a791638519505cefafe162606f706c25592e4bde4d97600c0195312e"
-dependencies = [
- "crossbeam-channel",
- "time",
- "tracing-subscriber",
 ]
 
 [[package]]

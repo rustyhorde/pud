@@ -34,8 +34,6 @@ pub(crate) struct Config {
     server_port: u16,
     name: String,
     level: Option<Level>,
-    log_file_path: PathBuf,
-    log_file_name: String,
 }
 
 impl Config {
@@ -97,14 +95,6 @@ impl LogConfig for Config {
     fn line_numbers(&self) -> bool {
         self.line_numbers
     }
-
-    fn log_file_path(&self) -> PathBuf {
-        self.log_file_path.clone()
-    }
-
-    fn log_file_name(&self) -> String {
-        self.log_file_name.clone()
-    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -115,25 +105,16 @@ impl TryFrom<TomlConfig> for Config {
         let server_addr = config.actix().ip().clone();
         let server_port = *config.actix().port();
         let retry_count = *config.retry_count();
-        let (target, thread_id, thread_names, line_numbers, log_file_path, log_file_name) =
+        let (target, thread_id, thread_names, line_numbers) =
             if let Some(tracing) = config.tracing() {
                 (
                     *tracing.target(),
                     *tracing.thread_id(),
                     *tracing.thread_names(),
                     *tracing.line_numbers(),
-                    PathBuf::from(tracing.log_file_path()),
-                    tracing.log_file_name().clone(),
                 )
             } else {
-                (
-                    false,
-                    false,
-                    false,
-                    false,
-                    PathBuf::from("."),
-                    "pudw.log".to_string(),
-                )
+                (false, false, false, false)
             };
         Ok(Config {
             verbose: 0,
@@ -148,8 +129,6 @@ impl TryFrom<TomlConfig> for Config {
             server_port,
             name,
             level: None,
-            log_file_path,
-            log_file_name,
         })
     }
 }

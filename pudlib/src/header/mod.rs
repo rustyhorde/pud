@@ -144,8 +144,6 @@ fn trace(app_style: &Style, bold_blue: &Style, bold_green: &Style, prefix: &'sta
 
 #[cfg(test)]
 mod test {
-    use std::path::PathBuf;
-
     use super::{from_u8, header};
     use crate::log::Config as LogConfig;
     use anyhow::Result;
@@ -165,8 +163,6 @@ mod test {
         verbose: u8,
         quiet: u8,
         level: Option<Level>,
-        log_file_path: PathBuf,
-        log_file_name: String,
     }
 
     impl Default for TestConfig {
@@ -175,8 +171,6 @@ mod test {
                 verbose: 3,
                 quiet: 0,
                 level: Some(Level::INFO),
-                log_file_path: PathBuf::from("."),
-                log_file_name: String::from("log.log"),
             }
         }
     }
@@ -213,14 +207,6 @@ mod test {
 
         fn line_numbers(&self) -> bool {
             false
-        }
-
-        fn log_file_path(&self) -> PathBuf {
-            self.log_file_path.clone()
-        }
-
-        fn log_file_name(&self) -> String {
-            self.log_file_name.clone()
         }
     }
 
