@@ -22,7 +22,7 @@ anyhow = "1.0.66"
 awc = { version = "3.0.1", features = ["rustls"] }
 bincode = "1.3.3"
 bytes = "1.3.0"
-clap = { version = "4.0.29", features = ["derive"] }
+clap = { version = "4.0.32", features = ["derive"] }
 futures = "0.3.25"
 getset = "0.1.2"
 pudlib = { path = "../pudlib"}
