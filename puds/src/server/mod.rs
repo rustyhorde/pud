@@ -41,9 +41,13 @@ use uuid::Uuid;
 #[getset(get = "pub(crate)")]
 pub(crate) struct Server {
     config: Config,
+    #[builder(default = HashMap::new())]
     workers: HashMap<Uuid, Worker>,
+    #[builder(default = HashMap::new())]
     managers: HashMap<Uuid, Manager>,
+    #[builder(default = Arc::new(AtomicUsize::new(0)))]
     worker_count: Arc<AtomicUsize>,
+    #[builder(default = Arc::new(AtomicUsize::new(0)))]
     manager_count: Arc<AtomicUsize>,
 }
 
@@ -249,7 +253,6 @@ impl Handler<ManagerSessionToServer> for Server {
                     self.config = config;
                 }
 
-                // TODO: Broadcast message to all workers and managers
                 self.direct_manager_message(ServerToManagerClient::Reload(true), &id);
                 self.broadcast_workers_message(&ServerToWorkerClient::Reload, &None);
             }

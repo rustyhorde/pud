@@ -27,11 +27,9 @@ use ruarango::ConnectionBuilder;
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
-    collections::HashMap,
     ffi::OsString,
     fs::File,
     io::{self, BufReader, Write},
-    sync::{atomic::AtomicUsize, Arc},
 };
 use tracing::info;
 
@@ -70,17 +68,9 @@ where
     header::<Config, dyn Write>(&config, HEADER_PREFIX, Some(&mut io::stdout()))?;
 
     // Setup and start the server actor
-    let worker_count = Arc::new(AtomicUsize::new(0));
-    let manager_count = Arc::new(AtomicUsize::new(0));
     let socket_addr = *config.socket_addr();
     let workers = usize::from(*config.workers());
-    let server = Server::builder()
-        .workers(HashMap::new())
-        .managers(HashMap::new())
-        .worker_count(worker_count)
-        .manager_count(manager_count)
-        .config(config.clone())
-        .build();
+    let server = Server::builder().config(config.clone()).build();
     let server_data = Data::new(server.start());
 
     // Add config to app data
@@ -88,13 +78,12 @@ where
     let config_data = Data::new(config_c);
 
     if !args.dry_run() {
-        // Setup a asynchronous store connection to the database
+        // Setup connection to the database
         let conn = ConnectionBuilder::default()
             .url(config.db_url())
             .username(config.db_user())
             .password(config.db_pass())
             .database(config.db_name())
-            // .async_kind(AsyncKind::Store)
             .build()
             .await?;
 
@@ -114,7 +103,6 @@ where
                 .app_data(config_data.clone())
                 .app_data(conn_data.clone())
                 .wrap(Compress::default())
-                // .wrap(TracingLogger::default())
                 .service(scope("/v1").configure(insecure_config))
         })
         .workers(workers)
