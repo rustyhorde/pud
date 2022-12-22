@@ -32,7 +32,7 @@ use std::{
         Arc,
     },
 };
-use tracing::{debug, error, info, instrument};
+use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -49,7 +49,6 @@ pub(crate) struct Server {
 
 impl Server {
     /// Send message to everyone, except those in skip
-    #[instrument(skip_all)]
     fn broadcast<T>(&self, message: T, skip_ids: &Option<Vec<Uuid>>)
     where
         T: Into<ServerToWorkerClient> + Into<ServerToManagerClient> + std::fmt::Debug + Clone,
@@ -61,7 +60,6 @@ impl Server {
         self.broadcast_managers_message(&server_to_manager_client, skip_ids);
     }
 
-    #[instrument(skip_all)]
     pub(crate) fn broadcast_workers_message(
         &self,
         message: &ServerToWorkerClient,
@@ -80,7 +78,6 @@ impl Server {
         }
     }
 
-    #[instrument(skip_all)]
     pub(crate) fn broadcast_managers_message(
         &self,
         message: &ServerToManagerClient,
@@ -99,7 +96,6 @@ impl Server {
         }
     }
 
-    #[instrument(skip(self, message))]
     pub(crate) fn direct_worker_message(&self, message: ServerToWorkerClient, id: &Uuid) {
         if let Some(worker) = self.workers.get(id) {
             worker.addr().do_send(message);
@@ -108,7 +104,6 @@ impl Server {
         }
     }
 
-    #[instrument(skip(self, message))]
     pub(crate) fn direct_manager_message(&self, message: ServerToManagerClient, id: &Uuid) {
         if let Some(manager) = self.managers.get(id) {
             manager.addr().do_send(message);
@@ -127,7 +122,6 @@ impl Actor for Server {
 impl Handler<WorkerConnect> for Server {
     type Result = MessageResult<WorkerConnect>;
 
-    #[instrument(name = "Handle Worker Connect", skip(self, _ctx))]
     fn handle(&mut self, connect: WorkerConnect, _ctx: &mut Context<Self>) -> Self::Result {
         debug!("handling connect message from worker");
         // register session with unique id
@@ -151,7 +145,6 @@ impl Handler<WorkerConnect> for Server {
 impl Handler<ManagerConnect> for Server {
     type Result = MessageResult<ManagerConnect>;
 
-    #[instrument(name = "Handle Manager Connect", skip(self, _ctx))]
     fn handle(&mut self, connect: ManagerConnect, _ctx: &mut Context<Self>) -> Self::Result {
         debug!("handling connect message from manager");
         // register session with unique id
@@ -175,7 +168,6 @@ impl Handler<ManagerConnect> for Server {
 impl Handler<WorkerDisconnect> for Server {
     type Result = ();
 
-    #[instrument(name = "Handle Worker Disconnect", skip(self, _ctx))]
     fn handle(&mut self, msg: WorkerDisconnect, _ctx: &mut Context<Self>) {
         debug!("handling disconnect message from worker");
         // remove worker
@@ -194,7 +186,6 @@ impl Handler<WorkerDisconnect> for Server {
 impl Handler<ManagerDisconnect> for Server {
     type Result = ();
 
-    #[instrument(name = "Handle Manager Disconnect", skip(self, _ctx))]
     fn handle(&mut self, msg: ManagerDisconnect, _ctx: &mut Context<Self>) {
         debug!("handling disconnect message from manager");
         // remove manager
@@ -213,7 +204,6 @@ impl Handler<ManagerDisconnect> for Server {
 impl Handler<WorkerSessionToServer> for Server {
     type Result = ();
 
-    #[instrument(name = "Handle Worker Session To Server", skip(self, _ctx))]
     fn handle(&mut self, msg: WorkerSessionToServer, _ctx: &mut Context<Self>) {
         debug!("handling message from a worker session");
         match msg {
@@ -242,7 +232,6 @@ impl Handler<WorkerSessionToServer> for Server {
 impl Handler<ManagerSessionToServer> for Server {
     type Result = ();
 
-    #[instrument(name = "Handle Manager Session To Server", skip(self, _ctx))]
     fn handle(&mut self, msg: ManagerSessionToServer, _ctx: &mut Context<Self>) {
         debug!("handling message from a manager session");
 

@@ -30,7 +30,7 @@ use std::{
     time::{Duration, Instant},
 };
 use time::OffsetDateTime;
-use tracing::{debug, error, error_span, info, info_span, instrument};
+use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -58,7 +58,6 @@ pub(crate) struct Session {
     /// The start instant of this session
     origin: Instant,
     /// A connection to the database
-    #[allow(dead_code)]
     conn: Connection,
     /// Current jobs docs
     #[builder(default = HashMap::new())]
@@ -68,7 +67,6 @@ pub(crate) struct Session {
 impl Session {
     // Heartbeat that sends ping to the worker every HEARTBEAT_INTERVAL seconds (5)
     // Also check for activity from the worker in the past CLIENT_TIMEOUT seconds (10)
-    #[allow(clippy::unused_self)]
     fn hb(&self, ctx: &mut WebsocketContext<Self>) {
         debug!("Starting worker session heartbeat");
         let origin_c = self.origin;
@@ -116,7 +114,6 @@ impl Session {
         self.hb = Instant::now();
     }
 
-    #[instrument(skip_all)]
     fn handle_binary(&mut self, ctx: &mut WebsocketContext<Self>, bytes: &Bytes) {
         debug!("handling binary message");
         self.hb = Instant::now();
@@ -131,69 +128,31 @@ impl Session {
                     });
                 }
                 WorkerClientToWorkerSession::JobStart { id, name } => {
-                    info!("Job '{name}' has started");
+                    info!("job '{name}' has started");
                     let job = Job::new(self.id, &self.name, id, &name);
                     let _old = self.jobs.insert(id, job);
                 }
                 WorkerClientToWorkerSession::JobEnd { id, name } => {
-                    info!("Job '{name}' has ended");
+                    info!("job '{name}' has ended");
                     if let Some(mut job) = self.jobs.remove(&id) {
                         let _ = job.set_end_time(OffsetDateTime::now_utc());
-                        if let Ok(config) = doc::input::CreateConfigBuilder::default()
-                            .collection(&self.name)
-                            .document(job)
-                            .build()
-                        {
-                            let conn_c = self.conn.clone();
-                            let _ = ctx.spawn(
-                                async move {
-                                    info!("Creating Job Document");
-                                    let doc_meta_res: DocMetaResult<(), ()> =
-                                        Document::create(&conn_c, config).await;
-                                    match doc_meta_res {
-                                        Ok(doc_meta_either) => {
-                                            if let Some(doc_meta) = doc_meta_either.right() {
-                                                info!(
-                                                    "id: {}, rev: {}",
-                                                    doc_meta.id(),
-                                                    doc_meta.rev()
-                                                );
-                                            }
-                                        }
-                                        Err(e) => error!("{e}"),
-                                    }
-                                }
-                                .into_actor(self),
-                            );
-                        }
+                        self.store_job_document(ctx, job);
                     }
                 }
                 WorkerClientToWorkerSession::Stdout { id, line } => {
-                    let span = info_span!("STDOUT");
-                    let enter = span.enter();
-                    info!("{line}");
                     if let Some(job) = self.jobs.get_mut(&id) {
                         job.stdout_mut().push(line);
                     }
-                    drop(enter);
                 }
                 WorkerClientToWorkerSession::Stderr { id, line } => {
-                    let span = error_span!("STDERR");
-                    let enter = span.enter();
-                    error!("{line}");
                     if let Some(job) = self.jobs.get_mut(&id) {
                         job.stderr_mut().push(line);
                     }
-                    drop(enter);
                 }
                 WorkerClientToWorkerSession::Status { id, code } => {
-                    let span = info_span!("STATUS");
-                    let enter = span.enter();
                     if let Some(job) = self.jobs.get_mut(&id) {
                         let _ = job.set_status(code);
                     }
-                    info!("status: {code}");
-                    drop(enter);
                 }
             },
             Err(e) => error!("{e}"),
@@ -225,6 +184,54 @@ impl Session {
     #[allow(clippy::unused_self)]
     fn handle_no_op(&mut self) {
         debug!("handling no op message");
+    }
+
+    fn create_collection(&self, ctx: &mut WebsocketContext<Self>) {
+        let conn_c = self.conn.clone();
+        let name_c = self.name.clone();
+        let _ = ctx.spawn(
+            async move {
+                if let Err(e) = Collection::collection(&conn_c, &name_c).await {
+                    debug!("collection not found: {e}");
+                    if let Ok(coll_config) =
+                        coll::input::ConfigBuilder::default().name(&name_c).build()
+                    {
+                        if let Err(e) = Collection::create(&conn_c, &coll_config).await {
+                            error!("{e}");
+                        } else {
+                            info!("collection '{name_c}' created successfully!");
+                        }
+                    }
+                }
+            }
+            .into_actor(self),
+        );
+    }
+
+    fn store_job_document(&self, ctx: &mut WebsocketContext<Self>, job: Job) {
+        if let Ok(config) = doc::input::CreateConfigBuilder::default()
+            .collection(&self.name)
+            .document(job)
+            .build()
+        {
+            let conn_c = self.conn.clone();
+            let _ = ctx.spawn(
+                async move {
+                    debug!("creating job document");
+                    let doc_meta_res: DocMetaResult<(), ()> =
+                        Document::create(&conn_c, config).await;
+                    match doc_meta_res {
+                        Ok(doc_meta_either) => {
+                            if let Some(doc_meta) = doc_meta_either.right() {
+                                info!("job document created: {}", doc_meta.id());
+                            }
+                        }
+                        Err(e) => error!("{e}"),
+                    }
+                }
+                .into_actor(self),
+            );
+        }
     }
 }
 
@@ -261,30 +268,10 @@ impl Actor for Session {
                 fut::ready(())
             })
             .wait(ctx);
-        if let Ok(coll_config) = coll::input::ConfigBuilder::default()
-            .name(&self.name)
-            .build()
-        {
-            let conn_c = self.conn.clone();
-            let name_c = self.name.clone();
-            let _ = ctx.spawn(
-                async move {
-                    if let Err(e) = Collection::collection(&conn_c, &name_c).await {
-                        error!("{e}");
-                        if let Err(e) = Collection::create(&conn_c, &coll_config).await {
-                            error!("{e}");
-                        } else {
-                            info!("collection '{name_c}' created successfully!");
-                        }
-                    }
-                }
-                .into_actor(self),
-            );
-        }
+        self.create_collection(ctx);
         debug!("worker registration complete: {}", self.id);
     }
 
-    #[instrument(name = "Worker Session Stopping", skip_all)]
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         info!("worker session stopping");
         self.addr.do_send(Disconnect::builder().id(self.id).build());
@@ -296,7 +283,6 @@ impl Actor for Session {
 impl Handler<ServerToWorkerClient> for Session {
     type Result = ();
 
-    #[instrument(name = "Handle ServerToWorkerClient", skip_all)]
     fn handle(&mut self, msg: ServerToWorkerClient, ctx: &mut Self::Context) {
         debug!("handling message from server actor to worker client");
         if let Ok(wm_bytes) = serialize(&msg) {
@@ -326,12 +312,10 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
         }
     }
 
-    #[instrument(name = "Worker StreamHandler Started", skip_all)]
     fn started(&mut self, _ctx: &mut Self::Context) {
         info!("worker session stream handler started");
     }
 
-    #[instrument(name = "Worker StreamHandler Finished", skip_all)]
     fn finished(&mut self, ctx: &mut Self::Context) {
         info!("worker session stream handler finished");
         ctx.stop();
