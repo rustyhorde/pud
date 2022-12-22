@@ -125,7 +125,7 @@ impl Worker {
     }
 
     fn start_rt_monitor(&mut self, ctx: &mut Context<Self>) {
-        info!("starting realtime schedule monitor");
+        debug!("starting realtime schedule monitor");
         let rt_handle = ctx.run_interval(Duration::from_secs(1), move |act, _ctx| {
             let now = OffsetDateTime::now_utc();
             for (rt, cmds) in &act.rt {
@@ -202,13 +202,12 @@ impl Worker {
     fn handle_binary(&mut self, ctx: &mut Context<Self>, bytes: &Bytes) {
         if let Ok(msg) = deserialize::<ServerToWorkerClient>(bytes) {
             match msg {
-                ServerToWorkerClient::Status(status) => info!("Status: {status}"),
+                ServerToWorkerClient::Status(status) => debug!("Status: {status}"),
                 ServerToWorkerClient::Initialize(commands, schedules) => {
                     self.commands = commands;
                     self.schedules = schedules;
                     info!("worker loaded {} commands", self.commands.len());
                     info!("worker loaded {} schedules", self.schedules.len());
-                    info!("worker initialization complete");
                     self.start_schedules(ctx);
                     // initialize the condvar pair
                     let (lock, _cvar) = &*self.running_pair;
@@ -217,6 +216,7 @@ impl Worker {
                         Err(poisoned) => poisoned.into_inner(),
                     };
                     *running = true;
+                    info!("worker initialization complete");
                 }
                 ServerToWorkerClient::Reload => {
                     info!("a reload has been requested, sending initialization");
@@ -322,7 +322,7 @@ impl Worker {
         on_unit_active_sec: Duration,
         cmds: &[String],
     ) {
-        info!(
+        debug!(
             "launching monotonic schedule in {}s, re-running every {}s",
             on_boot_sec.as_secs_f64(),
             on_unit_active_sec.as_secs_f64(),
@@ -375,7 +375,7 @@ impl Worker {
     fn store_realtime(&mut self, on_calendar: &str, _persistent: bool, cmds: &[String]) {
         match parse_calendar(on_calendar) {
             Ok(rt) => {
-                info!("adding realtime schedule {rt:?}");
+                debug!("adding realtime schedule {rt:?}");
                 let _prev = self.rt.insert(rt, cmds.to_vec());
             }
             Err(e) => error!("{e}"),
