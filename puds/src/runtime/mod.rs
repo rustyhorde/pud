@@ -30,11 +30,10 @@ use std::{
     collections::HashMap,
     ffi::OsString,
     fs::File,
-    io::{BufReader, Write},
+    io::{self, BufReader, Write},
     sync::{atomic::AtomicUsize, Arc},
 };
 use tracing::info;
-use tracing_actix_web::TracingLogger;
 
 const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ███████╗
 ██╔══██╗██║   ██║██╔══██╗██╔════╝
@@ -68,7 +67,7 @@ where
     initialize(&mut config)?;
 
     // Output the pretty header
-    header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
+    header::<Config, dyn Write>(&config, HEADER_PREFIX, Some(&mut io::stdout()))?;
 
     // Setup and start the server actor
     let worker_count = Arc::new(AtomicUsize::new(0));
@@ -115,7 +114,7 @@ where
                 .app_data(config_data.clone())
                 .app_data(conn_data.clone())
                 .wrap(Compress::default())
-                .wrap(TracingLogger::default())
+                // .wrap(TracingLogger::default())
                 .service(scope("/v1").configure(insecure_config))
         })
         .workers(workers)

@@ -170,8 +170,4 @@ pub(crate) struct Tracing {
     thread_names: bool,
     /// Should we trace the line numbers
     line_numbers: bool,
-    /// Log file path
-    log_file_path: String,
-    /// Log file name
-    log_file_name: String,
 }

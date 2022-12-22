@@ -7,9 +7,7 @@ port = 32277
 
 # tracing configuration
 [tracing]
-target = false
+target = true
 thread_id = false
 thread_names = false
-line_numbers = false
-log_file_path = "test"
-log_file_name = "pudw.log"
+line_numbers = true

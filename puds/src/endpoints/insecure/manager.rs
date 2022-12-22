@@ -35,7 +35,7 @@ pub(crate) async fn manager(
         .realip_remote_addr()
         .map_or(unknown.clone(), ToString::to_string);
     let name = name.name.as_deref().map_or(unknown, ToString::to_string);
-    info!("Name: {name}, Ip: {ip})");
+    info!("Name: {name}, Ip: {ip}");
     let response = start(
         Session::builder()
             .id(Uuid::new_v4())

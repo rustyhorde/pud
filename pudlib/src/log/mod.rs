@@ -63,6 +63,7 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
         Ok(())
     } else {
         let format = fmt::layer()
+            .compact()
             .with_level(true)
             .with_ansi(true)
             .with_target(config.target())

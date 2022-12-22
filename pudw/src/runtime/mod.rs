@@ -18,7 +18,12 @@ use awc::{http::Version, Client};
 use clap::Parser;
 use futures::StreamExt;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
-use std::{ffi::OsString, io::Write, thread::sleep, time::Duration};
+use std::{
+    ffi::OsString,
+    io::{self, Write},
+    thread::sleep,
+    time::Duration,
+};
 use tokio::sync::mpsc::unbounded_channel;
 use tracing::{debug, error, info};
 
@@ -53,7 +58,7 @@ where
     initialize(&mut config)?;
 
     // Output the pretty header
-    header::<Config, dyn Write>(&config, HEADER_PREFIX, None)?;
+    header::<Config, dyn Write>(&config, HEADER_PREFIX, Some(&mut io::stdout()))?;
 
     // Pull values out of config
     let url = config.server_url();
