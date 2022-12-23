@@ -139,10 +139,10 @@ impl CommandLine {
                     let mut lines = vec![];
 
                     for (id, (ip, name)) in &workers {
-                        lines.push(format!("{name:max_name_len$} - {ip:max_ip_len$} ({id})"));
+                        lines.push(format!("{name:>max_name_len$} - {ip:max_ip_len$} ({id})"));
                     }
 
-                    lines.sort();
+                    lines.sort_by(|x, y| x.trim().cmp(y.trim()));
 
                     for line in &lines {
                         error!("{line}");
