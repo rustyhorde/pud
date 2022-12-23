@@ -136,14 +136,16 @@ impl CommandLine {
                         .max_by(Ord::cmp)
                         .unwrap_or(20);
                     error!("{count} worker(s) connected");
+                    let mut lines = vec![];
+
                     for (id, (ip, name)) in &workers {
-                        error!(
-                            "{:name_width$} - {:ip_width$} ({id})",
-                            name,
-                            ip,
-                            name_width = max_name_len,
-                            ip_width = max_ip_len
-                        );
+                        lines.push(format!("{name:max_name_len$} - {ip:max_ip_len$} ({id})"));
+                    }
+
+                    lines.sort();
+
+                    for line in &lines {
+                        error!("{line}");
                     }
                     ctx.stop();
                 }
