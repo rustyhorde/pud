@@ -124,8 +124,8 @@ impl CommandLine {
                     ctx.stop();
                 }
                 ServerToManagerClient::WorkersList(workers) => {
-                    for (id, name) in &workers {
-                        error!("{name} ({id})");
+                    for (id, (ip, name)) in &workers {
+                        error!("{name} - {ip} ({id})");
                     }
                     ctx.stop();
                 }

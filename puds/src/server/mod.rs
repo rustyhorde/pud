@@ -257,10 +257,10 @@ impl Handler<ManagerSessionToServer> for Server {
                 self.broadcast_workers_message(&ServerToWorkerClient::Reload, &None);
             }
             ManagerSessionToServer::ListWorkers(id) => {
-                let workers: HashMap<Uuid, String> = self
+                let workers: HashMap<Uuid, (String, String)> = self
                     .workers
                     .iter()
-                    .map(|(id, worker)| (*id, worker.name().clone()))
+                    .map(|(id, worker)| (*id, (worker.ip().clone(), worker.name().clone())))
                     .collect();
                 self.direct_manager_message(ServerToManagerClient::WorkersList(workers), &id);
             }

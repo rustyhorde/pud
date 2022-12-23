@@ -74,7 +74,7 @@ pub enum ServerToManagerClient {
     /// Reload status
     Reload(bool),
     /// Connected Workers
-    WorkersList(HashMap<Uuid, String>),
+    WorkersList(HashMap<Uuid, (String, String)>),
 }
 
 impl From<String> for ServerToManagerClient {
