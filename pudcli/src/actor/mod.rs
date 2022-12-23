@@ -124,8 +124,26 @@ impl CommandLine {
                     ctx.stop();
                 }
                 ServerToManagerClient::WorkersList(workers) => {
+                    let count = workers.len();
+                    let max_ip_len = workers
+                        .iter()
+                        .map(|x| (x.1).0.len())
+                        .max_by(Ord::cmp)
+                        .unwrap_or(20);
+                    let max_name_len = workers
+                        .iter()
+                        .map(|x| (x.1).1.len())
+                        .max_by(Ord::cmp)
+                        .unwrap_or(20);
+                    error!("{count} worker(s) connected");
                     for (id, (ip, name)) in &workers {
-                        error!("{name} - {ip} ({id})");
+                        error!(
+                            "{:name_width$} - {:ip_width$} ({id})",
+                            name,
+                            ip,
+                            name_width = max_name_len,
+                            ip_width = max_ip_len
+                        );
                     }
                     ctx.stop();
                 }
