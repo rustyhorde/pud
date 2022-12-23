@@ -46,6 +46,7 @@ pub(crate) struct Config {
     db_user: String,
     db_pass: String,
     db_name: String,
+    with_level: bool,
 }
 
 impl Verbosity for Config {
@@ -98,6 +99,10 @@ impl LogConfig for Config {
     fn line_numbers(&self) -> bool {
         self.line_numbers
     }
+
+    fn with_level(&self) -> bool {
+        self.with_level
+    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -116,16 +121,17 @@ impl TryFrom<TomlConfig> for Config {
         let db_pass = config.arangodb().password().clone();
         let db_name = config.arangodb().name().clone();
 
-        let (target, thread_id, thread_names, line_numbers) =
+        let (target, thread_id, thread_names, line_numbers, with_level) =
             if let Some(tracing) = config.tracing() {
                 (
                     *tracing.target(),
                     *tracing.thread_id(),
                     *tracing.thread_names(),
                     *tracing.line_numbers(),
+                    *tracing.with_level(),
                 )
             } else {
-                (false, false, false, false)
+                (false, false, false, false, true)
             };
         let socket_addr = SocketAddr::from((ip_addr, *port));
         let (tls, hostlist, default, overrides, schedules) = config.take();
@@ -151,6 +157,7 @@ impl TryFrom<TomlConfig> for Config {
             db_user,
             db_pass,
             db_name,
+            with_level,
         })
     }
 }
@@ -238,6 +245,8 @@ pub(crate) struct Tracing {
     thread_names: bool,
     /// Should we trace the line numbers
     line_numbers: bool,
+    /// Should we trace the level
+    with_level: bool,
 }
 
 /// TLS configuration

@@ -58,6 +58,7 @@ pub(crate) struct Cli {
 #[derive(Clone, Debug, Subcommand)]
 pub(crate) enum Subcommands {
     Reload,
+    ListWorkers,
 }
 
 #[cfg(test)]

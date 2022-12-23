@@ -38,6 +38,8 @@ pub trait Config {
     fn thread_names(&self) -> bool;
     /// Should we log the line numbers?
     fn line_numbers(&self) -> bool;
+    /// Shoule we log the level?
+    fn with_level(&self) -> bool;
     /// Get the effective tracing level
     fn level(&self) -> Option<Level>;
     /// Allow initialization to set the effective tracing level
@@ -64,7 +66,7 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
     } else {
         let format = fmt::layer()
             .compact()
-            .with_level(true)
+            .with_level(config.with_level())
             .with_ansi(true)
             .with_target(config.target())
             .with_thread_ids(config.thread_id())

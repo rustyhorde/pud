@@ -22,8 +22,7 @@ target = false
 thread_id = false
 thread_names = false
 line_numbers = false
-log_file_path = "test"
-log_file_name = "puds.log"
+with_level = true
 
 # Host list
 [hostlist.linux]

@@ -11,3 +11,4 @@ target = false
 thread_id = false
 thread_names = false
 line_numbers = false
+with_level = false

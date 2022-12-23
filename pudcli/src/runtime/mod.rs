@@ -57,12 +57,14 @@ where
             info!("running reload");
             ManagerClientToManagerSession::Reload
         }
+        Subcommands::ListWorkers => {
+            info!("listing workers");
+            ManagerClientToManagerSession::ListWorkers
+        }
     };
 
     if !args.dry_run() {
-        let (tx_stdout, mut rx_stdout) = unbounded_channel();
-        let (tx_stderr, mut rx_stderr) = unbounded_channel();
-        let (tx_status, mut rx_status) = unbounded_channel();
+        let (tx, mut rx) = unbounded_channel();
         let sys = System::new();
 
         sys.block_on(async move {
@@ -78,38 +80,24 @@ where
                     let _ = CommandLine::add_stream(stream, ctx);
                     CommandLine::builder()
                         .addr(SinkWrite::new(sink, ctx))
-                        .tx_stdout(tx_stdout.clone())
-                        .tx_stderr(tx_stderr.clone())
-                        .tx_status(tx_status.clone())
+                        .tx(tx.clone())
                         .command_to_run(command_to_run)
                         .build()
                 });
 
-                let stdout_addr = addr.clone();
                 let _handle = spawn(async move {
-                    while let Some(line) = rx_stdout.recv().await {
-                        stdout_addr.do_send(line);
+                    while let Some(status) = rx.recv().await {
+                        addr.do_send(status);
                     }
                 });
-
-                let stderr_addr = addr.clone();
-                let _handle = spawn(async move {
-                    while let Some(line) = rx_stderr.recv().await {
-                        stderr_addr.do_send(line);
-                    }
-                });
-
-                let status_addr = addr;
-                let _handle = spawn(async move {
-                    while let Some(status) = rx_status.recv().await {
-                        status_addr.do_send(status);
-                    }
-                });
+            } else {
+                System::current().stop();
             }
         });
 
         if let Err(e) = sys.run().context("run failed") {
-            error!("{e}");
+            error!("{e:?}");
+            error!("should kill sys");
         }
     }
     Ok(())

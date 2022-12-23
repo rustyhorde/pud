@@ -256,6 +256,14 @@ impl Handler<ManagerSessionToServer> for Server {
                 self.direct_manager_message(ServerToManagerClient::Reload(true), &id);
                 self.broadcast_workers_message(&ServerToWorkerClient::Reload, &None);
             }
+            ManagerSessionToServer::ListWorkers(id) => {
+                let workers: HashMap<Uuid, String> = self
+                    .workers
+                    .iter()
+                    .map(|(id, worker)| (*id, worker.name().clone()))
+                    .collect();
+                self.direct_manager_message(ServerToManagerClient::WorkersList(workers), &id);
+            }
         }
     }
 }

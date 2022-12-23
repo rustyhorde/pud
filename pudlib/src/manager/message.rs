@@ -19,4 +19,6 @@ pub enum ManagerClientToManagerSession {
     Initialize,
     /// A reload request from a manager
     Reload,
+    /// List the connected workers
+    ListWorkers,
 }

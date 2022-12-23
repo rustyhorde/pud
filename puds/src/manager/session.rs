@@ -121,6 +121,10 @@ impl Session {
                         name: self.name.clone(),
                     });
                 }
+                ManagerClientToManagerSession::ListWorkers => {
+                    self.addr
+                        .do_send(ManagerSessionToServer::ListWorkers(self.id));
+                }
             },
             Err(e) => error!("{e}"),
         }

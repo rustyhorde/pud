@@ -10,7 +10,6 @@
 
 use std::{
     collections::VecDeque,
-    sync::{atomic::AtomicBool, Arc, Mutex},
     time::{Duration, Instant},
 };
 
@@ -39,33 +38,20 @@ const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(TypedBuilder)]
-#[allow(dead_code)]
 pub(crate) struct CommandLine {
     // current heartbeat instant
     #[builder(default = Instant::now())]
     hb: Instant,
     // The addr used to send messages back to the worker session
     addr: SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>,
-    // the sender for stdout from running commands
-    tx_stdout: UnboundedSender<ManagerClientToManagerSession>,
-    // the sender for stderr from running commands
-    tx_stderr: UnboundedSender<ManagerClientToManagerSession>,
-    // the sender for a command status
-    tx_status: UnboundedSender<ManagerClientToManagerSession>,
+    // the sender for manager client to manager session
+    #[allow(dead_code)]
+    tx: UnboundedSender<ManagerClientToManagerSession>,
     // the command to run on the server
     command_to_run: ManagerClientToManagerSession,
-    // handle to the stdout queue future
-    #[builder(default = Arc::new(Mutex::new(None)))]
-    stdout_handle: Arc<Mutex<Option<SpawnHandle>>>,
     #[builder(default = VecDeque::new())]
     // the stdout queue
     stdout_queue: VecDeque<Vec<u8>>,
-    // the last instant a queue message was drained
-    #[builder(default = Instant::now())]
-    stdout_last: Instant,
-    // the last instant a stdout message was received
-    #[builder(default = AtomicBool::new(false))]
-    queue_running: AtomicBool,
     // continuation bytes
     #[builder(default = BytesMut::new())]
     cont_bytes: BytesMut,
@@ -122,19 +108,25 @@ impl CommandLine {
                 ServerToManagerClient::Initialize => {
                     info!("command line initialization complete");
                     // request reload from the server
-                    if let Ok(init) = serialize(&ManagerClientToManagerSession::Reload) {
+                    if let Ok(init) = serialize(&self.command_to_run) {
                         if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
-                            error!("Unable to send reload message");
+                            error!("Unable to send message");
                         }
                     } else {
-                        error!("Unable to serialize reload message");
+                        error!("Unable to serialize message");
                     }
                 }
                 ServerToManagerClient::Reload(result) => {
-                    info!(
+                    error!(
                         "reload was a {}",
                         if result { "success" } else { "failure" }
                     );
+                    ctx.stop();
+                }
+                ServerToManagerClient::WorkersList(workers) => {
+                    for (id, name) in &workers {
+                        error!("{name} ({id})");
+                    }
                     ctx.stop();
                 }
             }

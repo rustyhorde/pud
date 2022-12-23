@@ -34,6 +34,7 @@ pub(crate) struct Config {
     server_port: u16,
     name: String,
     level: Option<Level>,
+    with_level: bool,
 }
 
 impl Config {
@@ -95,6 +96,10 @@ impl LogConfig for Config {
     fn line_numbers(&self) -> bool {
         self.line_numbers
     }
+
+    fn with_level(&self) -> bool {
+        self.with_level
+    }
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -105,16 +110,17 @@ impl TryFrom<TomlConfig> for Config {
         let server_addr = config.actix().ip().clone();
         let server_port = *config.actix().port();
         let retry_count = *config.retry_count();
-        let (target, thread_id, thread_names, line_numbers) =
+        let (target, thread_id, thread_names, line_numbers, with_level) =
             if let Some(tracing) = config.tracing() {
                 (
                     *tracing.target(),
                     *tracing.thread_id(),
                     *tracing.thread_names(),
                     *tracing.line_numbers(),
+                    *tracing.with_level(),
                 )
             } else {
-                (false, false, false, false)
+                (false, false, false, false, true)
             };
         Ok(Config {
             verbose: 0,
@@ -129,6 +135,7 @@ impl TryFrom<TomlConfig> for Config {
             server_port,
             name,
             level: None,
+            with_level,
         })
     }
 }
@@ -170,4 +177,6 @@ pub(crate) struct Tracing {
     thread_names: bool,
     /// Should we trace the line numbers
     line_numbers: bool,
+    /// Should we trace the level
+    with_level: bool,
 }

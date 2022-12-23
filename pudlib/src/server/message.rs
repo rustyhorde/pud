@@ -11,7 +11,7 @@
 use crate::{Command, Schedule};
 use actix::Message;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
 
 /// A message from a worker session to the server actor
@@ -58,6 +58,8 @@ pub enum ManagerSessionToServer {
     },
     /// Reload the server configuration
     Reload(Uuid),
+    /// List the connected workers
+    ListWorkers(Uuid),
 }
 
 /// A message for a manager
@@ -71,6 +73,8 @@ pub enum ServerToManagerClient {
     Initialize,
     /// Reload status
     Reload(bool),
+    /// Connected Workers
+    WorkersList(HashMap<Uuid, String>),
 }
 
 impl From<String> for ServerToManagerClient {

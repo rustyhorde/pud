@@ -20,12 +20,13 @@ pub(crate) mod session;
 #[derive(Clone, Debug, Getters)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct Worker {
+    name: String,
     addr: Recipient<ServerToWorkerClient>,
 }
 
 impl From<Connect> for Worker {
     fn from(value: Connect) -> Self {
-        let (addr, _ip, _name) = value.take();
-        Worker { addr }
+        let (addr, _ip, name) = value.take();
+        Worker { name, addr }
     }
 }

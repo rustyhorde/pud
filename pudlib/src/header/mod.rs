@@ -208,6 +208,10 @@ mod test {
         fn line_numbers(&self) -> bool {
             false
         }
+
+        fn with_level(&self) -> bool {
+            true
+        }
     }
 
     lazy_static! {
