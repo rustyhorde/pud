@@ -61,6 +61,9 @@ where
             info!("listing workers");
             ManagerClientToManagerSession::ListWorkers
         }
+        Subcommands::Schedules(schedule) => {
+            ManagerClientToManagerSession::Schedules(schedule.name().clone())
+        }
     };
 
     if !args.dry_run() {

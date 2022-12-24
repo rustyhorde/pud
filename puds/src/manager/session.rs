@@ -125,6 +125,11 @@ impl Session {
                     self.addr
                         .do_send(ManagerSessionToServer::ListWorkers(self.id));
                 }
+                ManagerClientToManagerSession::Schedules(name) => {
+                    info!("schedules requested for {name}");
+                    self.addr
+                        .do_send(ManagerSessionToServer::Schedules { id: self.id, name });
+                }
             },
             Err(e) => error!("{e}"),
         }

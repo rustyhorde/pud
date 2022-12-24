@@ -8,6 +8,7 @@
 
 //! Worker Actix Message
 
+use crate::Schedule;
 use actix::Message;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -55,6 +56,13 @@ pub enum WorkerClientToWorkerSession {
     },
     /// An initialization request from a worker
     Initialize,
+    /// The schedules loaded on this worker
+    Schedules {
+        /// The manager that request the schedules
+        manager_id: Uuid,
+        /// The currently loaded schedules
+        schedules: Vec<Schedule>,
+    },
 }
 
 impl WorkerClientToWorkerSession {

@@ -12,7 +12,7 @@ use actix::Message;
 use serde::{Deserialize, Serialize};
 
 /// A message from a manger client to a manager session
-#[derive(Clone, Copy, Debug, Deserialize, Message, Serialize)]
+#[derive(Clone, Debug, Deserialize, Message, Serialize)]
 #[rtype(result = "()")]
 pub enum ManagerClientToManagerSession {
     /// An initialization request from a manager
@@ -21,4 +21,6 @@ pub enum ManagerClientToManagerSession {
     Reload,
     /// List the connected workers
     ListWorkers,
+    /// List the schedules for the given worker
+    Schedules(String),
 }

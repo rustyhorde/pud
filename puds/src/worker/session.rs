@@ -154,6 +154,14 @@ impl Session {
                         let _ = job.set_status(code);
                     }
                 }
+                WorkerClientToWorkerSession::Schedules {
+                    manager_id,
+                    schedules,
+                } => self.addr.do_send(WorkerSessionToServer::Schedules {
+                    manager_id,
+                    name: self.name.clone(),
+                    schedules,
+                }),
             },
             Err(e) => error!("{e}"),
         }

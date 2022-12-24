@@ -27,7 +27,9 @@ use awc::{
 use bincode::{deserialize, serialize};
 use bytes::{Bytes, BytesMut};
 use futures::stream::SplitSink;
-use pudlib::{parse_ts_ping, send_ts_ping, ManagerClientToManagerSession, ServerToManagerClient};
+use pudlib::{
+    parse_ts_ping, send_ts_ping, ManagerClientToManagerSession, Schedule, ServerToManagerClient,
+};
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
@@ -146,6 +148,42 @@ impl CommandLine {
 
                     for line in &lines {
                         error!("{line}");
+                    }
+                    ctx.stop();
+                }
+                ServerToManagerClient::Schedules { name, schedules } => {
+                    error!("Retrieved {} schedules from '{name}'", schedules.len());
+
+                    for schedule in &schedules {
+                        match schedule {
+                            Schedule::Monotonic {
+                                on_boot_sec,
+                                on_unit_active_sec,
+                                cmds,
+                            } => {
+                                error!("monotonic:");
+                                error!("     on_boot_sec:        {}", on_boot_sec.as_secs_f64());
+                                error!(
+                                    "     on_unit_active_sec: {}",
+                                    on_unit_active_sec.as_secs_f64()
+                                );
+                                for cmd in cmds {
+                                    error!("     cmd:                {cmd}");
+                                }
+                            }
+                            Schedule::Realtime {
+                                on_calendar,
+                                persistent,
+                                cmds,
+                            } => {
+                                error!("realtime:");
+                                error!("     on_calendar: {on_calendar}");
+                                error!("     persistent:  {persistent}");
+                                for cmd in cmds {
+                                    error!("     cmd:         {cmd}");
+                                }
+                            }
+                        }
                     }
                     ctx.stop();
                 }

@@ -224,6 +224,16 @@ impl Worker {
                     // request initialization from the server
                     self.initialize(ctx);
                 }
+                ServerToWorkerClient::Schedules(manager_id) => {
+                    if let Ok(msg) = serialize(&WorkerClientToWorkerSession::Schedules {
+                        manager_id,
+                        schedules: self.schedules.clone(),
+                    }) {
+                        if let Err(e) = self.addr.write(Message::Binary(Bytes::from(msg))) {
+                            error!("unable to write schedules message: {e:?}");
+                        }
+                    }
+                }
             }
         }
     }

@@ -59,8 +59,14 @@ pub(crate) struct Cli {
 pub(crate) enum Subcommands {
     Reload,
     ListWorkers,
+    Schedules(Schedule),
 }
 
+#[derive(Clone, Debug, Getters, Parser)]
+#[getset(get = "pub(crate)")]
+pub(crate) struct Schedule {
+    name: String,
+}
 #[cfg(test)]
 mod test {
     use super::Cli;

@@ -229,6 +229,16 @@ impl Handler<WorkerSessionToServer> for Server {
                     &id,
                 );
             }
+            WorkerSessionToServer::Schedules {
+                manager_id,
+                name,
+                schedules,
+            } => {
+                self.direct_manager_message(
+                    ServerToManagerClient::Schedules { name, schedules },
+                    &manager_id,
+                );
+            }
         }
     }
 }
@@ -263,6 +273,21 @@ impl Handler<ManagerSessionToServer> for Server {
                     .map(|(id, worker)| (*id, (worker.ip().clone(), worker.name().clone())))
                     .collect();
                 self.direct_manager_message(ServerToManagerClient::WorkersList(workers), &id);
+            }
+            ManagerSessionToServer::Schedules { id, name } => {
+                if let Some((worker_id, _worker)) =
+                    self.workers.iter().find(|(_k, v)| *v.name() == name)
+                {
+                    self.direct_worker_message(ServerToWorkerClient::Schedules(id), worker_id);
+                } else {
+                    self.direct_manager_message(
+                        ServerToManagerClient::Schedules {
+                            name,
+                            schedules: vec![],
+                        },
+                        &id,
+                    );
+                }
             }
         }
     }

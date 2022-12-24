@@ -25,6 +25,15 @@ pub enum WorkerSessionToServer {
         /// The name of the worker client
         name: String,
     },
+    /// A schedules request has been fulfilled
+    Schedules {
+        /// The manager id that originated the request
+        manager_id: Uuid,
+        /// The name of the worker
+        name: String,
+        /// The currently loaded schedules
+        schedules: Vec<Schedule>,
+    },
 }
 
 /// A message from a server to a worker client
@@ -37,6 +46,8 @@ pub enum ServerToWorkerClient {
     Initialize(BTreeMap<String, Command>, Vec<Schedule>),
     /// A reload has been requested, worker should re-initialize
     Reload,
+    /// A request for the current loaded schedules
+    Schedules(Uuid),
 }
 
 impl From<String> for ServerToWorkerClient {
@@ -60,6 +71,13 @@ pub enum ManagerSessionToServer {
     Reload(Uuid),
     /// List the connected workers
     ListWorkers(Uuid),
+    /// Schedules for the given worker
+    Schedules {
+        /// The id of the manager
+        id: Uuid,
+        /// The name of the worker to fetch schedules from
+        name: String,
+    },
 }
 
 /// A message for a manager
@@ -75,6 +93,13 @@ pub enum ServerToManagerClient {
     Reload(bool),
     /// Connected Workers
     WorkersList(HashMap<Uuid, (String, String)>),
+    /// Schedules for the given worker
+    Schedules {
+        /// The name of the worker
+        name: String,
+        /// The schedules currently loaded on the worker
+        schedules: Vec<Schedule>,
+    },
 }
 
 impl From<String> for ServerToManagerClient {
