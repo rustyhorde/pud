@@ -8,11 +8,6 @@
 
 // The cli actix actor
 
-use std::{
-    collections::VecDeque,
-    time::{Duration, Instant},
-};
-
 use actix::{
     io::{SinkWrite, WriteHandler},
     Actor, ActorContext, AsyncContext, Context, Handler, SpawnHandle, StreamHandler, System,
@@ -29,6 +24,10 @@ use bytes::{Bytes, BytesMut};
 use futures::stream::SplitSink;
 use pudlib::{
     parse_ts_ping, send_ts_ping, ManagerClientToManagerSession, Schedule, ServerToManagerClient,
+};
+use std::{
+    collections::VecDeque,
+    time::{Duration, Instant},
 };
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, error, info};
@@ -200,14 +199,21 @@ impl CommandLine {
                     } => {
                         error!("job started at {start_time}");
                         error!("job ended at {end_time}");
+                        if let Ok(nanos) = i64::try_from(
+                            end_time.unix_timestamp_nanos() - start_time.unix_timestamp_nanos(),
+                        ) {
+                            let dur = time::Duration::nanoseconds(nanos);
+                            error!("job duration: {}s", dur.as_seconds_f64());
+                        }
+                        error!("");
                         error!("STDOUT");
                         for line in &stdout {
-                            error!("{line}");
+                            error!("     {line}");
                         }
                         error!("");
                         error!("STDERR");
                         for line in &stderr {
-                            error!("{line}");
+                            error!("     {line}");
                         }
                         error!("");
 

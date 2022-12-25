@@ -142,13 +142,10 @@ impl Session {
                         let addr_c = self.addr.clone();
                         let _handle = ctx.spawn(
                             async move {
-                                info!("finding job documents");
                                 match Cursor::create::<JobDoc>(&conn_c, config).await {
                                     Ok(res) => {
                                         if let Ok(meta) = res.right_safe() {
-                                            info!("have job documents result");
                                             if let Some(job_doc) = meta.result() {
-                                                info!("sending job documents result");
                                                 addr_c.do_send(ManagerSessionToServer::Query {
                                                     id: id_c,
                                                     output: job_doc.clone(),

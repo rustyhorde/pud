@@ -291,7 +291,6 @@ impl Handler<ManagerSessionToServer> for Server {
                 }
             }
             ManagerSessionToServer::Query { id, output } => {
-                info!("sending job documents back to manager");
                 if output.is_empty() {
                     self.direct_manager_message(
                         ServerToManagerClient::QueryReturn {
@@ -305,10 +304,7 @@ impl Handler<ManagerSessionToServer> for Server {
                     );
                 } else {
                     let output_len = output.len();
-                    info!("output length: {output_len}");
                     for (idx, job_doc) in output.iter().enumerate() {
-                        info!("sending message back to manager");
-                        info!("done: {}", idx == (output_len - 1));
                         self.direct_manager_message(
                             ServerToManagerClient::QueryReturn {
                                 stderr: job_doc.stderr().clone(),
