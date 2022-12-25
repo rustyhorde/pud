@@ -102,92 +102,122 @@ impl CommandLine {
         error!("invalid text received: {}", String::from_utf8_lossy(bytes));
     }
 
-    #[allow(clippy::unused_self)]
+    #[allow(clippy::too_many_lines)]
     fn handle_binary(&mut self, ctx: &mut Context<Self>, bytes: &Bytes) {
-        if let Ok(msg) = deserialize::<ServerToManagerClient>(bytes) {
-            match msg {
-                ServerToManagerClient::Status(status) => info!("Status: {status}"),
-                ServerToManagerClient::Initialize => {
-                    info!("command line initialization complete");
-                    // request reload from the server
-                    if let Ok(init) = serialize(&self.command_to_run) {
-                        if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
-                            error!("Unable to send message");
-                        }
-                    } else {
-                        error!("Unable to serialize message");
-                    }
-                }
-                ServerToManagerClient::Reload(result) => {
-                    error!(
-                        "reload was a {}",
-                        if result { "success" } else { "failure" }
-                    );
-                    ctx.stop();
-                }
-                ServerToManagerClient::WorkersList(workers) => {
-                    let count = workers.len();
-                    let max_ip_len = workers
-                        .iter()
-                        .map(|x| (x.1).0.len())
-                        .max_by(Ord::cmp)
-                        .unwrap_or(20);
-                    let max_name_len = workers
-                        .iter()
-                        .map(|x| (x.1).1.len())
-                        .max_by(Ord::cmp)
-                        .unwrap_or(20);
-                    error!("{count} worker(s) connected");
-                    let mut lines = vec![];
-
-                    for (id, (ip, name)) in &workers {
-                        lines.push(format!("{name:>max_name_len$} - {ip:max_ip_len$} ({id})"));
-                    }
-
-                    lines.sort_by(|x, y| x.trim().cmp(y.trim()));
-
-                    for line in &lines {
-                        error!("{line}");
-                    }
-                    ctx.stop();
-                }
-                ServerToManagerClient::Schedules { name, schedules } => {
-                    error!("Retrieved {} schedules from '{name}'", schedules.len());
-
-                    for schedule in &schedules {
-                        match schedule {
-                            Schedule::Monotonic {
-                                on_boot_sec,
-                                on_unit_active_sec,
-                                cmds,
-                            } => {
-                                error!("monotonic:");
-                                error!("     on_boot_sec:        {}", on_boot_sec.as_secs_f64());
-                                error!(
-                                    "     on_unit_active_sec: {}",
-                                    on_unit_active_sec.as_secs_f64()
-                                );
-                                for cmd in cmds {
-                                    error!("     cmd:                {cmd}");
-                                }
+        match deserialize::<ServerToManagerClient>(bytes) {
+            Ok(msg) => {
+                match msg {
+                    ServerToManagerClient::Status(status) => info!("Status: {status}"),
+                    ServerToManagerClient::Initialize => {
+                        info!("command line initialization complete");
+                        // request reload from the server
+                        if let Ok(init) = serialize(&self.command_to_run) {
+                            if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
+                                error!("Unable to send message");
                             }
-                            Schedule::Realtime {
-                                on_calendar,
-                                persistent,
-                                cmds,
-                            } => {
-                                error!("realtime:");
-                                error!("     on_calendar: {on_calendar}");
-                                error!("     persistent:  {persistent}");
-                                for cmd in cmds {
-                                    error!("     cmd:         {cmd}");
-                                }
-                            }
+                        } else {
+                            error!("Unable to serialize message");
                         }
                     }
-                    ctx.stop();
+                    ServerToManagerClient::Reload(result) => {
+                        error!(
+                            "reload was a {}",
+                            if result { "success" } else { "failure" }
+                        );
+                        ctx.stop();
+                    }
+                    ServerToManagerClient::WorkersList(workers) => {
+                        let count = workers.len();
+                        let max_ip_len = workers
+                            .iter()
+                            .map(|x| (x.1).0.len())
+                            .max_by(Ord::cmp)
+                            .unwrap_or(20);
+                        let max_name_len = workers
+                            .iter()
+                            .map(|x| (x.1).1.len())
+                            .max_by(Ord::cmp)
+                            .unwrap_or(20);
+                        error!("{count} worker(s) connected");
+                        let mut lines = vec![];
+
+                        for (id, (ip, name)) in &workers {
+                            lines.push(format!("{name:>max_name_len$} - {ip:max_ip_len$} ({id})"));
+                        }
+
+                        lines.sort_by(|x, y| x.trim().cmp(y.trim()));
+
+                        for line in &lines {
+                            error!("{line}");
+                        }
+                        ctx.stop();
+                    }
+                    ServerToManagerClient::Schedules { name, schedules } => {
+                        error!("Retrieved {} schedules from '{name}'", schedules.len());
+
+                        for schedule in &schedules {
+                            match schedule {
+                                Schedule::Monotonic {
+                                    on_boot_sec,
+                                    on_unit_active_sec,
+                                    cmds,
+                                } => {
+                                    error!("monotonic:");
+                                    error!(
+                                        "     on_boot_sec:        {}",
+                                        on_boot_sec.as_secs_f64()
+                                    );
+                                    error!(
+                                        "     on_unit_active_sec: {}",
+                                        on_unit_active_sec.as_secs_f64()
+                                    );
+                                    for cmd in cmds {
+                                        error!("     cmd:                {cmd}");
+                                    }
+                                }
+                                Schedule::Realtime {
+                                    on_calendar,
+                                    persistent,
+                                    cmds,
+                                } => {
+                                    error!("realtime:");
+                                    error!("     on_calendar: {on_calendar}");
+                                    error!("     persistent:  {persistent}");
+                                    for cmd in cmds {
+                                        error!("     cmd:         {cmd}");
+                                    }
+                                }
+                            }
+                        }
+                        ctx.stop();
+                    }
+                    ServerToManagerClient::QueryReturn {
+                        stdout,
+                        stderr,
+                        start_time,
+                        end_time,
+                        done,
+                    } => {
+                        error!("job started at {start_time}");
+                        error!("job ended at {end_time}");
+                        error!("STDOUT");
+                        for line in &stdout {
+                            error!("{line}");
+                        }
+                        error!("");
+                        error!("STDERR");
+                        for line in &stderr {
+                            error!("{line}");
+                        }
+                        error!("");
+
+                        if done {
+                            ctx.stop();
+                        }
+                    }
                 }
             }
+            Err(e) => error!("{e}"),
         }
     }
 

@@ -217,6 +217,7 @@ pub use config::Verbosity;
 pub use header::header;
 pub use log::initialize;
 pub use log::Config as LogConfig;
+pub use manager::data::JobDoc;
 pub use manager::message::ManagerClientToManagerSession;
 pub use schedule::dow::DayOfWeek;
 pub use schedule::hms::Hour;

@@ -32,6 +32,7 @@ use std::{
         Arc,
     },
 };
+use time::OffsetDateTime;
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -287,6 +288,38 @@ impl Handler<ManagerSessionToServer> for Server {
                         },
                         &id,
                     );
+                }
+            }
+            ManagerSessionToServer::Query { id, output } => {
+                info!("sending job documents back to manager");
+                if output.is_empty() {
+                    self.direct_manager_message(
+                        ServerToManagerClient::QueryReturn {
+                            stdout: vec![],
+                            stderr: vec![],
+                            start_time: OffsetDateTime::now_utc(),
+                            end_time: OffsetDateTime::now_utc(),
+                            done: true,
+                        },
+                        &id,
+                    );
+                } else {
+                    let output_len = output.len();
+                    info!("output length: {output_len}");
+                    for (idx, job_doc) in output.iter().enumerate() {
+                        info!("sending message back to manager");
+                        info!("done: {}", idx == (output_len - 1));
+                        self.direct_manager_message(
+                            ServerToManagerClient::QueryReturn {
+                                stderr: job_doc.stderr().clone(),
+                                stdout: job_doc.stdout().clone(),
+                                start_time: *job_doc.start_time(),
+                                end_time: *job_doc.end_time(),
+                                done: idx == (output_len - 1),
+                            },
+                            &id,
+                        );
+                    }
                 }
             }
         }

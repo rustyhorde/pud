@@ -23,4 +23,6 @@ pub enum ManagerClientToManagerSession {
     ListWorkers,
     /// List the schedules for the given worker
     Schedules(String),
+    /// The query to run against the job documents
+    Query(String),
 }

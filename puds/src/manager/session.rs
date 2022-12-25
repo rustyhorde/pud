@@ -22,9 +22,10 @@ use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use bincode::{deserialize, serialize};
 use bytestring::ByteString;
 use pudlib::{
-    parse_ts_ping, send_ts_ping, ManagerClientToManagerSession, ManagerSessionToServer,
+    parse_ts_ping, send_ts_ping, JobDoc, ManagerClientToManagerSession, ManagerSessionToServer,
     ServerToManagerClient,
 };
+use ruarango::{cursor::input::CreateConfigBuilder, Connection, Cursor};
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
@@ -51,10 +52,11 @@ pub(crate) struct Session {
     /// continuation bytes
     #[builder(default = BytesMut::new())]
     cont_bytes: BytesMut,
+    /// A connection to the database
+    conn: Connection,
     /// The start instant of this session
     origin: Instant,
 }
-
 impl Session {
     // Heartbeat that sends ping to the manager every HEARTBEAT_INTERVAL seconds (5)
     // Also check for activity from the manager in the past CLIENT_TIMEOUT seconds (10)
@@ -106,7 +108,7 @@ impl Session {
         self.hb = Instant::now();
     }
 
-    fn handle_binary(&mut self, bytes: &Bytes) {
+    fn handle_binary(&mut self, ctx: &mut WebsocketContext<Self>, bytes: &Bytes) {
         debug!("handling binary message");
         self.hb = Instant::now();
         let bytes_vec = bytes.to_vec();
@@ -126,9 +128,46 @@ impl Session {
                         .do_send(ManagerSessionToServer::ListWorkers(self.id));
                 }
                 ManagerClientToManagerSession::Schedules(name) => {
-                    info!("schedules requested for {name}");
                     self.addr
                         .do_send(ManagerSessionToServer::Schedules { id: self.id, name });
+                }
+                ManagerClientToManagerSession::Query(query) => {
+                    if let Ok(config) = CreateConfigBuilder::default()
+                        .query(query)
+                        .count(true)
+                        .build()
+                    {
+                        let conn_c = self.conn.clone();
+                        let id_c = self.id;
+                        let addr_c = self.addr.clone();
+                        let _handle = ctx.spawn(
+                            async move {
+                                info!("finding job documents");
+                                match Cursor::create::<JobDoc>(&conn_c, config).await {
+                                    Ok(res) => {
+                                        if let Ok(meta) = res.right_safe() {
+                                            info!("have job documents result");
+                                            if let Some(job_doc) = meta.result() {
+                                                info!("sending job documents result");
+                                                addr_c.do_send(ManagerSessionToServer::Query {
+                                                    id: id_c,
+                                                    output: job_doc.clone(),
+                                                });
+                                            } else {
+                                                error!("no cursor meta result");
+                                            }
+                                        } else {
+                                            error!("no cursor meta");
+                                        }
+                                    }
+                                    Err(e) => error!("{e}"),
+                                }
+                            }
+                            .into_actor(self),
+                        );
+                    } else {
+                        error!("unable to build cursor query");
+                    }
                 }
             },
             Err(e) => error!("{e}"),
@@ -142,7 +181,7 @@ impl Session {
         ctx.stop();
     }
 
-    fn handle_continuation(&mut self, item: Item) {
+    fn handle_continuation(&mut self, ctx: &mut WebsocketContext<Self>, item: Item) {
         debug!("handling continuation message");
         match item {
             Item::FirstText(_bytes) => error!("unexpected text continuation"),
@@ -151,7 +190,7 @@ impl Session {
             }
             Item::Last(bytes) => {
                 self.cont_bytes.extend_from_slice(&bytes);
-                self.handle_binary(&bytes);
+                self.handle_binary(ctx, &bytes);
                 self.cont_bytes.clear();
             }
         }
@@ -229,9 +268,9 @@ impl StreamHandler<Result<Message, ProtocolError>> for Session {
                 Message::Ping(bytes) => self.handle_ping(ctx, &bytes),
                 Message::Pong(bytes) => self.handle_pong(&bytes),
                 Message::Text(byte_string) => self.handle_text(&byte_string),
-                Message::Binary(bytes) => self.handle_binary(&bytes),
+                Message::Binary(bytes) => self.handle_binary(ctx, &bytes),
                 Message::Close(reason) => self.handle_close(ctx, reason),
-                Message::Continuation(item) => self.handle_continuation(item),
+                Message::Continuation(item) => self.handle_continuation(ctx, item),
                 Message::Nop => self.handle_no_op(),
             }
         } else {

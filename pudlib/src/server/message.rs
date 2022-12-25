@@ -8,10 +8,11 @@
 
 // Actix messages for a server
 
-use crate::{Command, Schedule};
+use crate::{Command, JobDoc, Schedule};
 use actix::Message;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 /// A message from a worker session to the server actor
@@ -78,6 +79,13 @@ pub enum ManagerSessionToServer {
         /// The name of the worker to fetch schedules from
         name: String,
     },
+    /// Job output for the given worker
+    Query {
+        /// The id of the manager
+        id: Uuid,
+        /// The job output
+        output: Vec<JobDoc>,
+    },
 }
 
 /// A message for a manager
@@ -99,6 +107,19 @@ pub enum ServerToManagerClient {
         name: String,
         /// The schedules currently loaded on the worker
         schedules: Vec<Schedule>,
+    },
+    /// Job details
+    QueryReturn {
+        /// The stdout from a job
+        stdout: Vec<String>,
+        /// The stderr from a job
+        stderr: Vec<String>,
+        /// The start time of a job
+        start_time: OffsetDateTime,
+        /// The end time of a job
+        end_time: OffsetDateTime,
+        /// Are there any more messages coming?
+        done: bool,
     },
 }
 

@@ -16,6 +16,7 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 use actix_web_actors::ws::start;
+use ruarango::Connection;
 use std::time::Instant;
 use tracing::{debug, error, info};
 use uuid::Uuid;
@@ -27,6 +28,7 @@ pub(crate) async fn manager(
     stream: Payload,
     name: Query<Name>,
     srv: Data<Addr<Server>>,
+    conn: Data<Connection>,
 ) -> HttpResponse {
     info!("manager connecting...");
     let unknown = String::from("Unknown");
@@ -44,6 +46,7 @@ pub(crate) async fn manager(
             .ip(ip)
             .hb(Instant::now())
             .origin(Instant::now())
+            .conn(conn.as_ref().clone())
             .build(),
         &request,
         stream,

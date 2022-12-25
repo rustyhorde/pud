@@ -60,6 +60,7 @@ pub(crate) enum Subcommands {
     Reload,
     ListWorkers,
     Schedules(Schedule),
+    Query(Query),
 }
 
 #[derive(Clone, Debug, Getters, Parser)]
@@ -67,6 +68,13 @@ pub(crate) enum Subcommands {
 pub(crate) struct Schedule {
     name: String,
 }
+
+#[derive(Clone, Debug, Getters, Parser)]
+#[getset(get = "pub(crate)")]
+pub(crate) struct Query {
+    query: String,
+}
+
 #[cfg(test)]
 mod test {
     use super::Cli;

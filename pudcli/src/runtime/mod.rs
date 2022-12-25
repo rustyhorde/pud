@@ -64,6 +64,7 @@ where
         Subcommands::Schedules(schedule) => {
             ManagerClientToManagerSession::Schedules(schedule.name().clone())
         }
+        Subcommands::Query(query) => ManagerClientToManagerSession::Query(query.query().clone()),
     };
 
     if !args.dry_run() {
