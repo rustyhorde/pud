@@ -26,7 +26,7 @@ indexmap = "1.9.2"
 lazy_static = "1.4.0"
 rand = "0.8.5"
 regex = "1.7.0"
-serde = { version = "1.0.149", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }
 thiserror = "1.0.37"
 time = { version = "0.3.17", features = ["formatting"] }
 toml = "0.5.9"
