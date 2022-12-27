@@ -223,7 +223,10 @@ impl CommandLine {
                     }
                 }
             }
-            Err(e) => error!("{e}"),
+            Err(e) => {
+                error!("{e}");
+                error!("{e:?}");
+            }
         }
     }
 
@@ -260,11 +263,14 @@ impl CommandLine {
         match item {
             Item::FirstText(_bytes) => error!("unexpected text continuation"),
             Item::FirstBinary(bytes) | Item::Continue(bytes) => {
+                debug!("handling binary item");
                 self.cont_bytes.extend_from_slice(&bytes);
             }
             Item::Last(bytes) => {
+                debug!("handling last item");
                 self.cont_bytes.extend_from_slice(&bytes);
-                self.handle_binary(ctx, &bytes);
+                let other = self.cont_bytes.split();
+                self.handle_binary(ctx, &other.freeze());
                 self.cont_bytes.clear();
             }
         }
@@ -298,14 +304,18 @@ impl Actor for CommandLine {
 /// Handle server websocket messages
 impl StreamHandler<Result<Frame, WsProtocolError>> for CommandLine {
     fn handle(&mut self, msg: Result<Frame, WsProtocolError>, ctx: &mut Self::Context) {
-        if let Ok(message) = msg {
-            match message {
+        match msg {
+            Ok(message) => match message {
                 Frame::Binary(bytes) => self.handle_binary(ctx, &bytes),
                 Frame::Text(bytes) => self.handle_text(&bytes),
                 Frame::Ping(bytes) => self.handle_ping(bytes),
                 Frame::Pong(bytes) => self.handle_pong(&bytes),
                 Frame::Close(reason) => self.handle_close(ctx, reason),
                 Frame::Continuation(item) => self.handle_continuation(ctx, item),
+            },
+            Err(e) => {
+                error!("Protocol Error: {e}");
+                ctx.stop();
             }
         }
     }

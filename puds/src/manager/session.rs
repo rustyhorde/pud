@@ -11,6 +11,7 @@
 use crate::{
     manager::message::{Connect, Disconnect},
     server::Server,
+    utils::handle_server_to_client,
 };
 use actix::{
     fut, Actor, ActorContext, ActorFutureExt, Addr, AsyncContext, ContextFutureSpawner, Handler,
@@ -19,7 +20,7 @@ use actix::{
 use actix_http::ws::{CloseReason, Item};
 use actix_web::web::{Bytes, BytesMut};
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
-use bincode::{deserialize, serialize};
+use bincode::deserialize;
 use bytestring::ByteString;
 use pudlib::{
     parse_ts_ping, send_ts_ping, JobDoc, ManagerClientToManagerSession, ManagerSessionToServer,
@@ -186,8 +187,10 @@ impl Session {
                 self.cont_bytes.extend_from_slice(&bytes);
             }
             Item::Last(bytes) => {
+                debug!("handling last item");
                 self.cont_bytes.extend_from_slice(&bytes);
-                self.handle_binary(ctx, &bytes);
+                let other = self.cont_bytes.split();
+                self.handle_binary(ctx, &other.freeze());
                 self.cont_bytes.clear();
             }
         }
@@ -247,13 +250,7 @@ impl Handler<ServerToManagerClient> for Session {
     type Result = ();
 
     fn handle(&mut self, msg: ServerToManagerClient, ctx: &mut Self::Context) {
-        debug!("handling message from server actor to manager client");
-        if let Ok(wm_bytes) = serialize(&msg) {
-            ctx.binary(wm_bytes);
-        } else {
-            error!("error serializing message");
-            ctx.binary(Bytes::from_static(b"error serializing message"));
-        }
+        handle_server_to_client(msg, ctx);
     }
 }
 

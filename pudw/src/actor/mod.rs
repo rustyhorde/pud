@@ -274,8 +274,10 @@ impl Worker {
                 self.cont_bytes.extend_from_slice(&bytes);
             }
             Item::Last(bytes) => {
+                debug!("handling last item");
                 self.cont_bytes.extend_from_slice(&bytes);
-                self.handle_binary(ctx, &bytes);
+                let other = self.cont_bytes.split();
+                self.handle_binary(ctx, &other.freeze());
                 self.cont_bytes.clear();
             }
         }
