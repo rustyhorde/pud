@@ -24,7 +24,7 @@ use futures::StreamExt;
 use pudlib::{initialize, load, ManagerClientToManagerSession, PudxBinary};
 use std::ffi::OsString;
 use tokio::sync::mpsc::unbounded_channel;
-use tracing::{debug, error, info};
+use tracing::{debug, error};
 
 pub(crate) fn run<I, T>(args: Option<I>) -> Result<()>
 where
@@ -53,14 +53,8 @@ where
     let url = config.server_url();
 
     let command_to_run = match args.sub_cmd() {
-        Subcommands::Reload => {
-            info!("running reload");
-            ManagerClientToManagerSession::Reload
-        }
-        Subcommands::ListWorkers => {
-            info!("listing workers");
-            ManagerClientToManagerSession::ListWorkers
-        }
+        Subcommands::Reload => ManagerClientToManagerSession::Reload,
+        Subcommands::ListWorkers => ManagerClientToManagerSession::ListWorkers,
         Subcommands::Schedules(schedule) => {
             ManagerClientToManagerSession::Schedules(schedule.name().clone())
         }
