@@ -296,6 +296,7 @@ impl Handler<ManagerSessionToServer> for Server {
                         ServerToManagerClient::QueryReturn {
                             stdout: vec![],
                             stderr: vec![],
+                            status: 0,
                             start_time: OffsetDateTime::now_utc(),
                             end_time: OffsetDateTime::now_utc(),
                             done: true,
@@ -309,6 +310,7 @@ impl Handler<ManagerSessionToServer> for Server {
                             ServerToManagerClient::QueryReturn {
                                 stderr: job_doc.stderr().clone(),
                                 stdout: job_doc.stdout().clone(),
+                                status: *job_doc.status(),
                                 start_time: *job_doc.start_time(),
                                 end_time: *job_doc.end_time(),
                                 done: idx == (output_len - 1),

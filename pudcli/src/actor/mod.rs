@@ -193,6 +193,7 @@ impl CommandLine {
                     ServerToManagerClient::QueryReturn {
                         stdout,
                         stderr,
+                        status,
                         start_time,
                         end_time,
                         done,
@@ -205,6 +206,9 @@ impl CommandLine {
                             let dur = time::Duration::nanoseconds(nanos);
                             error!("job duration: {}s", dur.as_seconds_f64());
                         }
+                        error!("");
+                        error!("STATUS");
+                        error!("     {status}");
                         error!("");
                         error!("STDOUT");
                         for line in &stdout {

@@ -114,6 +114,8 @@ pub enum ServerToManagerClient {
         stdout: Vec<String>,
         /// The stderr from a job
         stderr: Vec<String>,
+        /// The job status
+        status: i32,
         /// The start time of a job
         start_time: OffsetDateTime,
         /// The end time of a job
