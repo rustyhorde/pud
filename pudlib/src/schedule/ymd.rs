@@ -112,7 +112,7 @@ impl Day {
     pub(crate) fn matches(&self, given: u8) -> bool {
         match self {
             Day::All => true,
-            Day::Days(months) => months.contains(&given),
+            Day::Days(days) => days.contains(&given),
         }
     }
 }
