@@ -38,7 +38,14 @@ uuid = { version = "1.2.2", features = ["v4", "serde"] }
 [build-dependencies]
 anyhow = "1.0.66"
 rustversion = "1.0.9"
-vergen = "7.4.3"
+vergen = { git = "https://github.com/rustyhorde/vergen", branch = "feature/version8", features = [
+    "build",
+    "cargo",
+    "git",
+    "gitcl",
+    "rustc",
+    "si",
+] }
 
 [dev-dependencies]
 anyhow = "1.0.66"

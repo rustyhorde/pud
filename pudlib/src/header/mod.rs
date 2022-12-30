@@ -29,7 +29,7 @@ lazy_static! {
             "git",
             env!("VERGEN_GIT_COMMIT_TIMESTAMP"),
         ));
-        let _ = vergen_set.insert(("SemVer", "git", env!("VERGEN_GIT_SEMVER")));
+        let _ = vergen_set.insert(("Describe", "git", env!("VERGEN_GIT_DESCRIBE")));
         let _ = vergen_set.insert(("Channel", "rustc", env!("VERGEN_RUSTC_CHANNEL")));
         let _ = vergen_set.insert(("Commit Date", "rustc", env!("VERGEN_RUSTC_COMMIT_DATE")));
         let _ = vergen_set.insert(("Commit SHA", "rustc", env!("VERGEN_RUSTC_COMMIT_HASH")));
