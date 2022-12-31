@@ -32,8 +32,9 @@ where
     #[serde(skip_serializing_if = "Option::is_none")]
     rustc_llvm_version: Option<T>,
     rustc_semver: T,
+    cargo_debug: T,
     cargo_features: T,
-    cargo_profile: T,
+    cargo_opt_level: T,
     cargo_target_triple: T,
     sysinfo_name: T,
     sysinfo_os_version: T,
@@ -49,7 +50,7 @@ impl Info<&'static str> {
     pub(crate) fn new() -> Self {
         Info {
             build_timestamp: env!("VERGEN_BUILD_TIMESTAMP"),
-            build_semver: env!("VERGEN_BUILD_SEMVER"),
+            build_semver: env!("CARGO_PKG_VERSION"),
             git_branch: env!("VERGEN_GIT_BRANCH"),
             git_commit_date: env!("VERGEN_GIT_COMMIT_TIMESTAMP"),
             git_describe: env!("VERGEN_GIT_DESCRIBE"),
@@ -60,8 +61,9 @@ impl Info<&'static str> {
             rustc_host_triple: env!("VERGEN_RUSTC_HOST_TRIPLE"),
             rustc_llvm_version: option_env!("VERGEN_RUSTC_LLVM_VERSION"),
             rustc_semver: env!("VERGEN_RUSTC_SEMVER"),
+            cargo_debug: env!("VERGEN_CARGO_DEBUG"),
             cargo_features: env!("VERGEN_CARGO_FEATURES"),
-            cargo_profile: env!("VERGEN_CARGO_PROFILE"),
+            cargo_opt_level: env!("VERGEN_CARGO_OPT_LEVEL"),
             cargo_target_triple: env!("VERGEN_CARGO_TARGET_TRIPLE"),
             sysinfo_name: env!("VERGEN_SYSINFO_NAME"),
             sysinfo_os_version: env!("VERGEN_SYSINFO_OS_VERSION"),

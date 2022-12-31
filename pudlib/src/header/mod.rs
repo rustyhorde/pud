@@ -21,7 +21,7 @@ lazy_static! {
     static ref VERGEN_MAP: IndexSet<(&'static str, &'static str, &'static str)> = {
         let mut vergen_set = IndexSet::new();
         let _ = vergen_set.insert(("Timestamp", "build", env!("VERGEN_BUILD_TIMESTAMP")));
-        let _ = vergen_set.insert(("SemVer", "build", env!("VERGEN_BUILD_SEMVER")));
+        let _ = vergen_set.insert(("SemVer", "build", env!("CARGO_PKG_VERSION")));
         let _ = vergen_set.insert(("Branch", "git", env!("VERGEN_GIT_BRANCH")));
         let _ = vergen_set.insert(("Commit SHA", "git", env!("VERGEN_GIT_SHA")));
         let _ = vergen_set.insert((
@@ -38,8 +38,9 @@ lazy_static! {
             let _ = vergen_set.insert(("LLVM Version", "rustc", llvm_version));
         }
         let _ = vergen_set.insert(("SemVer", "rustc", env!("VERGEN_RUSTC_SEMVER")));
+        let _ = vergen_set.insert(("Debug", "cargo", env!("VERGEN_CARGO_DEBUG")));
         let _ = vergen_set.insert(("Features", "cargo", env!("VERGEN_CARGO_FEATURES")));
-        let _ = vergen_set.insert(("Profile", "cargo", env!("VERGEN_CARGO_PROFILE")));
+        let _ = vergen_set.insert(("OptLevel", "cargo", env!("VERGEN_CARGO_OPT_LEVEL")));
         let _ = vergen_set.insert(("Target Triple", "cargo", env!("VERGEN_CARGO_TARGET_TRIPLE")));
         let _ = vergen_set.insert(("Name", "sysinfo", env!("VERGEN_SYSINFO_NAME")));
         let _ = vergen_set.insert(("OS Version", "sysinfo", env!("VERGEN_SYSINFO_OS_VERSION")));

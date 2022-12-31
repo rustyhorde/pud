@@ -40,6 +40,6 @@ mod test {
         assert!(resp.status().is_success());
         let result: Info<String> = read_body_json(resp).await;
         assert_eq!(result.build_timestamp(), env!("VERGEN_BUILD_TIMESTAMP"));
-        assert_eq!(result.build_semver(), env!("VERGEN_BUILD_SEMVER"));
+        assert_eq!(result.build_semver(), env!("CARGO_PKG_VERSION"));
     }
 }

@@ -1,18 +1,18 @@
 use anyhow::Result;
-use vergen::Vergen;
+use vergen::EmitBuilder;
 
 pub fn main() -> Result<()> {
     nightly_lints();
     beta_lints();
     stable_lints();
     msrv_lints();
-    Vergen::default()
+    EmitBuilder::builder()
         .all_build()
         .all_cargo()
         .all_git()
         .all_rustc()
         .all_sysinfo()
-        .gen()
+        .emit()
 }
 
 #[rustversion::nightly]
