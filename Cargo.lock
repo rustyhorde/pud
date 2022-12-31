@@ -2429,7 +2429,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vergen"
 version = "8.0.0"
-source = "git+https://github.com/rustyhorde/vergen?branch=feature/version8#776854b3f95e97fa102ccf081ff707544d60c679"
+source = "git+https://github.com/rustyhorde/vergen?branch=feature/version8#04fefdd0d90bbb37ba5b956af219b5a7386b3872"
 dependencies = [
  "anyhow",
  "rustc_version",
