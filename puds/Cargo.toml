@@ -42,7 +42,7 @@ vergen = { git = "https://github.com/rustyhorde/vergen", branch = "feature/versi
     "build",
     "cargo",
     "git",
-    "gitcl",
+    "gix",
     "rustc",
     "si",
 ] }
