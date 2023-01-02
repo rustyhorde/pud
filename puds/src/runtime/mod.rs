@@ -155,7 +155,7 @@ mod test {
             TEST_PATH
         ]))
         .await
-        .is_ok())
+        .is_ok());
     }
 
     #[actix_rt::test]
@@ -168,7 +168,7 @@ mod test {
             TEST_PATH
         ]))
         .await
-        .is_ok())
+        .is_ok());
     }
 
     #[actix_rt::test]

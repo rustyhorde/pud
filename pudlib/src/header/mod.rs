@@ -147,7 +147,6 @@ fn trace(app_style: &Style, bold_blue: &Style, bold_green: &Style, prefix: &'sta
 mod test {
     use super::{from_u8, header};
     use crate::log::Config as LogConfig;
-    use anyhow::Result;
     use console::Style;
     use lazy_static::lazy_static;
     use regex::Regex;
@@ -235,7 +234,7 @@ mod test {
 
     #[test]
     #[cfg(debug_assertions)]
-    fn header_writes() -> Result<()> {
+    fn header_writes() {
         let mut buf = vec![];
         assert!(header(&TestConfig::default(), HEADER_PREFIX, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
@@ -243,12 +242,11 @@ mod test {
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
-        Ok(())
     }
 
     #[test]
     #[cfg(not(debug_assertions))]
-    fn header_writes() -> Result<()> {
+    fn header_writes() {
         let mut buf = vec![];
         assert!(header(&TestConfig::default(), HEADER_PREFIX, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
@@ -256,6 +254,5 @@ mod test {
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
-        Ok(())
     }
 }

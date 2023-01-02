@@ -86,7 +86,11 @@ mod test {
                     persistent: _,
                     cmds: _,
                 } => true,
-                _ => false,
+                Schedule::Monotonic {
+                    on_boot_sec: _,
+                    on_unit_active_sec: _,
+                    cmds: _,
+                } => false,
             })
             .collect::<Vec<Schedule>>();
         let monotonic: Vec<Schedule> = schedules
@@ -99,7 +103,11 @@ mod test {
                     on_unit_active_sec: _,
                     cmds: _,
                 } => true,
-                _ => false,
+                Schedule::Realtime {
+                    on_calendar: _,
+                    persistent: _,
+                    cmds: _,
+                } => false,
             })
             .collect::<Vec<Schedule>>();
         assert_eq!(3, schedules.schedules().len());

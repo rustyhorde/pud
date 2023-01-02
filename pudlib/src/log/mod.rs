@@ -92,6 +92,7 @@ fn ok_on_test(e: TryInitError) -> Result<()> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unnecessary_wraps, clippy::needless_pass_by_value)]
 fn ok_on_test(_e: TryInitError) -> Result<()> {
     Ok(())
 }

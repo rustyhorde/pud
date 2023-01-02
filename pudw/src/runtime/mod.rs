@@ -126,7 +126,7 @@ mod test {
             "-c",
             TEST_PATH
         ]))
-        .is_ok())
+        .is_ok());
     }
 
     #[test]
@@ -138,6 +138,6 @@ mod test {
             "-c",
             TEST_PATH
         ]))
-        .is_ok())
+        .is_ok());
     }
 }

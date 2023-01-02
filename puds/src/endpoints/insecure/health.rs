@@ -34,12 +34,9 @@ mod test {
 
     #[actix_rt::test]
     async fn health_in_app_works() {
-        let mut app = init_service(App::new().configure(insecure_config)).await;
+        let app = init_service(App::new().configure(insecure_config)).await;
 
-        let resp = TestRequest::get()
-            .uri("/health")
-            .send_request(&mut app)
-            .await;
+        let resp = TestRequest::get().uri("/health").send_request(&app).await;
         assert!(resp.status().is_success());
         let result: Response<String> = read_body_json(resp).await;
         assert_eq!(*result.status(), "healthy");

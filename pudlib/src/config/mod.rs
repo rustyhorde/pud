@@ -258,7 +258,7 @@ mod test {
         }
     }
 
-    const BAD_PATH: &'static str = "this/path/is/bad/config.toml";
+    const BAD_PATH: &str = "this/path/is/bad/config.toml";
     const BAD_TOML_TEST_PATH: &str = "test/bad.toml";
     const BAD_WORKERS_TOML_TEST_PATH: &str = "test/bad_workers.toml";
     #[cfg(windows)]
@@ -269,13 +269,13 @@ mod test {
         "Could not parse config file! test/bad.toml\n\nCaused by:\n    missing field `actix`";
     const BAD_WORKERS_PARSE_ERROR: &str =
         "Could not parse config file! test/bad_workers.toml\n\nCaused by:\n    invalid type: string \"57\", expected u8 for key `actix.workers` at line 2 column 11";
-    const TEST_CONFIG: &'static str = r#"[actix]
+    const TEST_CONFIG: &str = r#"[actix]
 workers = 8
 "#;
 
     #[test]
     fn config_file_path_is_default() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME")])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME")])?;
         let defaults = Defaults::test_defaults();
         let path = config_file_path(args.config_file_path(), defaults)?;
         assert_eq!(path, default_config_file_path(defaults)?);
@@ -284,7 +284,7 @@ workers = 8
 
     #[test]
     fn config_file_path_is_set() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let defaults = Defaults::test_defaults();
         let path = config_file_path(args.config_file_path(), defaults)?;
         let expected = PathBuf::from(TEST_PATH);
@@ -294,12 +294,12 @@ workers = 8
 
     #[test]
     fn read_config_works() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let defaults = Defaults::test_defaults();
         let path = config_file_path(args.config_file_path(), defaults)?;
         let path_c = path.clone();
         let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
-        let file_contents = read_config_file(&path, &ctx)?;
+        let file_contents = read_config_file(&path, ctx)?;
         for (actual, expected) in file_contents.lines().zip(TEST_CONFIG.lines()) {
             assert_eq!(actual, expected);
         }
@@ -308,12 +308,12 @@ workers = 8
 
     #[test]
     fn read_config_fails() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", BAD_PATH])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", BAD_PATH])?;
         let defaults = Defaults::test_defaults();
         let path = config_file_path(args.config_file_path(), defaults)?;
         let path_c = path.clone();
         let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
-        match read_config_file(&path, &ctx) {
+        match read_config_file(&path, ctx) {
             Ok(_) => Err(anyhow!("This config file shouldn't exist!")),
             Err(e) => {
                 assert_eq!(format!("{e:?}"), BAD_CONFIG_ERROR);
@@ -324,7 +324,7 @@ workers = 8
 
     #[test]
     fn parse_config_fails() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", BAD_TOML_TEST_PATH])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", BAD_TOML_TEST_PATH])?;
         match load::<TomlConfig, Config>(
             args.config_file_path(),
             *args.verbose(),
@@ -341,8 +341,7 @@ workers = 8
 
     #[test]
     fn bad_config_workers_fails() -> Result<()> {
-        let args =
-            Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", BAD_WORKERS_TOML_TEST_PATH])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", BAD_WORKERS_TOML_TEST_PATH])?;
         match load::<TomlConfig, Config>(
             args.config_file_path(),
             *args.verbose(),

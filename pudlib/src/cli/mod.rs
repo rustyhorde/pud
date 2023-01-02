@@ -66,7 +66,7 @@ mod test {
 
     #[test]
     fn quiet_works() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-qqq"])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-qqq"])?;
         assert_eq!(*args.quiet(), 3);
         assert_eq!(*args.verbose(), 0);
         assert!(!*args.dry_run());
@@ -76,7 +76,7 @@ mod test {
 
     #[test]
     fn verbose_works() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-vvv"])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-vvv"])?;
         assert_eq!(*args.quiet(), 0);
         assert_eq!(*args.verbose(), 3);
         assert!(!*args.dry_run());
@@ -86,7 +86,7 @@ mod test {
 
     #[test]
     fn dry_run_works() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-vvv", "--dry-run"])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-vvv", "--dry-run"])?;
         assert_eq!(*args.quiet(), 0);
         assert_eq!(*args.verbose(), 3);
         assert!(*args.dry_run());
@@ -96,15 +96,13 @@ mod test {
 
     #[test]
     fn config_file_path_works() -> Result<()> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", "a/path/to.toml"])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", "a/path/to.toml"])?;
         assert_eq!(*args.quiet(), 0);
         assert_eq!(*args.verbose(), 0);
         assert!(!*args.dry_run());
         assert!(args.config_file_path().is_some());
         assert_eq!(
-            args.config_file_path()
-                .as_deref()
-                .unwrap_or_else(|| "error"),
+            args.config_file_path().as_deref().unwrap_or("error"),
             "a/path/to.toml"
         );
         Ok(())
@@ -112,7 +110,7 @@ mod test {
 
     #[test]
     fn quiet_and_verbose_dont_coexist() -> Result<()> {
-        match Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-q", "-v"]) {
+        match Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-q", "-v"]) {
             Ok(_) => Err(anyhow!("This command line should fail!")),
             Err(e) => {
                 assert_eq!(e.kind(), ErrorKind::ArgumentConflict);

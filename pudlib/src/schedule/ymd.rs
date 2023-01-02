@@ -231,18 +231,17 @@ mod test {
     }
 
     #[test]
-    fn year_matching_works() -> Result<()> {
+    fn year_matching_works() {
         let years = Year::Range(2022, 2024);
         assert!(!years.matches(2021));
         assert!(years.matches(2022));
         assert!(years.matches(2023));
         assert!(years.matches(2024));
         assert!(!years.matches(2025));
-        Ok(())
     }
 
     #[test]
-    fn month_matching_works() -> Result<()> {
+    fn month_matching_works() {
         let months = Month::Months(vec![1, 3, 7]);
         assert!(months.matches(1));
         assert!(!months.matches(2));
@@ -256,17 +255,15 @@ mod test {
         assert!(!months.matches(10));
         assert!(!months.matches(11));
         assert!(!months.matches(12));
-        Ok(())
     }
 
     #[test]
-    fn day_matching_works() -> Result<()> {
+    fn day_matching_works() {
         let days = Day::Days(vec![10, 11, 12]);
         assert!(!days.matches(9));
         assert!(days.matches(10));
         assert!(days.matches(11));
         assert!(days.matches(12));
         assert!(!days.matches(13));
-        Ok(())
     }
 }

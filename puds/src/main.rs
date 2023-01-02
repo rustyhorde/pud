@@ -217,14 +217,14 @@ mod test {
     }
 
     fn setup_config() -> Result<Config> {
-        let args = Cli::try_parse_from(&[env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
+        let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let mut config = load::<TomlConfig, Config>(
             args.config_file_path(),
             *args.verbose(),
             *args.quiet(),
             PudxBinary::Puds,
         )?;
-        let _guard = initialize(&mut config)?;
+        initialize(&mut config)?;
         Ok(config)
     }
 }
