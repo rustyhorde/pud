@@ -76,7 +76,7 @@ mod test {
     #[test]
     fn deserialize_schedule() -> Result<()> {
         let schedules: Schedules = from_str(SCHEDULES)?;
-        let realtime: Vec<Schedule> = schedules
+        let realtime = schedules
             .schedules()
             .iter()
             .cloned()
@@ -91,9 +91,8 @@ mod test {
                     on_unit_active_sec: _,
                     cmds: _,
                 } => false,
-            })
-            .collect::<Vec<Schedule>>();
-        let monotonic: Vec<Schedule> = schedules
+            });
+        let monotonic = schedules
             .schedules()
             .iter()
             .cloned()
@@ -108,11 +107,10 @@ mod test {
                     persistent: _,
                     cmds: _,
                 } => false,
-            })
-            .collect::<Vec<Schedule>>();
+            });
         assert_eq!(3, schedules.schedules().len());
-        assert_eq!(2, realtime.len());
-        assert_eq!(1, monotonic.len());
+        assert_eq!(2, realtime.count());
+        assert_eq!(1, monotonic.count());
         Ok(())
     }
 }
