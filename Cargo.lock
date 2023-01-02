@@ -3235,7 +3235,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vergen"
 version = "8.0.0"
-source = "git+https://github.com/rustyhorde/vergen?branch=feature/version8#df06922e60920a3090b6656203af036edce595c8"
+source = "git+https://github.com/rustyhorde/vergen?branch=feature/version8#86c60448e8cdfe7563f346e0b08334abd8fc0d88"
 dependencies = [
  "anyhow",
  "git-repository",
