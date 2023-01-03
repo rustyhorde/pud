@@ -596,9 +596,9 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.15.3"
+version = "0.15.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5556015fe3aad8b968e5d4124980fbe2f6aaee7aeec6b749de1faaa2ca5d0a4c"
+checksum = "c9b6515d269224923b26b5febea2ed42b2d5f2ce37284a4dd670fedd6cb8347a"
 dependencies = [
  "encode_unicode",
  "lazy_static",
@@ -3235,7 +3235,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vergen"
 version = "8.0.0"
-source = "git+https://github.com/rustyhorde/vergen?branch=feature/version8#df06922e60920a3090b6656203af036edce595c8"
+source = "git+https://github.com/rustyhorde/vergen?branch=feature/version8#76509612fff45681c53c192f0cc05d4eb714cddc"
 dependencies = [
  "anyhow",
  "git-repository",
