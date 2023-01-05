@@ -3004,9 +3004,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.23.0"
+version = "1.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eab6d665857cc6ca78d6e80303a02cea7a7851e85dfbd77cbdc09bd129f1ef46"
+checksum = "38a54aca0c15d014013256222ba0ebed095673f89345dd79119d912eb561b7a8"
 dependencies = [
  "autocfg",
  "bytes",
@@ -3234,8 +3234,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "vergen"
-version = "8.0.0"
-source = "git+https://github.com/rustyhorde/vergen?branch=feature/version8#76509612fff45681c53c192f0cc05d4eb714cddc"
+version = "8.0.0-beta.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69d2cd4ed9711020b01979ed603539b36b545a7ba33dd5057dd7d3d5bcac2775"
 dependencies = [
  "anyhow",
  "git-repository",
