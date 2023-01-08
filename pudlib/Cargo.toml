@@ -22,7 +22,6 @@ console = "0.15.2"
 const_format = "0.2.30"
 dirs2 = "3.0.1"
 getset = "0.1.2"
-indexmap = "1.9.2"
 lazy_static = "1.4.0"
 rand = "0.8.5"
 regex = "1.7.0"
@@ -34,6 +33,7 @@ tracing = { version = "0.1.37", features = ["max_level_trace", "release_max_leve
 tracing-subscriber = { version = "0.3.16", features = ["time"] }
 typed-builder = "0.11.0"
 uuid = { version = "1.2.2", features = ["v4", "serde"] }
+vergen-pretty = { version = "0.1.0", features = ["color","trace"] }
 
 [build-dependencies]
 anyhow = "1.0.66"

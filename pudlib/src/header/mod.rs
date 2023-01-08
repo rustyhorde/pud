@@ -11,59 +11,10 @@
 use crate::log::Config as LogConfig;
 use anyhow::Result;
 use console::Style;
-use indexmap::IndexSet;
-use lazy_static::lazy_static;
 use rand::Rng;
 use std::io::Write;
-use tracing::{info, Level};
-
-lazy_static! {
-    static ref VERGEN_MAP: IndexSet<(&'static str, &'static str, &'static str)> = {
-        let mut vergen_set = IndexSet::new();
-        let _ = vergen_set.insert(("Timestamp", "build", env!("VERGEN_BUILD_TIMESTAMP")));
-        let _ = vergen_set.insert(("SemVer", "build", env!("CARGO_PKG_VERSION")));
-        let _ = vergen_set.insert(("Branch", "git", env!("VERGEN_GIT_BRANCH")));
-        let _ = vergen_set.insert(("Commit SHA", "git", env!("VERGEN_GIT_SHA")));
-        let _ = vergen_set.insert((
-            "Commit Timestamp",
-            "git",
-            env!("VERGEN_GIT_COMMIT_TIMESTAMP"),
-        ));
-        let _ = vergen_set.insert(("Describe", "git", env!("VERGEN_GIT_DESCRIBE")));
-        let _ = vergen_set.insert(("Channel", "rustc", env!("VERGEN_RUSTC_CHANNEL")));
-        let _ = vergen_set.insert(("Commit Date", "rustc", env!("VERGEN_RUSTC_COMMIT_DATE")));
-        let _ = vergen_set.insert(("Commit SHA", "rustc", env!("VERGEN_RUSTC_COMMIT_HASH")));
-        let _ = vergen_set.insert(("Host Triple", "rustc", env!("VERGEN_RUSTC_HOST_TRIPLE")));
-        if let Some(llvm_version) = option_env!("VERGEN_RUSTC_LLVM_VERSION") {
-            let _ = vergen_set.insert(("LLVM Version", "rustc", llvm_version));
-        }
-        let _ = vergen_set.insert(("SemVer", "rustc", env!("VERGEN_RUSTC_SEMVER")));
-        let _ = vergen_set.insert(("Debug", "cargo", env!("VERGEN_CARGO_DEBUG")));
-        let _ = vergen_set.insert(("Features", "cargo", env!("VERGEN_CARGO_FEATURES")));
-        let _ = vergen_set.insert(("OptLevel", "cargo", env!("VERGEN_CARGO_OPT_LEVEL")));
-        let _ = vergen_set.insert(("Target Triple", "cargo", env!("VERGEN_CARGO_TARGET_TRIPLE")));
-        let _ = vergen_set.insert(("Name", "sysinfo", env!("VERGEN_SYSINFO_NAME")));
-        let _ = vergen_set.insert(("OS Version", "sysinfo", env!("VERGEN_SYSINFO_OS_VERSION")));
-        if let Some(user) = option_env!("VERGEN_SYSINFO_USER") {
-            let _ = vergen_set.insert(("User", "sysinfo", user));
-        }
-        let _ = vergen_set.insert(("Memory", "sysinfo", env!("VERGEN_SYSINFO_TOTAL_MEMORY")));
-        let _ = vergen_set.insert(("CPU Vendor", "sysinfo", env!("VERGEN_SYSINFO_CPU_VENDOR")));
-        let _ = vergen_set.insert((
-            "CPU Cores",
-            "sysinfo",
-            env!("VERGEN_SYSINFO_CPU_CORE_COUNT"),
-        ));
-        let _ = vergen_set.insert(("CPU Names", "sysinfo", env!("VERGEN_SYSINFO_CPU_NAME")));
-        let _ = vergen_set.insert(("CPU Brand", "sysinfo", env!("VERGEN_SYSINFO_CPU_BRAND")));
-        let _ = vergen_set.insert((
-            "CPU Frequency",
-            "sysinfo",
-            env!("VERGEN_SYSINFO_CPU_FREQUENCY"),
-        ));
-        vergen_set
-    };
-}
+use tracing::Level;
+use vergen_pretty::{vergen_pretty_env, PrefixBuilder, PrettyBuilder};
 
 fn from_u8(val: u8) -> Style {
     let style = Style::new();
@@ -89,58 +40,43 @@ where
 {
     let mut rng = rand::thread_rng();
     let app_style = from_u8(rng.gen_range(0..7));
-    let bold_blue = Style::new().bold().blue();
-    let bold_green = Style::new().bold().green();
     if let Some(writer) = writer {
-        output_to_writer(writer, &app_style, &bold_blue, &bold_green, prefix)?;
+        output_to_writer(writer, app_style, prefix)?;
     } else if let Some(level) = config.level() {
         if level >= Level::INFO {
-            trace(&app_style, &bold_blue, &bold_green, prefix);
+            trace(app_style, prefix)?;
         }
     }
     Ok(())
 }
 
-fn output_to_writer<T>(
-    writer: &mut T,
-    app_style: &Style,
-    bold_blue: &Style,
-    bold_green: &Style,
-    prefix: &'static str,
-) -> Result<()>
+fn output_to_writer<T>(writer: &mut T, app_style: Style, prefix: &'static str) -> Result<()>
 where
     T: Write + ?Sized,
 {
-    for line in prefix.lines() {
-        writeln!(writer, "{}", app_style.apply_to(line))?;
-    }
-    writeln!(writer)?;
-    writeln!(writer, "{}", bold_green.apply_to("4a61736f6e204f7a696173"))?;
-    writeln!(writer)?;
-    for (prefix, kind, value) in &*VERGEN_MAP {
-        let key = format!("{:>16} ({:>7})", *prefix, *kind);
-        let blue_key = bold_blue.apply_to(key);
-        let green_val = bold_green.apply_to(*value);
-        writeln!(writer, "{blue_key}: {green_val}")?;
-    }
-    writeln!(writer)?;
+    let prefix = PrefixBuilder::default()
+        .lines(prefix.lines().map(str::to_string).collect())
+        .style(app_style)
+        .build()?;
+    PrettyBuilder::default()
+        .env(vergen_pretty_env!())
+        .prefix(prefix)
+        .build()?
+        .display(writer)?;
     Ok(())
 }
 
-fn trace(app_style: &Style, bold_blue: &Style, bold_green: &Style, prefix: &'static str) {
-    for line in prefix.lines() {
-        info!("{}", app_style.apply_to(line));
-    }
-    info!("");
-    info!("{}", bold_green.apply_to("4a61736f6e204f7a696173"));
-    info!("");
-    for (prefix, kind, value) in &*VERGEN_MAP {
-        let key = format!("{:>16} ({:>7})", *prefix, *kind);
-        let blue_key = bold_blue.apply_to(key);
-        let green_val = bold_green.apply_to(*value);
-        info!("{blue_key}: {green_val}");
-    }
-    info!("");
+fn trace(app_style: Style, prefix: &'static str) -> Result<()> {
+    let prefix = PrefixBuilder::default()
+        .lines(prefix.lines().map(str::to_string).collect())
+        .style(app_style)
+        .build()?;
+    PrettyBuilder::default()
+        .env(vergen_pretty_env!())
+        .prefix(prefix)
+        .build()?
+        .trace();
+    Ok(())
 }
 
 #[cfg(test)]
@@ -157,7 +93,10 @@ mod test {
 ██████╔╝██║   ██║██║  ██║██║ █╗ ██║
 ██╔═══╝ ██║   ██║██║  ██║██║███╗██║
 ██║     ╚██████╔╝██████╔╝╚███╔███╔╝
-╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ "#;
+╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ 
+
+4a61736f6e204f7a696173
+"#;
 
     struct TestConfig {
         verbose: u8,
@@ -216,7 +155,7 @@ mod test {
 
     lazy_static! {
         static ref BUILD_TIMESTAMP: Regex = Regex::new(r#"Timestamp \(  build\)"#).unwrap();
-        static ref BUILD_SEMVER: Regex = Regex::new(r#"SemVer \(  build\)"#).unwrap();
+        static ref BUILD_SEMVER: Regex = Regex::new(r#"Semver \(  rustc\)"#).unwrap();
         static ref GIT_BRANCH: Regex = Regex::new(r#"Branch \(    git\)"#).unwrap();
     }
 
@@ -239,6 +178,7 @@ mod test {
         assert!(header(&TestConfig::default(), HEADER_PREFIX, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
+        println!("{header_str}");
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
