@@ -24,7 +24,7 @@ dirs2 = "3.0.1"
 getset = "0.1.2"
 lazy_static = "1.4.0"
 rand = "0.8.5"
-regex = "1.7.0"
+regex = "1.7.1"
 serde = { version = "1.0.149", features = ["derive"] }
 thiserror = "1.0.37"
 time = { version = "0.3.17", features = ["formatting", "serde", "serde-human-readable"] }
@@ -49,4 +49,4 @@ vergen = { version = "8.0.0-beta.1", features = [
 
 [dev-dependencies]
 anyhow = "1.0.66"
-regex = "1.7.0"
+regex = "1.7.1"
