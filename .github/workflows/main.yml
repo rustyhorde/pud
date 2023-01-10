@@ -189,7 +189,7 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
-      - name: 🙊 Code Coverage (vergen) 🙊
+      - name: 🙊 Code Coverage 🙊
         run: cargo tarpaulin --out Xml --skip-clean --target-dir target/coverage
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
