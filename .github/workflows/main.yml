@@ -147,10 +147,11 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks sccache
       - name: ✂ Clippy ✂
         env:
+          BLAH: $env:USERPROFILE
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           SCCACHE_BUCKET: ${{ secrets.SCCACHE_BUCKET }}
-          RUSTC_WRAPPER: ${{ env:USERPROFILE }}\.cargo\bin\sccache
+          RUSTC_WRAPPER: ${{ env.BLAH }}\.cargo\bin\sccache
         run: cargo clippy --all-targets --all-features -- -Dwarnings
       - name: sccache stats
         run: sccache --show-stats
