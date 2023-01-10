@@ -96,7 +96,6 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
@@ -131,7 +130,6 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
@@ -140,8 +138,22 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        run: |
+          rustup override set stable
+          cargo binstall -V || cargo install cargo-binstall
+          rustup override remove
+      - name: 💾 Install (sccache) 💾
+        run: cargo binstall --no-confirm --no-symlinks sccache
       - name: ✂ Clippy ✂
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SCCACHE_BUCKET: ${{ secrets.SCCACHE_BUCKET }}
+          RUSTC_WRAPPER: ~/.cargo/bin/sccache
         run: cargo clippy --all-targets --all-features -- -Dwarnings
+      - name: sccache stats
+        run: sccache --show-stats
   test-linux:
     name: 🧪 Linux 🧪
     needs: lints-linux
