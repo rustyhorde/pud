@@ -11,7 +11,7 @@ on:
     tags-ignore: "*"
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron: "13 3 * * *"
+    - cron: "42 3 * * *"
 
 name: CI
 
@@ -21,6 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: ☢️ Rustfmt Check ☢️
         run: cargo fmt --all -- --check
   lints-linux:
@@ -40,6 +49,17 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -67,6 +87,16 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -91,6 +121,16 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -124,10 +164,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-tarpaulin*
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -142,12 +187,12 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
-      - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
+      - name: 🙊 Code Coverage (vergen) 🙊
+        run: cargo tarpaulin --out Xml --skip-clean --target-dir target/coverage
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./cobertura.xml
+          files: ./vergen/cobertura.xml,./vergen-pretty/cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
@@ -174,10 +219,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-tarpaulin*
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -188,17 +237,11 @@ jobs:
           rustup override set stable
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
-      - name: 💾 Install (tarpaulin, all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
+      - name: 💾 Install (all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
-      - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
-      - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./cobertura.xml
-  test-windows:
+    test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
     runs-on: ${{ matrix.os }}
@@ -236,9 +279,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
