@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - master
-    tags-ignore: 
+    tags-ignore:
       - "*"
   pull_request:
     branches:
       - "*"
-    tags-ignore: 
+    tags-ignore:
       - "*"
   schedule:
     # * is a special character in YAML so you have to quote this string
@@ -243,7 +243,7 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
-    test-windows:
+  test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
     runs-on: ${{ matrix.os }}
