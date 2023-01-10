@@ -15,7 +15,6 @@ use actix::{
 use actix_codec::Framed;
 use actix_http::ws::{CloseReason, Item};
 use awc::{
-    cookie::time::OffsetDateTime,
     error::WsProtocolError,
     ws::{Codec, Frame, Message},
     BoxedSocket,
@@ -39,6 +38,7 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
+use time::OffsetDateTime;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, error, info};
 use typed_builder::TypedBuilder;
