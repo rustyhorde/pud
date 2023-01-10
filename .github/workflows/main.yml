@@ -82,7 +82,7 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            rust: "1.62.0"
+            rust: "1.64.0"
           - os: windows-latest
             rust: stable
           - os: windows-latest
@@ -206,7 +206,7 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            rust: "1.62.0"
+            rust: "1.64.0"
             target: x86_64-pc-windows-msvc
           - os: windows-latest
             rust: stable
@@ -218,7 +218,7 @@ jobs:
             rust: nightly
             target: x86_64-pc-windows-msvc
           - os: windows-latest
-            rust: "1.62.0"
+            rust: "1.64.0"
             target: x86_64-pc-windows-gnu
           - os: windows-latest
             rust: stable
