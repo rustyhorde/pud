@@ -19,11 +19,13 @@ name: CI
 
 jobs:
   rustfmt:
-    name: ☢️ Formatting ☢️
+    name: 📌 Formatting 📌
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -32,7 +34,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
-      - name: 🛢️ Rustfmt Check 🛢️
+      - name: ⭕ Rustfmt Check ⭕
         run: cargo fmt --all -- --check
   lints-linux:
     name: 🕳️ Lints Linux 🕳️
@@ -50,8 +52,10 @@ jobs:
           - os: ubuntu-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -88,8 +92,10 @@ jobs:
           - os: macos-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -123,8 +129,10 @@ jobs:
           - os: windows-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -162,7 +170,7 @@ jobs:
             rust: nightly
             target: x86_64-unknown-linux-gnu
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
@@ -217,7 +225,7 @@ jobs:
             rust: nightly
             target: x86_64-apple-darwin
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
@@ -278,7 +286,7 @@ jobs:
             rust: nightly
             target: x86_64-pc-windows-gnu
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
