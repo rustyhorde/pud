@@ -96,6 +96,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            target/
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
@@ -104,24 +105,8 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: 💾 Install (cargo-binstall) 💾
-        run: |
-          rustup override set stable
-          cargo binstall -V || cargo install cargo-binstall
-          rustup override remove
-      - name: 💾 Install (sccache) 💾
-        run: cargo binstall --no-confirm --no-symlinks sccache
-      - name: 🎁 Set RUSTC_WRAPPER 🎁
-        run: |
-          echo "RUSTC_WRAPPER=$HOME/.cargo/bin/sccache" >> $GITHUB_ENV
       - name: 📎 Clippy 📎
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SCCACHE_BUCKET: ${{ secrets.SCCACHE_BUCKET }}
         run: cargo clippy --all-targets --all-features -- -Dwarnings
-      - name: 💵 sccache stats 💵
-        run: sccache --show-stats
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -146,6 +131,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            target/
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
@@ -154,24 +140,8 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: 💾 Install (cargo-binstall) 💾
-        run: |
-          rustup override set stable
-          cargo binstall -V || cargo install cargo-binstall
-          rustup override remove
-      - name: 💾 Install (sccache) 💾
-        run: cargo binstall --no-confirm --no-symlinks sccache
-      - name: 🎁 Set RUSTC_WRAPPER 🎁
-        run: |
-          echo ("RUSTC_WRAPPER=" + $env:USERPROFILE + "\.cargo\bin\sccache") >> $env:GITHUB_ENV
       - name: 📎 Clippy 📎
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SCCACHE_BUCKET: ${{ secrets.SCCACHE_BUCKET }}
         run: cargo clippy --all-targets --all-features -- -Dwarnings
-      - name: 💵 sccache stats 💵
-        run: sccache --show-stats
   test-linux:
     name: 🧪 Linux 🧪
     needs: lints-linux
@@ -257,6 +227,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            target/
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
@@ -272,18 +243,9 @@ jobs:
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
       - name: 💾 Install 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features sccache
-      - name: 🎁 Set RUSTC_WRAPPER 🎁
-        run: |
-          echo "RUSTC_WRAPPER=$HOME/.cargo/bin/sccache" >> $GITHUB_ENV
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SCCACHE_BUCKET: ${{ secrets.SCCACHE_BUCKET }}
         run: cargo test-all-features
-      - name: 💵 sccache stats 💵
-        run: sccache --show-stats
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -326,6 +288,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            target/
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
@@ -341,15 +304,6 @@ jobs:
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
       - name: 💾 Install 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features sccache
-      - name: 🎁 Set RUSTC_WRAPPER 🎁
-        run: |
-          echo ("RUSTC_WRAPPER=" + $env:USERPROFILE + "\.cargo\bin\sccache") >> $env:GITHUB_ENV
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SCCACHE_BUCKET: ${{ secrets.SCCACHE_BUCKET }}
         run: cargo test-all-features
-      - name: 💵 sccache stats 💵
-        run: sccache --show-stats
