@@ -28,7 +28,7 @@ bytestring = "1.2.0"
 clap = { version = "4.1.0", features = ["derive"] }
 getset = "0.1.2"
 pudlib = { path = "../pudlib" }
-ruarango = "0.1.0"
+ruarango = "0.1.2"
 rustls = "0.20.8"
 rustls-pemfile = "1.0.2"
 serde = { version = "1.0.152", features = ["derive"] }

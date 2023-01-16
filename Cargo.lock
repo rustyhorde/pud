@@ -2588,9 +2588,9 @@ dependencies = [
 
 [[package]]
 name = "ruarango"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62ed348ac5293c32f5fbb4d6695045771edcf07eed4d14b0dd85b271b86f23ad"
+checksum = "c841763d4aa07aad63be8e83f7256cc5dde5a5b1c224036540623219074f70ed"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2602,7 +2602,6 @@ dependencies = [
  "reqwest",
  "rustversion",
  "serde",
- "serde_derive",
  "serde_json",
  "thiserror",
  "wiremock",
