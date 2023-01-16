@@ -42,7 +42,7 @@ uuid = { version = "1.2.2", features = ["v4", "serde"] }
 [build-dependencies]
 anyhow = "1.0.68"
 rustversion = "1.0.11"
-vergen = { version = "8.0.0-beta.2", features = [
+vergen = { version = "8.0.0-beta.3", features = [
     "build",
     "cargo",
     "git",
