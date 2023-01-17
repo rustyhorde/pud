@@ -4,26 +4,37 @@ on:
   push:
     branches:
       - master
-    tags-ignore: 
+    tags-ignore:
       - "*"
   pull_request:
     branches:
       - "*"
-    tags-ignore: 
+    tags-ignore:
       - "*"
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron: "13 3 * * *"
+    - cron: "42 3 * * *"
 
 name: CI
 
 jobs:
   rustfmt:
-    name: ☢️ Formatting ☢️
+    name: 📌 Formatting 📌
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: ☢️ Rustfmt Check ☢️
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+      - name: ⭕ Rustfmt Check ⭕
         run: cargo fmt --all -- --check
   lints-linux:
     name: 🕳️ Lints Linux 🕳️
@@ -41,7 +52,20 @@ jobs:
           - os: ubuntu-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -50,7 +74,7 @@ jobs:
           rm -f ~/.cargo/bin/cargo-clippy
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: ✂ Clippy ✂
+      - name: 📎 Clippy 📎
         run: cargo clippy --all-targets --all-features -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
@@ -68,13 +92,26 @@ jobs:
           - os: macos-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: ✂ Clippy ✂
+      - name: 📎 Clippy 📎
         run: cargo clippy --all-targets --all-features -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
@@ -92,13 +129,26 @@ jobs:
           - os: windows-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: ✂ Clippy ✂
+      - name: 📎 Clippy 📎
         run: cargo clippy --all-targets --all-features -- -Dwarnings
   test-linux:
     name: 🧪 Linux 🧪
@@ -120,16 +170,21 @@ jobs:
             rust: nightly
             target: x86_64-unknown-linux-gnu
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-tarpaulin*
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -145,11 +200,11 @@ jobs:
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
+        run: cargo tarpaulin --out Xml --skip-clean --target-dir target/coverage
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./cobertura.xml
+          files: ./vergen/cobertura.xml,./vergen-pretty/cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
@@ -170,16 +225,21 @@ jobs:
             rust: nightly
             target: x86_64-apple-darwin
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-tarpaulin*
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -190,16 +250,10 @@ jobs:
           rustup override set stable
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
-      - name: 💾 Install (tarpaulin, all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
+      - name: 💾 Install 💾
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
-      - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
-      - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./cobertura.xml
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -232,15 +286,21 @@ jobs:
             rust: nightly
             target: x86_64-pc-windows-gnu
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -251,7 +311,7 @@ jobs:
           rustup override set stable
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
-      - name: 💾 Install (all-features) 💾
+      - name: 💾 Install 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
