@@ -175,14 +175,12 @@ pub(crate) struct TomlConfig {
     /// The tracing configuration
     tracing: Option<Tracing>,
     /// A list of hosts.
-    #[serde(serialize_with = "toml::ser::tables_last")]
     hostlist: BTreeMap<String, Hosts>,
     /// The defaults commands
     default: BTreeMap<String, Command>,
     /// The overrides for specific workers
     overrides: BTreeMap<String, BTreeMap<String, Command>>,
     /// The schedules for specific workers
-    #[serde(serialize_with = "toml::ser::tables_last")]
     schedules: BTreeMap<String, Schedules>,
 }
 

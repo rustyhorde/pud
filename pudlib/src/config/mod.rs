@@ -266,9 +266,9 @@ mod test {
     #[cfg(not(windows))]
     const BAD_CONFIG_ERROR: &str = "Could not open config file! this/path/is/bad/config.toml\n\nCaused by:\n    No such file or directory (os error 2)";
     const BAD_PARSE_ERROR: &str =
-        "Could not parse config file! test/bad.toml\n\nCaused by:\n    missing field `actix`";
+        "Could not parse config file! test/bad.toml\n\nCaused by:\n    TOML parse error at line 1, column 1\n      |\n    1 | \n      | ^\n    missing field `actix`\n    ";
     const BAD_WORKERS_PARSE_ERROR: &str =
-        "Could not parse config file! test/bad_workers.toml\n\nCaused by:\n    invalid type: string \"57\", expected u8 for key `actix.workers` at line 2 column 11";
+        "Could not parse config file! test/bad_workers.toml\n\nCaused by:\n    TOML parse error at line 2, column 11\n      |\n    2 | workers = \"57\"\n      |           ^^^^\n    invalid type: string \"57\", expected u8\n    ";
     const TEST_CONFIG: &str = r#"[actix]
 workers = 8
 "#;
