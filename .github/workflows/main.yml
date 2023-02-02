@@ -72,7 +72,7 @@ jobs:
           rm -f ~/.cargo/bin/rustfmt
           rm -f ~/.cargo/bin/cargo-fmt
           rm -f ~/.cargo/bin/cargo-clippy
-          rustup toolchain install ${{ matrix.rust }} --profile default  --no-self-update
+          rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
         run: cargo clippy --all-targets --all-features -- -Dwarnings
