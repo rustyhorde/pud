@@ -1174,9 +1174,9 @@ dependencies = [
 
 [[package]]
 name = "git-config"
-version = "0.15.1"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "500cc0517781f9f573c4dc26feb3ae0cdc28ae7160a81ef104590943984f6a8e"
+checksum = "ef7630c163ac8f5a043fd8d2d20ed9cdd2ff98fd85ae5bf4c470e3216cf945df"
 dependencies = [
  "bstr",
  "git-config-value",
@@ -1248,9 +1248,9 @@ dependencies = [
 
 [[package]]
 name = "git-discover"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2738a9941f1411cff31e6ea4399a6c7304cc3ea34fb8c1c6f1aef1f667d46cc"
+checksum = "d14f330cca9ba171bb1404cb3b1d6fc6323153b8f72fa9dcf7d95904d66cc234"
 dependencies = [
  "bstr",
  "git-hash",
@@ -1448,9 +1448,9 @@ dependencies = [
 
 [[package]]
 name = "git-ref"
-version = "0.23.1"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a2c29bab109acaf626d49a54f1f85ab7f0911268fbf62c2b39680ef4ef19069"
+checksum = "94ca590ebe794709951f696d14e1d4ea98e58363e79f51844f8d1aafc3896b44"
 dependencies = [
  "git-actor",
  "git-features",
@@ -1481,9 +1481,9 @@ dependencies = [
 
 [[package]]
 name = "git-repository"
-version = "0.33.0"
+version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a958d3fa83660d15c6535765477a8895156bdd6a922dbd0fc445afa42f4b534"
+checksum = "5a5e235db27f1c30ddb22f0a6a43984cc789ff0ed16fa590451dc51c43b4cfc4"
 dependencies = [
  "git-actor",
  "git-attributes",
@@ -3278,9 +3278,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "vergen"
-version = "8.0.0-beta.3"
+version = "8.0.0-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ddc80f045ae4afcbb388b085240e773f6728dfbbacff007dd91fc9e2f686fc7"
+checksum = "05ef74be59877a61ea02668425a31ee127914e1f46f7e50708fb43f36439212e"
 dependencies = [
  "anyhow",
  "git-repository",
