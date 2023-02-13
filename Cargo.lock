@@ -1174,9 +1174,9 @@ dependencies = [
 
 [[package]]
 name = "git-config"
-version = "0.16.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef7630c163ac8f5a043fd8d2d20ed9cdd2ff98fd85ae5bf4c470e3216cf945df"
+checksum = "457aa928d9521ac7514c0c7abb7a890c5274a3eebe8eaa0d40a0b8db0c1fafa9"
 dependencies = [
  "bstr",
  "git-config-value",
@@ -1524,9 +1524,9 @@ dependencies = [
 
 [[package]]
 name = "git-revision"
-version = "0.10.2"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0d500a13e24760401589c4f8c77ce3b2b0ec6345897b5494fa8fdf35afe0423"
+checksum = "152dae3e7d2901516a04f05dc54d67f6d22c1e463c27c5425a551f1a0d7f8b9c"
 dependencies = [
  "bstr",
  "git-date",
