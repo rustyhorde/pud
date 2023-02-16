@@ -27,7 +27,7 @@ rand = "0.8.5"
 regex = "1.7.1"
 serde = { version = "1.0.152", features = ["derive"] }
 thiserror = "1.0.38"
-time = { version = "0.3.17", features = [
+time = { version = "0.3.18", features = [
     "formatting",
     "serde",
     "serde-human-readable",
