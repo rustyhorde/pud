@@ -1329,9 +1329,9 @@ dependencies = [
 
 [[package]]
 name = "gix-glob"
-version = "0.5.3"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02f30e5d3048e99c3a6d1c9663b6dad445927e3e22cf920400b8efe8d7d22cd6"
+checksum = "e3b9aec9707a611857f8215c865aabe003362f2dcc33dc91892a40b4264fd215"
 dependencies = [
  "bitflags",
  "bstr",
