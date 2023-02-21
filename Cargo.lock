@@ -1123,9 +1123,9 @@ dependencies = [
 
 [[package]]
 name = "gix"
-version = "0.37.0"
+version = "0.37.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3187ee78487e2a54e9971abf427ab2dbb3a5bfcf1aec9df6d37df85418c5f52"
+checksum = "b2450b1c21db868ac46d4c40574c2b969d20c66b8115c2fa4e0b128ff60b73e7"
 dependencies = [
  "gix-actor",
  "gix-attributes",
@@ -1223,9 +1223,9 @@ dependencies = [
 
 [[package]]
 name = "gix-config"
-version = "0.16.2"
+version = "0.16.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "398b5003d5e4991355528e8fbb4a9d532050c8327df790522735a711db82fcd0"
+checksum = "b3f91bda4599d9d434e256fd8778fd0f368f7ae5c2015a55934899ac5b70ca99"
 dependencies = [
  "bstr",
  "gix-config-value",
