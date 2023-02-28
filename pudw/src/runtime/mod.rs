@@ -81,7 +81,7 @@ where
                     debug!("{response:?}");
                     let (sink, stream) = framed.split();
                     let addr = Worker::create(|ctx| {
-                        let _ = Worker::add_stream(stream, ctx);
+                        _ = Worker::add_stream(stream, ctx);
                         Worker::builder()
                             .addr(SinkWrite::new(sink, ctx))
                             .tx(tx.clone())

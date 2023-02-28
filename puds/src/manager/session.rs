@@ -65,7 +65,7 @@ impl Session {
     fn hb(&self, ctx: &mut WebsocketContext<Self>) {
         debug!("Starting manager session heartbeat");
         let origin_c = self.origin;
-        let _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
+        _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             debug!("checking heartbeat");
             // check heartbeat
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {

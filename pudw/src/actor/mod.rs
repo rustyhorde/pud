@@ -100,7 +100,7 @@ impl Worker {
     fn hb(&self, ctx: &mut Context<Self>) {
         debug!("Starting worker session heartbeat");
         let origin_c = self.origin;
-        let _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
+        _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             debug!("checking heartbeat");
             // check heartbeat
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
@@ -476,10 +476,10 @@ fn run_cmd(
 
         let shell = shell_path.to_string_lossy().to_string();
         let mut cmd = std::process::Command::new(shell);
-        let _ = cmd.arg("-c");
-        let _ = cmd.arg(command);
-        let _ = cmd.stdout(Stdio::piped());
-        let _ = cmd.stderr(Stdio::piped());
+        _ = cmd.arg("-c");
+        _ = cmd.arg(command);
+        _ = cmd.stdout(Stdio::piped());
+        _ = cmd.stderr(Stdio::piped());
 
         if let Ok(mut child) = cmd.spawn() {
             let _stdout_handle_opt = if let Some(child_stdout) = child.stdout.take() {

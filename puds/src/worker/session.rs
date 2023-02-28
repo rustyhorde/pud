@@ -70,7 +70,7 @@ impl Session {
     fn hb(&self, ctx: &mut WebsocketContext<Self>) {
         debug!("Starting worker session heartbeat");
         let origin_c = self.origin;
-        let _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
+        _ = ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             debug!("checking heartbeat");
             // check heartbeat
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
@@ -135,7 +135,7 @@ impl Session {
                 WorkerClientToWorkerSession::JobEnd { id, name } => {
                     info!("job '{name}' has ended");
                     if let Some(mut job) = self.jobs.remove(&id) {
-                        let _ = job.set_end_time(OffsetDateTime::now_utc());
+                        _ = job.set_end_time(OffsetDateTime::now_utc());
                         self.store_job_document(ctx, job);
                     }
                 }
@@ -151,7 +151,7 @@ impl Session {
                 }
                 WorkerClientToWorkerSession::Status { id, code } => {
                     if let Some(job) = self.jobs.get_mut(&id) {
-                        let _ = job.set_status(code);
+                        _ = job.set_status(code);
                     }
                 }
                 WorkerClientToWorkerSession::Schedules {
@@ -199,7 +199,7 @@ impl Session {
     fn create_collection(&self, ctx: &mut WebsocketContext<Self>) {
         let conn_c = self.conn.clone();
         let name_c = self.name.clone();
-        let _ = ctx.spawn(
+        _ = ctx.spawn(
             async move {
                 if let Err(e) = Collection::collection(&conn_c, &name_c).await {
                     debug!("collection not found: {e}");
@@ -225,7 +225,7 @@ impl Session {
             .build()
         {
             let conn_c = self.conn.clone();
-            let _ = ctx.spawn(
+            _ = ctx.spawn(
                 async move {
                     debug!("creating job document");
                     let doc_meta_res: DocMetaResult<(), ()> =

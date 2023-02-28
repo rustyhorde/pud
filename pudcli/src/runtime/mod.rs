@@ -75,7 +75,7 @@ where
                 debug!("{response:?}");
                 let (sink, stream) = framed.split();
                 let addr = CommandLine::create(|ctx| {
-                    let _ = CommandLine::add_stream(stream, ctx);
+                    _ = CommandLine::add_stream(stream, ctx);
                     CommandLine::builder()
                         .addr(SinkWrite::new(sink, ctx))
                         .tx(tx.clone())

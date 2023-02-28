@@ -74,7 +74,7 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
             .with_line_number(config.line_numbers())
             .with_timer(UtcTime::new(Iso8601::DEFAULT));
         let level = get_effective_level(config.quiet(), config.verbose());
-        let _ = config.set_level(level);
+        _ = config.set_level(level);
         let filter_layer = LevelFilter::from(level);
         match registry().with(format).with(filter_layer).try_init() {
             Ok(_) => {

@@ -22,7 +22,7 @@ pub(crate) struct Name {
 }
 
 pub(crate) fn insecure_config(cfg: &mut ServiceConfig) {
-    let _ = cfg
+    _ = cfg
         .route("/health", get().to(health::health))
         .route("/info", get().to(info::info))
         .route("/ws/worker", get().to(worker::worker))

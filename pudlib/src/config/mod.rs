@@ -173,7 +173,7 @@ where
 {
     let mut buf = String::new();
     let mut file = File::open(config_file_path).with_context(|| ctx(FILE_OPEN))?;
-    let _ = file.read_to_string(&mut buf).with_context(|| ctx(READ))?;
+    _ = file.read_to_string(&mut buf).with_context(|| ctx(READ))?;
     Ok(buf)
 }
 
@@ -183,9 +183,9 @@ where
     <U as TryFrom<T>>::Error: std::error::Error + Sync + Send + 'static,
 {
     let mut config: U = U::try_from(config)?;
-    let _ = config.set_verbose(verbose);
-    let _ = config.set_quiet(quiet);
-    let _ = config.set_config_file_path(config_file_path);
+    _ = config.set_verbose(verbose);
+    _ = config.set_quiet(quiet);
+    _ = config.set_config_file_path(config_file_path);
     Ok(config)
 }
 
