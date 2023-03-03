@@ -19,7 +19,7 @@ dependencies = [
  "futures-util",
  "log",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot",
  "pin-project-lite",
  "smallvec",
  "tokio",
@@ -45,16 +45,16 @@ dependencies = [
 
 [[package]]
 name = "actix-http"
-version = "3.3.0"
+version = "3.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0070905b2c4a98d184c4e81025253cb192aa8a73827553f38e9410801ceb35bb"
+checksum = "c2079246596c18b4a33e274ae10c0e50613f4d32a4198e09c7b93771013fed74"
 dependencies = [
  "actix-codec",
  "actix-rt",
  "actix-service",
  "actix-tls",
  "actix-utils",
- "ahash 0.7.6",
+ "ahash 0.8.3",
  "base64 0.21.0",
  "bitflags",
  "brotli",
@@ -752,7 +752,7 @@ dependencies = [
  "hashbrown 0.12.3",
  "lock_api",
  "once_cell",
- "parking_lot_core 0.9.7",
+ "parking_lot_core",
 ]
 
 [[package]]
@@ -1355,7 +1355,7 @@ checksum = "9609c1b8f36f12968e6a6098f7cdb52004f7d42d570f47a2d6d7c16612f19acb"
 dependencies = [
  "gix-hash",
  "hashbrown 0.13.2",
- "parking_lot 0.12.1",
+ "parking_lot",
 ]
 
 [[package]]
@@ -1434,7 +1434,7 @@ dependencies = [
  "gix-pack",
  "gix-path",
  "gix-quote",
- "parking_lot 0.12.1",
+ "parking_lot",
  "tempfile",
  "thiserror",
 ]
@@ -1458,7 +1458,7 @@ dependencies = [
  "gix-tempfile",
  "gix-traverse",
  "memmap2",
- "parking_lot 0.12.1",
+ "parking_lot",
  "smallvec",
  "thiserror",
 ]
@@ -1482,7 +1482,7 @@ dependencies = [
  "gix-command",
  "gix-config-value",
  "nix",
- "parking_lot 0.12.1",
+ "parking_lot",
  "thiserror",
 ]
 
@@ -2171,37 +2171,12 @@ checksum = "427c3892f9e783d91cc128285287e70a59e206ca452770ece88a76f7a3eddd72"
 
 [[package]]
 name = "parking_lot"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d17b78036a60663b797adeaee46f5c9dfebb86948d1255007a1d6be0271ff99"
-dependencies = [
- "instant",
- "lock_api",
- "parking_lot_core 0.8.6",
-]
-
-[[package]]
-name = "parking_lot"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3742b2c103b9f06bc9fff0a37ff4912935851bee6d36f3c02bcc755bcfec228f"
 dependencies = [
  "lock_api",
- "parking_lot_core 0.9.7",
-]
-
-[[package]]
-name = "parking_lot_core"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60a2cfe6f0ad2bfc16aefa463b497d5c7a5ecd44a23efa72aa342d90177356dc"
-dependencies = [
- "cfg-if 1.0.0",
- "instant",
- "libc",
- "redox_syscall",
- "smallvec",
- "winapi",
+ "parking_lot_core",
 ]
 
 [[package]]
@@ -2288,13 +2263,13 @@ dependencies = [
 
 [[package]]
 name = "prodash"
-version = "23.1.0"
+version = "23.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88ee4651b19ce9933cb6077977767f44d332f14603f00d455ce9284e709493d0"
+checksum = "d73c6b64cb5b99eb63ca97d378685712617ec0172ff5c04cd47a489d3e2c51f8"
 dependencies = [
  "bytesize",
  "human_format",
- "parking_lot 0.11.2",
+ "parking_lot",
 ]
 
 [[package]]
@@ -3015,7 +2990,7 @@ dependencies = [
  "libc",
  "memchr",
  "mio",
- "parking_lot 0.12.1",
+ "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",
