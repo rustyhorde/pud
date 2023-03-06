@@ -40,4 +40,4 @@ tracing = { version = "0.1.37", features = [
 typed-builder = "0.12.0"
 
 [build-dependencies]
-rustversion = "1.0.11"
+rustversion = "1.0.12"
