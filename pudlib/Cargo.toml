@@ -17,7 +17,7 @@ version = "0.1.0"
 actix = "0.13.0"
 anyhow = "1.0.69"
 bytes = "1.4.0"
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.8", features = ["derive"] }
 console = "0.15.5"
 const_format = "0.2.30"
 dirs2 = "3.0.1"
@@ -25,9 +25,9 @@ getset = "0.1.2"
 lazy_static = "1.4.0"
 rand = "0.8.5"
 regex = "1.7.1"
-serde = { version = "1.0.152", features = ["derive"] }
-thiserror = "1.0.38"
-time = { version = "0.3.17", features = [
+serde = { version = "1.0.154", features = ["derive"] }
+thiserror = "1.0.39"
+time = { version = "0.3.20", features = [
     "formatting",
     "serde",
     "serde-human-readable",
@@ -44,8 +44,8 @@ vergen-pretty = { version = "0.1.1", features = ["color", "trace"] }
 
 [build-dependencies]
 anyhow = "1.0.69"
-rustversion = "1.0.11"
-vergen = { version = "8.0.0-beta.6", features = [
+rustversion = "1.0.12"
+vergen = { version = "8.0.0-beta.9", features = [
     "build",
     "cargo",
     "git",
