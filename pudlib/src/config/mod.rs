@@ -293,6 +293,7 @@ workers = 8
     }
 
     #[test]
+    #[allow(clippy::redundant_clone)]
     fn read_config_works() -> Result<()> {
         let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let defaults = Defaults::test_defaults();
@@ -307,6 +308,7 @@ workers = 8
     }
 
     #[test]
+    #[allow(clippy::redundant_clone)]
     fn read_config_fails() -> Result<()> {
         let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", BAD_PATH])?;
         let defaults = Defaults::test_defaults();
