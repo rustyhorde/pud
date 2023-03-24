@@ -1074,9 +1074,9 @@ dependencies = [
 
 [[package]]
 name = "gix"
-version = "0.41.0"
+version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1853c840375a04e02315cb225b6d802291abfabbf08e500727c98a8670f1bf1"
+checksum = "fd5e0d9c5df90c9b4d325ec716762beb7d6c1465a4049fec5c4f6b72e7824656"
 dependencies = [
  "gix-actor",
  "gix-attributes",
@@ -3184,9 +3184,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "vergen"
-version = "8.0.0-beta.11"
+version = "8.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "805fef6896c32ebf3aef99b0c9d609461fc93d84f033a1be605eb5bc5ab589e7"
+checksum = "7f9a8771e0243f62129338ff4c36436ebe763f2f07aee2ec03238a7abb0f03a5"
 dependencies = [
  "anyhow",
  "gix",
