@@ -24,7 +24,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
 use ruarango::ConnectionBuilder;
-use rustls::{Certificate, PrivateKey, ServerConfig};
+use rustls::{Certificate, PrivateKey, server::ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
     ffi::OsString,
