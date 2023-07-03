@@ -20,7 +20,7 @@ use time::Weekday;
 
 lazy_static! {
     static ref DOW_RANGE_RE: Regex =
-        Regex::new(r#"([a-zA-Z]{3,})\.\.([a-zA-Z]{3,})"#).expect("invalid day of week range regex");
+        Regex::new(r"([a-zA-Z]{3,})\.\.([a-zA-Z]{3,})").expect("invalid day of week range regex");
 }
 
 /// The day of the week for a realtime schedule

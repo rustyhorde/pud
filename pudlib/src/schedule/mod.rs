@@ -33,9 +33,9 @@ pub(crate) mod ymd;
 
 lazy_static! {
     static ref RANGE_RE: Regex =
-        Regex::new(r#"(\d{1,2})\.\.(\d{1,2})"#).expect("invalid range regex");
+        Regex::new(r"(\d{1,2})\.\.(\d{1,2})").expect("invalid range regex");
     static ref REP_RE: Regex =
-        Regex::new(r#"(\d{1,2})(\.\.(\d{1,2}))?/(\d{1,2})"#).expect("invalid repetition regex");
+        Regex::new(r"(\d{1,2})(\.\.(\d{1,2}))?/(\d{1,2})").expect("invalid repetition regex");
 }
 
 const MINUTELY: &str = "minutely";
