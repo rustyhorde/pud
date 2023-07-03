@@ -9,8 +9,6 @@ on:
   pull_request:
     branches:
       - "*"
-    tags-ignore:
-      - "*"
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron: "42 3 * * *"
@@ -75,7 +73,9 @@ jobs:
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
-        run: cargo clippy --all-targets --all-features -- -Dwarnings
+        run: |
+          cargo update
+          cargo clippy --all-targets --all-features -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -112,7 +112,9 @@ jobs:
           rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
-        run: cargo clippy --all-targets --all-features -- -Dwarnings
+        run: |
+          cargo update
+          cargo clippy --all-targets --all-features -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -149,7 +151,9 @@ jobs:
           rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
-        run: cargo clippy --all-targets --all-features -- -Dwarnings
+        run: |
+          cargo update
+          cargo clippy --all-targets --all-features -- -Dwarnings
   test-linux:
     name: 🧪 Linux 🧪
     needs: lints-linux
