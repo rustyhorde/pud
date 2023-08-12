@@ -67,7 +67,7 @@ pub(crate) fn clap_or_error(err: anyhow::Error) -> i32 {
     }
 }
 
-pub(crate) fn success(_: ()) -> i32 {
+pub(crate) fn success((): ()) -> i32 {
     0
 }
 

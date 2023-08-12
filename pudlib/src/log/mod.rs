@@ -77,7 +77,7 @@ pub fn initialize<T: Config>(config: &mut T) -> Result<()> {
         _ = config.set_level(level);
         let filter_layer = LevelFilter::from(level);
         match registry().with(format).with(filter_layer).try_init() {
-            Ok(_) => {
+            Ok(()) => {
                 init.store(true, Ordering::SeqCst);
                 Ok(())
             }

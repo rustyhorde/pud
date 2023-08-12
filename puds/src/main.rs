@@ -162,7 +162,7 @@
 // If nightly and not unstable, deny `unstable_features`
 #![cfg_attr(all(msrv, not(feature = "unstable"), nightly), deny(unstable_features))]
 // nightly only lints
-// #![cfg_attr(all(msrv, nightly),deny())]
+// #![cfg_attr(all(msrv, nightly), deny())]
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta, nightly)),
@@ -176,7 +176,7 @@
 // #![cfg_attr(all(msrv, stable), deny())]
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
-// #![cfg_attr(msrv, allow())]
+#![cfg_attr(msrv, allow(clippy::ignored_unit_patterns))]
 
 mod constants;
 mod endpoints;
