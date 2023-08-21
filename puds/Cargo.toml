@@ -31,7 +31,7 @@ pudlib = { path = "../pudlib" }
 ruarango = "0.1.2"
 rustls = "0.20.8"
 rustls-pemfile = "1.0.2"
-serde = { version = "1.0.162", features = ["derive"] }
+serde = { version = "=1.0.171", features = ["derive"] }
 thiserror = "1.0.40"
 time = { version = "0.3.21", features = ["serde", "serde-human-readable"] }
 tracing = { version = "0.1.37", features = ["max_level_trace", "release_max_level_info"] }
