@@ -76,30 +76,38 @@ mod test {
     #[test]
     fn deserialize_schedule() -> Result<()> {
         let schedules: Schedules = from_str(SCHEDULES)?;
-        let realtime = schedules.schedules().iter().cloned().filter(|x| match x {
-            Schedule::Realtime {
-                on_calendar: _,
-                persistent: _,
-                cmds: _,
-            } => true,
-            Schedule::Monotonic {
-                on_boot_sec: _,
-                on_unit_active_sec: _,
-                cmds: _,
-            } => false,
-        });
-        let monotonic = schedules.schedules().iter().cloned().filter(|x| match x {
-            Schedule::Monotonic {
-                on_boot_sec: _,
-                on_unit_active_sec: _,
-                cmds: _,
-            } => true,
-            Schedule::Realtime {
-                on_calendar: _,
-                persistent: _,
-                cmds: _,
-            } => false,
-        });
+        let realtime = schedules
+            .schedules()
+            .iter()
+            .filter(|x| match x {
+                Schedule::Realtime {
+                    on_calendar: _,
+                    persistent: _,
+                    cmds: _,
+                } => true,
+                Schedule::Monotonic {
+                    on_boot_sec: _,
+                    on_unit_active_sec: _,
+                    cmds: _,
+                } => false,
+            })
+            .cloned();
+        let monotonic = schedules
+            .schedules()
+            .iter()
+            .filter(|x| match x {
+                Schedule::Monotonic {
+                    on_boot_sec: _,
+                    on_unit_active_sec: _,
+                    cmds: _,
+                } => true,
+                Schedule::Realtime {
+                    on_calendar: _,
+                    persistent: _,
+                    cmds: _,
+                } => false,
+            })
+            .cloned();
         assert_eq!(3, schedules.schedules().len());
         assert_eq!(2, realtime.count());
         assert_eq!(1, monotonic.count());
