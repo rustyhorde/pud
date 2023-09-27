@@ -88,7 +88,7 @@ mod test {
     use regex::Regex;
     use tracing::Level;
 
-    const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
+    const HEADER_PREFIX: &str = r"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
 ██╔══██╗██║   ██║██╔══██╗██║    ██║
 ██████╔╝██║   ██║██║  ██║██║ █╗ ██║
 ██╔═══╝ ██║   ██║██║  ██║██║███╗██║
@@ -96,7 +96,7 @@ mod test {
 ╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ 
 
 4a61736f6e204f7a696173
-"#;
+";
 
     struct TestConfig {
         verbose: u8,

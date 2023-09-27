@@ -27,12 +27,12 @@ use std::{
 use tokio::sync::mpsc::unbounded_channel;
 use tracing::{debug, error, info};
 
-const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
+const HEADER_PREFIX: &str = r"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
 ██╔══██╗██║   ██║██╔══██╗██║    ██║
 ██████╔╝██║   ██║██║  ██║██║ █╗ ██║
 ██╔═══╝ ██║   ██║██║  ██║██║███╗██║
 ██║     ╚██████╔╝██████╔╝╚███╔███╔╝
-╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ "#;
+╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ ";
 
 pub(crate) fn run<I, T>(args: Option<I>) -> Result<()>
 where
