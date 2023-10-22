@@ -13,6 +13,7 @@ use serde::Serialize;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
+#[allow(clippy::struct_field_names)]
 #[derive(Clone, Debug, Eq, Getters, MutGetters, PartialEq, Serialize, Setters)]
 #[getset(get = "pub(crate)", set = "pub(crate)")]
 pub(crate) struct Job {
