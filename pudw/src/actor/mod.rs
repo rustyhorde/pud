@@ -136,14 +136,15 @@ impl Worker {
                     let running_pair_c = act.running_pair.clone();
 
                     // Run the long running commands in a separate thread
-                    let _b = thread::spawn(move || {
-                        // Run the commands sequentially
-                        for cmd_name in &cmds_thread {
-                            if let Some(cmd) = commands_thread.get(cmd_name) {
-                                run_cmd(cmd_name, cmd.cmd(), &running_pair_c, &tx);
+                    let _b =
+                        thread::spawn(move || {
+                            // Run the commands sequentially
+                            for cmd_name in &cmds_thread {
+                                if let Some(cmd) = commands_thread.get(cmd_name) {
+                                    run_cmd(cmd_name, cmd.cmd(), &running_pair_c, &tx);
+                                }
                             }
-                        }
-                    });
+                        });
                 }
             }
         });

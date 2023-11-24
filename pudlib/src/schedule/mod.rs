@@ -352,12 +352,13 @@ mod test {
     #[test]
     fn monthly() -> Result<()> {
         let res = parse_calendar(MONTHLY)?;
-        let expected = Realtime::builder()
-            .day(1)
-            .hour(0)
-            .minute(0)
-            .second(0)
-            .build();
+        let expected =
+            Realtime::builder()
+                .day(1)
+                .hour(0)
+                .minute(0)
+                .second(0)
+                .build();
         assert_eq!(res, expected);
         Ok(())
     }
