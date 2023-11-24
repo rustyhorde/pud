@@ -127,11 +127,12 @@ fn load_tls_config(config: &Config) -> Result<ServerConfig> {
 
     let key_file =
         &mut BufReader::new(File::open(key_file_path).with_context(|| "Unable to read key file")?);
-    let mut keys: Vec<PrivateKey> = pkcs8_private_keys(key_file)
-        .map_err(|_| PrivKey)?
-        .into_iter()
-        .map(PrivateKey)
-        .collect();
+    let mut keys: Vec<PrivateKey> =
+        pkcs8_private_keys(key_file)
+            .map_err(|_| PrivKey)?
+            .into_iter()
+            .map(PrivateKey)
+            .collect();
 
     let config = ServerConfig::builder()
         .with_safe_defaults()

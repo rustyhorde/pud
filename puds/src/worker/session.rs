@@ -157,11 +157,13 @@ impl Session {
                 WorkerClientToWorkerSession::Schedules {
                     manager_id,
                     schedules,
-                } => self.addr.do_send(WorkerSessionToServer::Schedules {
-                    manager_id,
-                    name: self.name.clone(),
-                    schedules,
-                }),
+                } => {
+                    self.addr.do_send(WorkerSessionToServer::Schedules {
+                        manager_id,
+                        name: self.name.clone(),
+                        schedules,
+                    });
+                }
             },
             Err(e) => error!("{e}"),
         }
@@ -219,10 +221,11 @@ impl Session {
     }
 
     fn store_job_document(&self, ctx: &mut WebsocketContext<Self>, job: Job) {
-        if let Ok(config) = doc::input::CreateConfigBuilder::default()
-            .collection(&self.name)
-            .document(job)
-            .build()
+        if let Ok(config) =
+            doc::input::CreateConfigBuilder::default()
+                .collection(&self.name)
+                .document(job)
+                .build()
         {
             let conn_c = self.conn.clone();
             _ = ctx.spawn(

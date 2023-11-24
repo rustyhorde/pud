@@ -121,18 +121,19 @@ impl TryFrom<TomlConfig> for Config {
         let db_pass = config.arangodb().password().clone();
         let db_name = config.arangodb().name().clone();
 
-        let (target, thread_id, thread_names, line_numbers, with_level) =
-            if let Some(tracing) = config.tracing() {
-                (
-                    *tracing.target(),
-                    *tracing.thread_id(),
-                    *tracing.thread_names(),
-                    *tracing.line_numbers(),
-                    *tracing.with_level(),
-                )
-            } else {
-                (false, false, false, false, true)
-            };
+        let (target, thread_id, thread_names, line_numbers, with_level) = if let Some(tracing) =
+            config.tracing()
+        {
+            (
+                *tracing.target(),
+                *tracing.thread_id(),
+                *tracing.thread_names(),
+                *tracing.line_numbers(),
+                *tracing.with_level(),
+            )
+        } else {
+            (false, false, false, false, true)
+        };
         let socket_addr = SocketAddr::from((ip_addr, *port));
         let (tls, hostlist, default, overrides, schedules) = config.take();
         let (cert_file_path, key_file_path) = tls.take();
