@@ -30,17 +30,17 @@ where
                 for (idx, chunk) in wm_bytes.chunks(65_536).enumerate() {
                     debug!("chunk length: {}", chunk.len());
                     if idx == 0 {
-                        ctx.write_raw(
-                            Message::Continuation(Item::FirstBinary(Bytes::copy_from_slice(chunk)))
-                        );
+                        ctx.write_raw(Message::Continuation(Item::FirstBinary(
+                            Bytes::copy_from_slice(chunk),
+                        )));
                     } else if idx == (upper - 1) {
-                        ctx.write_raw(
-                            Message::Continuation(Item::Last(Bytes::copy_from_slice(chunk)))
-                        );
+                        ctx.write_raw(Message::Continuation(Item::Last(Bytes::copy_from_slice(
+                            chunk,
+                        ))));
                     } else {
-                        ctx.write_raw(
-                            Message::Continuation(Item::Continue(Bytes::copy_from_slice(chunk)))
-                        );
+                        ctx.write_raw(Message::Continuation(Item::Continue(
+                            Bytes::copy_from_slice(chunk),
+                        )));
                     }
                 }
             }

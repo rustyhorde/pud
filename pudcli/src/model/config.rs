@@ -110,19 +110,18 @@ impl TryFrom<TomlConfig> for Config {
         let server_addr = config.actix().ip().clone();
         let server_port = *config.actix().port();
         let retry_count = *config.retry_count();
-        let (target, thread_id, thread_names, line_numbers, with_level) = if let Some(tracing) =
-            config.tracing()
-        {
-            (
-                *tracing.target(),
-                *tracing.thread_id(),
-                *tracing.thread_names(),
-                *tracing.line_numbers(),
-                *tracing.with_level(),
-            )
-        } else {
-            (false, false, false, false, true)
-        };
+        let (target, thread_id, thread_names, line_numbers, with_level) =
+            if let Some(tracing) = config.tracing() {
+                (
+                    *tracing.target(),
+                    *tracing.thread_id(),
+                    *tracing.thread_names(),
+                    *tracing.line_numbers(),
+                    *tracing.with_level(),
+                )
+            } else {
+                (false, false, false, false, true)
+            };
         Ok(Config {
             verbose: 0,
             quiet: 0,
