@@ -221,11 +221,10 @@ impl Session {
     }
 
     fn store_job_document(&self, ctx: &mut WebsocketContext<Self>, job: Job) {
-        if let Ok(config) =
-            doc::input::CreateConfigBuilder::default()
-                .collection(&self.name)
-                .document(job)
-                .build()
+        if let Ok(config) = doc::input::CreateConfigBuilder::default()
+            .collection(&self.name)
+            .document(job)
+            .build()
         {
             let conn_c = self.conn.clone();
             _ = ctx.spawn(

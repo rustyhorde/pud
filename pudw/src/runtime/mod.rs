@@ -89,12 +89,11 @@ where
                     });
 
                     let status_addr = addr;
-                    let _handle =
-                        spawn(async move {
-                            while let Some(status) = rx.recv().await {
-                                status_addr.do_send(status);
-                            }
-                        });
+                    let _handle = spawn(async move {
+                        while let Some(status) = rx.recv().await {
+                            status_addr.do_send(status);
+                        }
+                    });
                 } else {
                     error!("unable to connect");
                     System::current().stop();
