@@ -486,7 +486,7 @@ fn run_cmd(
                 let tx_stdout = tx.clone();
                 let stdout_handle = thread::spawn(move || {
                     let stdout_reader = BufReader::new(child_stdout);
-                    for line in stdout_reader.lines().flatten() {
+                    for line in stdout_reader.lines().map_while(Result::ok) {
                         let stdout_m = WorkerClientToWorkerSession::Stdout {
                             id: command_id,
                             line,
@@ -506,7 +506,7 @@ fn run_cmd(
                 let tx_stderr = tx.clone();
                 let stderr_handle = thread::spawn(move || {
                     let stderr_reader = BufReader::new(child_stderr);
-                    for line in stderr_reader.lines().flatten() {
+                    for line in stderr_reader.lines().map_while(Result::ok) {
                         let stderr_m = WorkerClientToWorkerSession::Stderr {
                             id: command_id,
                             line,
