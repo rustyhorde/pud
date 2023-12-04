@@ -157,11 +157,13 @@ impl Session {
                 WorkerClientToWorkerSession::Schedules {
                     manager_id,
                     schedules,
-                } => self.addr.do_send(WorkerSessionToServer::Schedules {
-                    manager_id,
-                    name: self.name.clone(),
-                    schedules,
-                }),
+                } => {
+                    self.addr.do_send(WorkerSessionToServer::Schedules {
+                        manager_id,
+                        name: self.name.clone(),
+                        schedules,
+                    });
+                }
             },
             Err(e) => error!("{e}"),
         }
