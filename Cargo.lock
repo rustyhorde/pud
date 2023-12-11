@@ -166,7 +166,7 @@ dependencies = [
  "tokio-util",
  "tracing",
  "webpki-roots 0.22.6",
- "webpki-roots 0.25.4",
+ "webpki-roots 0.25.3",
 ]
 
 [[package]]
@@ -2345,7 +2345,7 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
- "typed-builder",
+ "typed-builder 0.16.2",
 ]
 
 [[package]]
@@ -2370,7 +2370,7 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
- "typed-builder",
+ "typed-builder 0.16.2",
  "uuid",
  "vergen",
  "vergen-pretty",
@@ -2400,7 +2400,7 @@ dependencies = [
  "thiserror",
  "time",
  "tracing",
- "typed-builder",
+ "typed-builder 0.18.0",
  "uuid",
  "vergen",
 ]
@@ -2427,7 +2427,7 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
- "typed-builder",
+ "typed-builder 0.16.2",
  "uuid",
 ]
 
@@ -3283,7 +3283,16 @@ version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "444d8748011b93cb168770e8092458cb0f8854f931ff82fdf6ddfbd72a9c933e"
 dependencies = [
- "typed-builder-macro",
+ "typed-builder-macro 0.16.2",
+]
+
+[[package]]
+name = "typed-builder"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e47c0496149861b7c95198088cbf36645016b1a0734cf350c50e2a38e070f38a"
+dependencies = [
+ "typed-builder-macro 0.18.0",
 ]
 
 [[package]]
@@ -3291,6 +3300,17 @@ name = "typed-builder-macro"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "563b3b88238ec95680aef36bdece66896eaa7ce3c0f1b4f39d38fb2435261352"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.40",
+]
+
+[[package]]
+name = "typed-builder-macro"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "982ee4197351b5c9782847ef5ec1fdcaf50503fb19d68f9771adae314e72b492"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3572,9 +3592,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-roots"
-version = "0.25.4"
+version = "0.25.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f20c57d8d7db6d3b86154206ae5d8fba62dd39573114de97c2cb0578251f8e1"
+checksum = "1778a42e8b3b90bff8d0f5032bf22250792889a5cdc752aa0020c84abe3aaf10"
 
 [[package]]
 name = "winapi"
