@@ -436,6 +436,7 @@ dependencies = [
  "pin-project-lite",
  "rand 0.8.5",
  "rustls 0.20.9",
+ "rustls 0.21.10",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -2347,7 +2348,7 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
- "typed-builder 0.16.2",
+ "typed-builder 0.18.0",
  "uuid",
 ]
 
