@@ -106,7 +106,7 @@ where
                 .service(scope("/v1").configure(insecure_config))
         })
         .workers(workers)
-        .bind_rustls(socket_addr, server_config)?
+        .bind_rustls_021(socket_addr, server_config)?
         .run()
         .await?;
     }

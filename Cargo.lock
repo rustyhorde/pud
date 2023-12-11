@@ -160,10 +160,12 @@ dependencies = [
  "rustls 0.21.10",
  "rustls-webpki",
  "tokio",
- "tokio-rustls",
+ "tokio-rustls 0.23.4",
+ "tokio-rustls 0.24.1",
  "tokio-util",
  "tracing",
- "webpki-roots",
+ "webpki-roots 0.22.6",
+ "webpki-roots 0.25.3",
 ]
 
 [[package]]
@@ -2263,7 +2265,7 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
- "typed-builder",
+ "typed-builder 0.16.2",
 ]
 
 [[package]]
@@ -2288,7 +2290,7 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
- "typed-builder",
+ "typed-builder 0.16.2",
  "uuid",
  "vergen",
  "vergen-pretty",
@@ -2311,14 +2313,14 @@ dependencies = [
  "lazy_static",
  "pudlib",
  "ruarango",
- "rustls 0.20.9",
+ "rustls 0.21.10",
  "rustls-pemfile",
  "rustversion",
  "serde",
  "thiserror",
  "time",
  "tracing",
- "typed-builder",
+ "typed-builder 0.18.0",
  "uuid",
  "vergen",
 ]
@@ -2345,7 +2347,7 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
- "typed-builder",
+ "typed-builder 0.16.2",
  "uuid",
 ]
 
@@ -3064,6 +3066,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-rustls"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c28327cf380ac148141087fbfb9de9d7bd4e84ab5d2c28fbc911d753de8a7081"
+dependencies = [
+ "rustls 0.21.10",
+ "tokio",
+]
+
+[[package]]
 name = "tokio-util"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3188,7 +3200,16 @@ version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34085c17941e36627a879208083e25d357243812c30e7d7387c3b954f30ade16"
 dependencies = [
- "typed-builder-macro",
+ "typed-builder-macro 0.16.2",
+]
+
+[[package]]
+name = "typed-builder"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e47c0496149861b7c95198088cbf36645016b1a0734cf350c50e2a38e070f38a"
+dependencies = [
+ "typed-builder-macro 0.18.0",
 ]
 
 [[package]]
@@ -3196,6 +3217,17 @@ name = "typed-builder-macro"
 version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f03ca4cb38206e2bef0700092660bb74d696f808514dae47fa1467cbfe26e96e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.40",
+]
+
+[[package]]
+name = "typed-builder-macro"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "982ee4197351b5c9782847ef5ec1fdcaf50503fb19d68f9771adae314e72b492"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3471,6 +3503,12 @@ checksum = "b6c71e40d7d2c34a5106301fb632274ca37242cd0c9d3e64dbece371a40a2d87"
 dependencies = [
  "webpki",
 ]
+
+[[package]]
+name = "webpki-roots"
+version = "0.25.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1778a42e8b3b90bff8d0f5032bf22250792889a5cdc752aa0020c84abe3aaf10"
 
 [[package]]
 name = "winapi"
