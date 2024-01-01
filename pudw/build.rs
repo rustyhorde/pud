@@ -4,6 +4,7 @@ pub fn main() {
     beta_lints();
     stable_lints();
     msrv_lints();
+    lints_fix();
 }
 
 #[rustversion::nightly]
@@ -36,4 +37,12 @@ fn msrv_lints() {}
 #[rustversion::since(1.70)]
 fn msrv_lints() {
     println!("cargo:rustc-cfg=msrv");
+}
+
+#[rustversion::before(1.75)]
+fn lints_fix() {}
+
+#[rustversion::since(1.75)]
+fn lints_fix() {
+    println!("cargo:rustc-cfg=lints_fix")
 }
