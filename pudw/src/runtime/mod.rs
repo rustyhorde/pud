@@ -76,7 +76,7 @@ where
                     .finish();
 
                 if let Ok((response, framed)) = awc.ws(&url_c).connect().await.map_err(|e| {
-                    error!("Error: {e}");
+                    error!("Error: {e:?}");
                 }) {
                     debug!("{response:?}");
                     let (sink, stream) = framed.split();
