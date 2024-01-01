@@ -175,8 +175,11 @@
 // #![cfg_attr(all(msrv, stable), deny())]
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
-#![cfg_attr(all(msrv, lints_fix), allow(clippy::struct_field_names))]
-#![cfg_attr(all(msrv, any(nightly, beta)), allow(clippy::ignored_unit_patterns))]
+#![cfg_attr(msrv, allow(clippy::struct_field_names))]
+#![cfg_attr(
+    all(msrv, any(nightly, beta)),
+    allow(clippy::ignored_unit_patterns)
+)]
 
 mod constants;
 mod endpoints;
