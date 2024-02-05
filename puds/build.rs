@@ -1,23 +1,22 @@
 use anyhow::Result;
-use vergen::EmitBuilder;
+use vergen_gix::{BuildBuilder, CargoBuilder, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder};
 
 pub fn main() -> Result<()> {
-    nightly_lints();
-    beta_lints();
-    stable_lints();
-    msrv_lints();
-    lints_fix();
-    EmitBuilder::builder()
-        .all_build()
-        .all_cargo()
-        .all_git()
-        .all_rustc()
-        .all_sysinfo()
+    nightyl();
+    beta();
+    stable();
+    msrv();
+    Emitter::default()
+        .add_instructions(&BuildBuilder::all_build()?)?
+        .add_instructions(&CargoBuilder::all_cargo()?)?
+        .add_instructions(&GixBuilder::all_git()?)?
+        .add_instructions(&RustcBuilder::all_rustc()?)?
+        .add_instructions(&SysinfoBuilder::all_sysinfo()?)?
         .emit()
 }
 
 #[rustversion::nightly]
-fn nightly_lints() {
+fn nightyl() {
     println!("cargo:rustc-cfg=nightly");
 }
 
@@ -30,7 +29,7 @@ fn beta_lints() {
 }
 
 #[rustversion::not(beta)]
-fn beta_lints() {}
+fn beta() {}
 
 #[rustversion::stable]
 fn stable_lints() {
@@ -38,20 +37,12 @@ fn stable_lints() {
 }
 
 #[rustversion::not(stable)]
-fn stable_lints() {}
+fn stable() {}
 
 #[rustversion::before(1.70)]
 fn msrv_lints() {}
 
 #[rustversion::since(1.70)]
-fn msrv_lints() {
+fn msrv() {
     println!("cargo:rustc-cfg=msrv");
-}
-
-#[rustversion::before(1.75)]
-fn lints_fix() {}
-
-#[rustversion::since(1.75)]
-fn lints_fix() {
-    println!("cargo:rustc-cfg=lints_fix")
 }
