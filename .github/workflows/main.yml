@@ -264,11 +264,11 @@ jobs:
       - name: 🙊 Code Coverage (pudlib) 🙊
         run: cargo llvm-cov -p pudlib -F unstable --no-report
       - name: 🙊 Code Coverage (puds) 🙊
-        run: cargo llvm-cov -p puds -F unstable --no-report; and \
+        run: cargo llvm-cov -p puds -F unstable --no-report
       - name: 🙊 Code Coverage (pudw) 🙊
-        run: cargo llvm-cov -p pudw -F unstable --no-report; and \
+        run: cargo llvm-cov -p pudw -F unstable --no-report
       - name: 🙊 Code Coverage (pudcli) 🙊
-        run: cargo llvm-cov -p pudcli -F unstable --no-report; and \
+        run: cargo llvm-cov -p pudcli -F unstable --no-report
       - name: 🙊 Code Coverage Report (LCOV) 🙊
         run: cargo llvm-cov report --lcov --output-path lcov.info
       - name: 🙊 Code Coverage Report (HTML) 🙊
