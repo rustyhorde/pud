@@ -2,7 +2,7 @@ use anyhow::Result;
 use vergen_gix::{BuildBuilder, CargoBuilder, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder};
 
 pub fn main() -> Result<()> {
-    nightyl();
+    nightly();
     beta();
     stable();
     msrv();
@@ -16,7 +16,7 @@ pub fn main() -> Result<()> {
 }
 
 #[rustversion::nightly]
-fn nightyl() {
+fn nightly() {
     println!("cargo:rustc-cfg=nightly");
 }
 
