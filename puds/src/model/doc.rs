@@ -18,8 +18,8 @@ use uuid::Uuid;
 pub(crate) struct Job {
     worker_id: Uuid,
     worker_name: String,
-    job_id: Uuid,
-    job_name: String,
+    id: Uuid,
+    name: String,
     #[serde(with = "time::serde::iso8601")]
     start_time: OffsetDateTime,
     #[serde(with = "time::serde::iso8601")]
@@ -41,8 +41,8 @@ impl Job {
             worker_name: worker_name.into(),
             start_time: OffsetDateTime::now_utc(),
             end_time: OffsetDateTime::now_utc(),
-            job_id,
-            job_name: job_name.into(),
+            id: job_id,
+            name: job_name.into(),
             stdout: vec![],
             stderr: vec![],
             status: i32::default(),
