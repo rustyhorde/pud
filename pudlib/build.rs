@@ -21,10 +21,10 @@ fn nightly() {
 }
 
 #[rustversion::not(nightly)]
-fn nightly_lints() {}
+fn nightly() {}
 
 #[rustversion::beta]
-fn beta_lints() {
+fn beta() {
     println!("cargo:rustc-cfg=beta");
 }
 
@@ -32,7 +32,7 @@ fn beta_lints() {
 fn beta() {}
 
 #[rustversion::stable]
-fn stable_lints() {
+fn stable() {
     println!("cargo:rustc-cfg=stable");
 }
 
@@ -40,7 +40,7 @@ fn stable_lints() {
 fn stable() {}
 
 #[rustversion::before(1.70)]
-fn msrv_lints() {}
+fn msrv() {}
 
 #[rustversion::since(1.70)]
 fn msrv() {
