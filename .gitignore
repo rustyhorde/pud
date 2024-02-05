@@ -1,6 +1,7 @@
 target/
 *.pem
 *.exe
+puds.out
 puds.toml
 *.log*
 .DS_Store
