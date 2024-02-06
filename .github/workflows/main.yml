@@ -52,6 +52,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+          rustup component add clippy
       - name: 📎 Clippy 📎
         run: |
           cargo update
@@ -74,6 +75,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+          rustup component add clippy
       - name: 📎 Clippy 📎
         run: |
           cargo update
@@ -96,6 +98,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+          rustup component add clippy
       - name: 📎 Clippy 📎
         run: |
           cargo update
