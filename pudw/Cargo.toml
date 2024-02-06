@@ -13,6 +13,14 @@ repository = "https://github.com/rustyhorde/pud"
 resolver = "2"
 version = "0.1.0"
 
+[package.metadata.cargo-all-features]
+denylist = ["unstable"]
+skip_optional_dependencies = true
+
+[features]
+default = []
+unstable = ["pudlib/unstable"]
+
 [dependencies]
 actix = "0.13.0"
 actix-codec = "0.5.0"
