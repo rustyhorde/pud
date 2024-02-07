@@ -22,7 +22,7 @@ default = []
 unstable = []
 
 [dependencies]
-actix = "0.13.0"
+actix = "0.13.3"
 anyhow = "1.0.71"
 bytes = "1.4.0"
 clap = { version = "4.2.7", features = ["derive"] }
