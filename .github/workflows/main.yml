@@ -17,7 +17,6 @@ concurrency:
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  COVERAGE_RUN_CMD: "cargo llvm-cov -p pudlib -F unstable --no-report && cargo llvm-cov -p puds -F unstable --no-report && cargo llvm-cov -p pudw -F unstable --no-report && cargo llvm-cov -p pudcli -F unstable --no-report"
 
 name: 🦀 Rust 🦀
 
@@ -108,7 +107,7 @@ jobs:
       target: x86_64-unknown-linux-gnu
       lcov: true
       html: true
-      run_cmd: $COVERAGE_RUN_CMD
+      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
 
   coverage-macos:
     name: 🧱 Coverage (MacOS) 🧱
@@ -120,7 +119,7 @@ jobs:
       target: x86_64-apple-darwin
       lcov: true
       html: true
-      run_cmd: $COVERAGE_RUN_CMD
+      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
 
   coverage-windows:
     name: 🧱 Coverage (Wndows) 🧱
@@ -135,7 +134,7 @@ jobs:
       target: ${{ matrix.target }}
       lcov: true
       html: true
-      run_cmd: $COVERAGE_RUN_CMD
+      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
 
   build_tier2:
     name: ☎️ Tier 2 ☎️
