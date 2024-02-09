@@ -1,2 +1,8 @@
-ignore:
-    - "**/main.rs"
+coverage:
+  status:
+    project:
+      default:
+        # basic
+        target: 90%
+        threshold: 10%
+        if_ci_failed: error
