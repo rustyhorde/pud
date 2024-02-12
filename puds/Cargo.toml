@@ -41,7 +41,7 @@ ruarango = "0.1.2"
 rustls = "0.21.10"
 rustls-pemfile = "1.0.4"
 serde = { version = "1.0.185", features = ["derive"] }
-thiserror = "1.0.40"
+thiserror = "1.0.57"
 time = { version = "0.3.21", features = ["serde", "serde-human-readable"] }
 tracing = { version = "0.1.37", features = ["max_level_trace", "release_max_level_info"] }
 typed-builder = "0.18.0"
