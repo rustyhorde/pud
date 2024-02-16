@@ -26,7 +26,7 @@ unstable = []
 actix = "0.13.0"
 anyhow = "1.0.71"
 bytes = "1.4.0"
-clap = { version = "4.2.7", features = ["derive"] }
+clap = { version = "4.5.1", features = ["derive"] }
 console = "0.15.5"
 const_format = "0.2.30"
 dirs2 = "3.0.1"
