@@ -471,7 +471,7 @@ mod test {
     fn should_run() -> Result<()> {
         let rt = Realtime::builder().hour(4).minute(37).second(0).build();
         let odt = OffsetDateTime::now_utc();
-        let odt = odt.replace_year(2023)?;
+        let odt = odt.replace_year(2024)?;
         let odt = if odt.day() > 28 {
             odt.replace_day(28)?
         } else {

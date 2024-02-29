@@ -170,7 +170,7 @@ pub(crate) struct TomlConfig {
     actix: Actix,
     /// The TLS configuration
     tls: Tls,
-    /// The ArangoDB configuration
+    /// The `ArangoDB` configuration
     arangodb: Arangodb,
     /// The tracing configuration
     tracing: Option<Tracing>,
@@ -220,7 +220,7 @@ pub(crate) struct Actix {
 #[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
 #[getset(get = "pub(crate)")]
 pub(crate) struct Arangodb {
-    /// The ArangoDB url
+    /// The `ArangoDB` url
     url: String,
     /// The user
     user: String,
