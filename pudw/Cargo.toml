@@ -38,7 +38,7 @@ futures = "0.3.28"
 getset = "0.1.2"
 pudlib = { path = "../pudlib" }
 serde = { version = "1.0.185", features = ["derive"] }
-thiserror = "1.0.57"
+thiserror = "1.0.58"
 time = "0.3.21"
 tokio = { version = "1.28.0", features = ["sync"] }
 tracing = { version = "0.1.37", features = [

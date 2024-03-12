@@ -35,7 +35,7 @@ lazy_static = "1.4.0"
 rand = "0.8.5"
 regex = "1.8.1"
 serde = { version = "1.0.185", features = ["derive"] }
-thiserror = "1.0.57"
+thiserror = "1.0.58"
 time = { version = "0.3.21", features = [
     "formatting",
     "serde",
