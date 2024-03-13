@@ -31,7 +31,7 @@ jobs:
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: ubuntu-latest
-      channel: nightly-2024-03-07
+      channel: nightly
       target: x86_64-unknown-linux-gnu
 
   lints-macos:
@@ -40,7 +40,7 @@ jobs:
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: macos-latest
-      channel: nightly-2024-03-07
+      channel: nightly
       target: x86_64-apple-darwin
 
   lints-windows:
@@ -49,7 +49,7 @@ jobs:
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: windows-latest
-      channel: nightly-2024-03-07
+      channel: nightly
       target: x86_64-pc-windows-gnu
 
   test-linux:
@@ -58,7 +58,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        channel: ["1.74.1", "stable", "beta", "nightly-2024-03-07"]
+        channel: ["1.74.1", "stable", "beta", "nightly"]
         target: [x86_64-unknown-linux-gnu]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
@@ -72,7 +72,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest]
-        channel: ["1.74.1", "stable", "beta", "nightly-2024-03-07"]
+        channel: ["1.74.1", "stable", "beta", "nightly"]
         target: [x86_64-apple-darwin]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
@@ -86,7 +86,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        channel: ["1.74.1", "stable", "beta", "nightly-2024-03-07"]
+        channel: ["1.74.1", "stable", "beta", "nightly"]
         target: [x86_64-pc-windows-gnu, x86_64-pc-windows-msvc]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
@@ -100,7 +100,7 @@ jobs:
     uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
     with:
       os: ubuntu-latest
-      channel: nightly-2024-03-07
+      channel: nightly
       target: x86_64-unknown-linux-gnu
       lcov: true
       html: true
@@ -113,7 +113,7 @@ jobs:
     uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
     with:
       os: macos-latest
-      channel: nightly-2024-03-07
+      channel: nightly
       target: x86_64-apple-darwin
       lcov: true
       html: true
@@ -129,7 +129,7 @@ jobs:
     uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
     with:
       os: windows-latest
-      channel: nightly-2024-03-07
+      channel: nightly
       target: ${{ matrix.target }}
       lcov: true
       html: true

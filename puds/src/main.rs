@@ -187,7 +187,7 @@
         must_not_suspend,
         non_exhaustive_omitted_patterns,
         unfulfilled_lint_expectations,
-        unknown_or_malformed_diagnostic_attributes,
+        // unknown_or_malformed_diagnostic_attributes,
         unnameable_types,
     )
 )]
