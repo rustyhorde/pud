@@ -12,7 +12,6 @@
 #![cfg_attr(
     all(feature = "unstable", nightly),
     feature(
-        diagnostic_namespace,
         lint_reasons,
         multiple_supertrait_upcastable,
         must_not_suspend,
