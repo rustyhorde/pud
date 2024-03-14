@@ -30,36 +30,28 @@ clap = { workspace = true }
 console = "0.15.8"
 const_format = "0.2.32"
 dirs2 = "3.0.1"
-getset = "0.1.2"
-lazy_static = "1.4.0"
+getset = { workspace = true }
+lazy_static = { workspace = true }
 rand = "0.8.5"
 regex = { workspace = true }
-serde = { version = "1.0.197", features = ["derive"] }
-thiserror = "1.0.58"
-time = { version = "0.3.34", features = [
+serde = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true, features = [
     "formatting",
     "serde",
     "serde-human-readable",
 ] }
 toml = "0.8.11"
-tracing = { version = "0.1.40", features = [
-    "max_level_trace",
-    "release_max_level_info",
-] }
+tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["time"] }
-typed-builder = "0.18.1"
-uuid = { version = "1.7.0", features = ["v4", "serde"] }
+typed-builder = { workspace = true }
+uuid = { workspace = true }
 vergen-pretty = { version = "0.3.3", features = ["color", "trace"] }
 
 [build-dependencies]
 anyhow = { workspace = true }
 rustversion = { workspace = true }
-vergen-gix = { version = "1.0.0-beta.2", features = [
-    "build",
-    "cargo",
-    "rustc",
-    "si",
-] }
+vergen-gix = { workspace = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }
