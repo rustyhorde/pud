@@ -2,10 +2,10 @@ use anyhow::Result;
 use vergen_gix::{BuildBuilder, CargoBuilder, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder};
 
 pub fn main() -> Result<()> {
+    println!("cargo:rerun-if-changed=build.rs");
     nightly();
     beta();
     stable();
-    msrv();
     Emitter::default()
         .add_instructions(&BuildBuilder::all_build()?)?
         .add_instructions(&CargoBuilder::all_cargo()?)?
@@ -38,11 +38,3 @@ fn stable() {
 
 #[rustversion::not(stable)]
 fn stable() {}
-
-#[rustversion::before(1.70)]
-fn msrv() {}
-
-#[rustversion::since(1.70)]
-fn msrv() {
-    println!("cargo:rustc-cfg=msrv");
-}

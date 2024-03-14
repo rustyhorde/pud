@@ -10,7 +10,6 @@
 
 use crate::{
     endpoints::insecure::insecure_config,
-    error::Error::{Certs, PrivKey},
     model::config::{Config, TomlConfig},
     server::Server,
 };
@@ -24,7 +23,10 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
 use ruarango::ConnectionBuilder;
-use rustls::{Certificate, PrivateKey, ServerConfig};
+use rustls::{
+    pki_types::{CertificateDer, PrivateKeyDer},
+    ServerConfig,
+};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
     ffi::OsString,
@@ -106,7 +108,7 @@ where
                 .service(scope("/v1").configure(insecure_config))
         })
         .workers(workers)
-        .bind_rustls_021(socket_addr, server_config)?
+        .bind_rustls_0_22(socket_addr, server_config)?
         .run()
         .await?;
     }
@@ -119,22 +121,16 @@ fn load_tls_config(config: &Config) -> Result<ServerConfig> {
     let cert_file = &mut BufReader::new(
         File::open(cert_file_path).with_context(|| "Unable to read cert file")?,
     );
-    let cert_chain: Vec<Certificate> = certs(cert_file)
-        .map_err(|_| Certs)?
-        .into_iter()
-        .map(Certificate)
-        .collect();
+    let cert_chain: Vec<CertificateDer<'_>> = certs(cert_file).filter_map(Result::ok).collect();
 
     let key_file =
         &mut BufReader::new(File::open(key_file_path).with_context(|| "Unable to read key file")?);
-    let mut keys: Vec<PrivateKey> = pkcs8_private_keys(key_file)
-        .map_err(|_| PrivKey)?
-        .into_iter()
-        .map(PrivateKey)
+    let mut keys: Vec<PrivateKeyDer<'_>> = pkcs8_private_keys(key_file)
+        .filter_map(Result::ok)
+        .map(PrivateKeyDer::from)
         .collect();
 
     let config = ServerConfig::builder()
-        .with_safe_defaults()
         .with_no_client_auth()
         .with_single_cert(cert_chain, keys.remove(0))?;
 

@@ -26,10 +26,6 @@ pub(crate) enum Error {
         source: AddrParseError,
         addr: String,
     },
-    #[error("Error loading chain certs")]
-    Certs,
-    #[error("Error loading private key")]
-    PrivKey,
 }
 
 impl Serialize for Error {

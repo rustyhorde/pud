@@ -23,30 +23,24 @@ default = []
 unstable = ["pudlib/unstable"]
 
 [dependencies]
-actix = "0.13.0"
-actix-codec = "0.5.0"
-actix-http = "3.3.1"
-actix-rt = "2.8.0"
-anyhow = "1.0.71"
-awc = { version = "3.1.1", default-features = false, features = [
-    "compress-brotli",
-    "rustls",
-] }
-bincode = "1.3.3"
-bytes = "1.4.0"
-clap = { version = "4.2.7", features = ["derive"] }
-futures = "0.3.28"
-getset = "0.1.2"
+actix = { workspace = true }
+actix-codec = { workspace = true }
+actix-http = { workspace = true }
+actix-rt = { workspace = true }
+anyhow = { workspace = true }
+awc = { workspace = true }
+bincode = { workspace = true }
+bytes = { workspace = true }
+clap = { workspace = true }
+futures = { workspace = true }
+getset = { workspace = true }
 pudlib = { path = "../pudlib" }
-serde = { version = "1.0.185", features = ["derive"] }
-thiserror = "1.0.57"
-time = "0.3.21"
-tokio = { version = "1.28.0", features = ["sync"] }
-tracing = { version = "0.1.37", features = [
-    "max_level_trace",
-    "release_max_level_info",
-] }
-typed-builder = "0.18.0"
+serde = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+typed-builder = { workspace = true }
 
 [build-dependencies]
-rustversion = "1.0.12"
+rustversion = { workspace = true }
