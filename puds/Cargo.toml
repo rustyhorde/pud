@@ -23,7 +23,7 @@ default = []
 unstable = ["pudlib/unstable"]
 
 [dependencies]
-actix = "0.13.0"
+actix = { workspace = true }
 actix-http = "3.3.1"
 actix-web = { version = "4.3.1", default-features = false, features = [
     "compress-brotli",
@@ -31,7 +31,7 @@ actix-web = { version = "4.3.1", default-features = false, features = [
     "rustls-0_22",
 ] }
 actix-web-actors = "4.2.0"
-anyhow = "1.0.71"
+anyhow = { workspace = true }
 bincode = "1.3.3"
 bytestring = "1.3.0"
 clap = { version = "4.2.7", features = ["derive"] }
@@ -49,7 +49,7 @@ uuid = { version = "1.3.2", features = ["v4", "serde"] }
 
 [build-dependencies]
 anyhow = "1.0.71"
-rustversion = "1.0.12"
+rustversion = { workspace = true }
 vergen-gix = { version = "1.0.0-beta.2", features = [
     "build",
     "cargo",

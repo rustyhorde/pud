@@ -23,8 +23,8 @@ default = []
 unstable = []
 
 [dependencies]
-actix = "0.13.3"
-anyhow = "1.0.81"
+actix = { workspace = true }
+anyhow = { workspace = true }
 bytes = "1.5.0"
 clap = { version = "4.5.2", features = ["derive"] }
 console = "0.15.8"
@@ -33,7 +33,7 @@ dirs2 = "3.0.1"
 getset = "0.1.2"
 lazy_static = "1.4.0"
 rand = "0.8.5"
-regex = "1.10.3"
+regex = { workspace = true }
 serde = { version = "1.0.197", features = ["derive"] }
 thiserror = "1.0.58"
 time = { version = "0.3.34", features = [
@@ -52,8 +52,8 @@ uuid = { version = "1.7.0", features = ["v4", "serde"] }
 vergen-pretty = { version = "0.3.3", features = ["color", "trace"] }
 
 [build-dependencies]
-anyhow = "1.0.81"
-rustversion = "1.0.14"
+anyhow = { workspace = true }
+rustversion = { workspace = true }
 vergen-gix = { version = "1.0.0-beta.2", features = [
     "build",
     "cargo",
@@ -62,5 +62,5 @@ vergen-gix = { version = "1.0.0-beta.2", features = [
 ] }
 
 [dev-dependencies]
-anyhow = "1.0.81"
-regex = "1.10.3"
+anyhow = { workspace = true }
+regex = { workspace = true }
