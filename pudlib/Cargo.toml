@@ -23,37 +23,37 @@ default = []
 unstable = []
 
 [dependencies]
-actix = "0.13.0"
-anyhow = "1.0.71"
-bytes = "1.4.0"
-clap = { version = "4.2.7", features = ["derive"] }
-console = "0.15.5"
-const_format = "0.2.30"
+actix = "0.13.3"
+anyhow = "1.0.81"
+bytes = "1.5.0"
+clap = { version = "4.5.2", features = ["derive"] }
+console = "0.15.8"
+const_format = "0.2.32"
 dirs2 = "3.0.1"
 getset = "0.1.2"
 lazy_static = "1.4.0"
 rand = "0.8.5"
-regex = "1.8.1"
-serde = { version = "1.0.185", features = ["derive"] }
-thiserror = "1.0.57"
-time = { version = "0.3.21", features = [
+regex = "1.10.3"
+serde = { version = "1.0.197", features = ["derive"] }
+thiserror = "1.0.58"
+time = { version = "0.3.34", features = [
     "formatting",
     "serde",
     "serde-human-readable",
 ] }
-toml = "0.8.0"
-tracing = { version = "0.1.37", features = [
+toml = "0.8.11"
+tracing = { version = "0.1.40", features = [
     "max_level_trace",
     "release_max_level_info",
 ] }
-tracing-subscriber = { version = "0.3.17", features = ["time"] }
-typed-builder = "0.18.0"
-uuid = { version = "1.3.2", features = ["v4", "serde"] }
+tracing-subscriber = { version = "0.3.18", features = ["time"] }
+typed-builder = "0.18.1"
+uuid = { version = "1.7.0", features = ["v4", "serde"] }
 vergen-pretty = { version = "0.3.3", features = ["color", "trace"] }
 
 [build-dependencies]
-anyhow = "1.0.71"
-rustversion = "1.0.12"
+anyhow = "1.0.81"
+rustversion = "1.0.14"
 vergen-gix = { version = "1.0.0-beta.2", features = [
     "build",
     "cargo",
@@ -62,5 +62,5 @@ vergen-gix = { version = "1.0.0-beta.2", features = [
 ] }
 
 [dev-dependencies]
-anyhow = "1.0.71"
-regex = "1.8.1"
+anyhow = "1.0.81"
+regex = "1.10.3"
