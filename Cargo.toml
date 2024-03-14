@@ -12,5 +12,6 @@ members = [
 actix = "0.13.3"
 anyhow = "1.0.81"
 bytes = "1.5.0"
+clap = { version = "4.5.2", features = ["derive"] }
 regex = "1.10.3"
 rustversion = "1.0.14"

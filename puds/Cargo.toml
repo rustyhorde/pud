@@ -34,7 +34,7 @@ actix-web-actors = "4.2.0"
 anyhow = { workspace = true }
 bincode = "1.3.3"
 bytestring = "1.3.0"
-clap = { version = "4.2.7", features = ["derive"] }
+clap = { workspace = true }
 getset = "0.1.2"
 pudlib = { path = "../pudlib" }
 ruarango = "0.1.2"
