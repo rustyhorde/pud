@@ -23,7 +23,7 @@ regex = "1.10.4"
 rustversion = "1.0.15"
 serde = { version = "1.0.197", features = ["derive"] }
 thiserror = "1.0.58"
-time = "0.3.34"
+time = "0.3.35"
 tokio = { version = "1.37.0", features = ["sync"] }
 tracing = { version = "0.1.40", features = [
   "max_level_trace",
