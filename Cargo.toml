@@ -29,7 +29,7 @@ tracing = { version = "0.1.40", features = [
   "max_level_trace",
   "release_max_level_info",
 ] }
-typed-builder = "0.18.1"
+typed-builder = "0.18.2"
 uuid = { version = "1.8.0", features = ["v4", "serde"] }
 vergen-gix = { version = "1.0.0-beta.2", features = [
   "build",
