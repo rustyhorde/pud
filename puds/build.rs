@@ -2,10 +2,11 @@ use anyhow::Result;
 use vergen_gix::{BuildBuilder, CargoBuilder, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder};
 
 pub fn main() -> Result<()> {
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rustc-check-cfg=cfg(coverage_nightly)");
     nightly();
     beta();
     stable();
-    msrv();
     Emitter::default()
         .add_instructions(&BuildBuilder::all_build()?)?
         .add_instructions(&CargoBuilder::all_cargo()?)?
@@ -17,32 +18,33 @@ pub fn main() -> Result<()> {
 
 #[rustversion::nightly]
 fn nightly() {
+    println!("cargo:rustc-check-cfg=cfg(nightly)");
     println!("cargo:rustc-cfg=nightly");
 }
 
 #[rustversion::not(nightly)]
-fn nightly() {}
+fn nightly() {
+    println!("cargo:rustc-check-cfg=cfg(nightly)");
+}
 
 #[rustversion::beta]
 fn beta() {
+    println!("cargo:rustc-check-cfg=cfg(beta)");
     println!("cargo:rustc-cfg=beta");
 }
 
 #[rustversion::not(beta)]
-fn beta() {}
+fn beta() {
+    println!("cargo:rustc-check-cfg=cfg(beta)");
+}
 
 #[rustversion::stable]
 fn stable() {
+    println!("cargo:rustc-check-cfg=cfg(stable)");
     println!("cargo:rustc-cfg=stable");
 }
 
 #[rustversion::not(stable)]
-fn stable() {}
-
-#[rustversion::before(1.70)]
-fn msrv() {}
-
-#[rustversion::since(1.70)]
-fn msrv() {
-    println!("cargo:rustc-cfg=msrv");
+fn stable() {
+    println!("cargo:rustc-check-cfg=cfg(stable)");
 }
