@@ -8,7 +8,7 @@ actix = "0.13.3"
 actix-codec = "0.5.2"
 actix-http = "3.6.0"
 actix-rt = "2.9.0"
-anyhow = "1.0.81"
+anyhow = "1.0.84"
 awc = { version = "3.4.0", default-features = false, features = [
     "compress-brotli",
     "rustls-0_21",
