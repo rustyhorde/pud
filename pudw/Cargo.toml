@@ -44,6 +44,3 @@ uuid = { workspace = true }
 
 [build-dependencies]
 rustversion = { workspace = true }
-
-[dev-dependencies]
-lazy_static = { workspace = true }
