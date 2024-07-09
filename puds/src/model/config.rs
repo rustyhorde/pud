@@ -13,7 +13,7 @@ use getset::{Getters, Setters};
 use pudlib::{Command, LogConfig, Schedules, Verbosity};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::BTreeMap,
     net::{IpAddr, SocketAddr},
     path::PathBuf,
 };
@@ -269,11 +269,4 @@ impl Tls {
 pub(crate) struct Hosts {
     /// The hostnames.
     hostnames: Vec<String>,
-}
-
-/// actix client configuration
-#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
-#[getset(get = "pub(crate)")]
-pub(crate) struct Override {
-    cmds: HashMap<String, Command>,
 }
