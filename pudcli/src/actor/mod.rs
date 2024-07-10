@@ -19,7 +19,7 @@ use awc::{
     ws::{CloseReason, Codec, Frame, Message},
     BoxedSocket,
 };
-use bincode::{deserialize, serialize};
+use bincode::{config::standard, decode_from_slice, encode_to_vec, serde::Compat};
 use bytes::{Bytes, BytesMut};
 use futures::stream::SplitSink;
 use pudlib::{
@@ -103,14 +103,14 @@ impl CommandLine {
 
     #[allow(clippy::too_many_lines)]
     fn handle_binary(&mut self, ctx: &mut Context<Self>, bytes: &Bytes) {
-        match deserialize::<ServerToManagerClient>(bytes) {
-            Ok(msg) => {
+        match decode_from_slice(bytes, standard()) {
+            Ok((Compat(msg), _)) => {
                 match msg {
                     ServerToManagerClient::Status(status) => info!("Status: {status}"),
                     ServerToManagerClient::Initialize => {
                         info!("command line initialization complete");
                         // request reload from the server
-                        if let Ok(init) = serialize(&self.command_to_run) {
+                        if let Ok(init) = encode_to_vec(&self.command_to_run, standard()) {
                             if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
                                 error!("Unable to send message");
                             }
@@ -289,7 +289,7 @@ impl Actor for CommandLine {
         // start heartbeat otherwise server will disconnect after 10 seconds
         self.hb(ctx);
         // request initialization from the server
-        if let Ok(init) = serialize(&ManagerClientToManagerSession::Initialize) {
+        if let Ok(init) = encode_to_vec(&ManagerClientToManagerSession::Initialize, standard()) {
             if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
                 error!("Unable to send initialize message");
             }
@@ -340,7 +340,7 @@ impl Handler<ManagerClientToManagerSession> for CommandLine {
     type Result = ();
 
     fn handle(&mut self, msg: ManagerClientToManagerSession, _ctx: &mut Context<Self>) {
-        match serialize(&msg) {
+        match encode_to_vec(&msg, standard()) {
             Ok(msg_bytes) => self.stdout_queue.push_back(msg_bytes),
             Err(e) => error!("{e}"),
         }

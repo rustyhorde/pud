@@ -18,7 +18,7 @@ use actix_http::ws::{CloseReason, Item};
 use actix_web::web::{Bytes, BytesMut};
 use actix_web_actors::ws::{Message, ProtocolError, WebsocketContext};
 use anyhow::Result;
-use bincode::deserialize;
+use bincode::{config::standard, decode_from_slice, serde::Compat};
 use bytestring::ByteString;
 use pudlib::{
     parse_ts_ping, send_ts_ping, ServerToWorkerClient, WorkerClientToWorkerSession,
@@ -118,8 +118,8 @@ impl Session {
         debug!("handling binary message");
         self.hb = Instant::now();
         let bytes_vec = bytes.to_vec();
-        match deserialize::<WorkerClientToWorkerSession>(&bytes_vec) {
-            Ok(message) => match message {
+        match decode_from_slice(&bytes_vec, standard()) {
+            Ok((Compat(message), _)) => match message {
                 WorkerClientToWorkerSession::Text(msg) => info!("{msg}"),
                 WorkerClientToWorkerSession::Initialize => {
                     self.addr.do_send(WorkerSessionToServer::Initialize {

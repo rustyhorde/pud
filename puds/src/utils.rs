@@ -12,7 +12,7 @@ use actix::Actor;
 use actix_http::ws::Item;
 use actix_web::web::Bytes;
 use actix_web_actors::ws::{Message, WebsocketContext};
-use bincode::serialize;
+use bincode::{config::standard, encode_to_vec, serde::Compat};
 use serde::Serialize;
 use tracing::{debug, error};
 
@@ -22,7 +22,8 @@ where
     U: Actor<Context = WebsocketContext<U>>,
 {
     debug!("handling message from server actor to manager client");
-    if let Ok(wm_bytes) = serialize(&msg) {
+    let bincode_compat = Compat(msg);
+    if let Ok(wm_bytes) = encode_to_vec(&bincode_compat, standard()) {
         if wm_bytes.len() > 65_536 {
             let chunks = wm_bytes.chunks(65_536);
             let (_lower, upper_opt) = chunks.size_hint();

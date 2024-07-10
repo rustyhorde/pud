@@ -8,6 +8,7 @@
 
 // shared server code
 
+use bincode::Encode;
 use getset::Getters;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -15,7 +16,7 @@ use std::time::Duration;
 pub(crate) mod message;
 
 /// A command to run on a worker
-#[derive(Clone, Debug, Default, Deserialize, Eq, Getters, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Encode, Eq, Getters, PartialEq, Serialize)]
 #[getset(get = "pub")]
 pub struct Command {
     /// The command to run
@@ -39,7 +40,7 @@ impl Schedules {
 }
 
 /// The schedule to run commands on a given worker client
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Encode, Eq, PartialEq, Serialize)]
 pub enum Schedule {
     /// A monotonic schedule
     Monotonic {

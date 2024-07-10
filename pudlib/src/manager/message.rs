@@ -9,10 +9,11 @@
 //! Manager Actix Message
 
 use actix::Message;
+use bincode::Encode;
 use serde::{Deserialize, Serialize};
 
 /// A message from a manger client to a manager session
-#[derive(Clone, Debug, Deserialize, Message, Serialize)]
+#[derive(Clone, Debug, Deserialize, Encode, Message, Serialize)]
 #[rtype(result = "()")]
 pub enum ManagerClientToManagerSession {
     /// An initialization request from a manager

@@ -19,7 +19,7 @@ use awc::{
     ws::{Codec, Frame, Message},
     BoxedSocket,
 };
-use bincode::{deserialize, serialize};
+use bincode::{config::standard, decode_from_slice, encode_to_vec, serde::Compat};
 use bytes::{Bytes, BytesMut};
 use futures::stream::SplitSink;
 use pudlib::{
@@ -200,7 +200,7 @@ impl Worker {
     }
 
     fn handle_binary(&mut self, ctx: &mut Context<Self>, bytes: &Bytes) {
-        if let Ok(msg) = deserialize::<ServerToWorkerClient>(bytes) {
+        if let Ok((Compat(msg), _)) = decode_from_slice(bytes, standard()) {
             match msg {
                 ServerToWorkerClient::Status(status) => debug!("Status: {status}"),
                 ServerToWorkerClient::Initialize(commands, schedules) => {
@@ -225,10 +225,11 @@ impl Worker {
                     self.initialize(ctx);
                 }
                 ServerToWorkerClient::Schedules(manager_id) => {
-                    if let Ok(msg) = serialize(&WorkerClientToWorkerSession::Schedules {
+                    let bin_compat = Compat(WorkerClientToWorkerSession::Schedules {
                         manager_id,
                         schedules: self.schedules.clone(),
-                    }) {
+                    });
+                    if let Ok(msg) = encode_to_vec(&bin_compat, standard()) {
                         if let Err(e) = self.addr.write(Message::Binary(Bytes::from(msg))) {
                             error!("unable to write schedules message: {e:?}");
                         }
@@ -398,7 +399,8 @@ impl Worker {
         // initialze the queue monitor
         self.queue_monitor(ctx);
         // request initialization from the server
-        if let Ok(init) = serialize(&WorkerClientToWorkerSession::Initialize) {
+        let bin_compat = Compat(WorkerClientToWorkerSession::Initialize);
+        if let Ok(init) = encode_to_vec(&bin_compat, standard()) {
             if let Err(_e) = self.addr.write(Message::Binary(Bytes::from(init))) {
                 error!("Unable to send initialize message");
             }
@@ -457,7 +459,8 @@ impl Handler<WorkerClientToWorkerSession> for Worker {
     type Result = ();
 
     fn handle(&mut self, msg: WorkerClientToWorkerSession, _ctx: &mut Context<Self>) {
-        match serialize(&msg) {
+        let bin_compat = Compat(msg);
+        match encode_to_vec(&bin_compat, standard()) {
             Ok(msg_bytes) => self.stdout_queue.push_back(msg_bytes),
             Err(e) => error!("{e}"),
         }
