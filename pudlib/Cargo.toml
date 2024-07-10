@@ -41,12 +41,12 @@ time = { workspace = true, features = [
     "serde",
     "serde-human-readable",
 ] }
-toml = "0.8.12"
+toml = "0.8.14"
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["time"] }
 typed-builder = { workspace = true }
 uuid = { workspace = true }
-vergen-pretty = { version = "0.3.3", features = ["color", "trace"] }
+vergen-pretty = { version = "0.3.4", features = ["color", "trace"] }
 
 [build-dependencies]
 anyhow = { workspace = true }
