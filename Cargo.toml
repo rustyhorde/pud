@@ -6,7 +6,7 @@ members = ["pudcli", "pudlib", "puds", "pudw"]
 [workspace.dependencies]
 actix = "0.13.5"
 actix-codec = "0.5.2"
-actix-http = "3.8.0"
+actix-http = "3.9.0"
 actix-rt = "2.10.0"
 anyhow = "1.0.86"
 awc = { version = "3.5.0", default-features = false, features = [
