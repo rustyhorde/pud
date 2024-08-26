@@ -6,22 +6,22 @@ members = ["pudcli", "pudlib", "puds", "pudw"]
 [workspace.dependencies]
 actix = "0.13.5"
 actix-codec = "0.5.2"
-actix-http = "3.8.0"
+actix-http = "3.9.0"
 actix-rt = "2.10.0"
 anyhow = "1.0.86"
-awc = { version = "3.5.0", default-features = false, features = [
+awc = { version = "3.5.1", default-features = false, features = [
     "compress-brotli",
     "rustls-0_21",
 ] }
 bincode = "1.3.3"
-bytes = "1.7.0"
-clap = { version = "4.5.13", features = ["derive"] }
+bytes = "1.7.1"
+clap = { version = "4.5.15", features = ["derive"] }
 futures = "0.3.30"
 getset = "0.1.2"
 lazy_static = "1.5.0"
-regex = "1.10.5"
+regex = "1.10.6"
 rustversion = "1.0.17"
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.207", features = ["derive"] }
 thiserror = "1.0.63"
 time = "0.3.36"
 tokio = { version = "1.39.2", features = ["sync"] }
@@ -29,7 +29,7 @@ tracing = { version = "0.1.40", features = [
   "max_level_trace",
   "release_max_level_info",
 ] }
-typed-builder = "0.19.1"
+typed-builder = "0.20.0"
 uuid = { version = "1.10.0", features = ["v4", "serde"] }
 vergen-gix = { version = "1.0.0", features = [
   "build",
