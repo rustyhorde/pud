@@ -96,7 +96,7 @@ impl Defaults {
 /// * TOML parse errors
 /// * `std::from::TryFrom` error if the TOML cannot be converted to the final config.
 ///
-pub fn load<T, U>(path: &Option<String>, verbose: u8, quiet: u8, binary: PudxBinary) -> Result<U>
+pub fn load<T, U>(path: Option<&String>, verbose: u8, quiet: u8, binary: PudxBinary) -> Result<U>
 where
     T: DeserializeOwned,
     U: TryFrom<T> + Verbosity,
@@ -148,7 +148,7 @@ where
     transform(config, path, verbose, quiet)
 }
 
-fn config_file_path(config_file_path: &Option<String>, defaults: Defaults) -> Result<PathBuf> {
+fn config_file_path(config_file_path: Option<&String>, defaults: Defaults) -> Result<PathBuf> {
     let default_fn = || -> Result<PathBuf> { default_config_file_path(defaults) };
     config_file_path
         .as_ref()
@@ -162,8 +162,8 @@ fn default_config_file_path(defaults: Defaults) -> Result<PathBuf> {
     Ok(config_file_path)
 }
 
-#[allow(clippy::unnecessary_wraps)]
-fn to_path_buf(path: &String) -> Result<PathBuf> {
+#[allow(clippy::unnecessary_wraps, clippy::trivially_copy_pass_by_ref)]
+fn to_path_buf(path: &&String) -> Result<PathBuf> {
     Ok(PathBuf::from(path))
 }
 
@@ -277,7 +277,7 @@ workers = 8
     fn config_file_path_is_default() -> Result<()> {
         let args = Cli::try_parse_from([env!("CARGO_PKG_NAME")])?;
         let defaults = Defaults::test_defaults();
-        let path = config_file_path(args.config_file_path(), defaults)?;
+        let path = config_file_path(args.config_file_path().as_ref(), defaults)?;
         assert_eq!(path, default_config_file_path(defaults)?);
         Ok(())
     }
@@ -286,7 +286,7 @@ workers = 8
     fn config_file_path_is_set() -> Result<()> {
         let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let defaults = Defaults::test_defaults();
-        let path = config_file_path(args.config_file_path(), defaults)?;
+        let path = config_file_path(args.config_file_path().as_ref(), defaults)?;
         let expected = PathBuf::from(TEST_PATH);
         assert_eq!(path, expected);
         Ok(())
@@ -297,7 +297,7 @@ workers = 8
     fn read_config_works() -> Result<()> {
         let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", TEST_PATH])?;
         let defaults = Defaults::test_defaults();
-        let path = config_file_path(args.config_file_path(), defaults)?;
+        let path = config_file_path(args.config_file_path().as_ref(), defaults)?;
         let path_c = path.clone();
         let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
         let file_contents = read_config_file(&path, ctx)?;
@@ -312,7 +312,7 @@ workers = 8
     fn read_config_fails() -> Result<()> {
         let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", BAD_PATH])?;
         let defaults = Defaults::test_defaults();
-        let path = config_file_path(args.config_file_path(), defaults)?;
+        let path = config_file_path(args.config_file_path().as_ref(), defaults)?;
         let path_c = path.clone();
         let ctx = |msg: &'static str| -> String { format!("{msg} {}", path_c.display()) };
         match read_config_file(&path, ctx) {
@@ -328,7 +328,7 @@ workers = 8
     fn parse_config_fails() -> Result<()> {
         let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", BAD_TOML_TEST_PATH])?;
         match load::<TomlConfig, Config>(
-            args.config_file_path(),
+            args.config_file_path().as_ref(),
             *args.verbose(),
             *args.quiet(),
             PudxBinary::Test,
@@ -345,7 +345,7 @@ workers = 8
     fn bad_config_workers_fails() -> Result<()> {
         let args = Cli::try_parse_from([env!("CARGO_PKG_NAME"), "-c", BAD_WORKERS_TOML_TEST_PATH])?;
         match load::<TomlConfig, Config>(
-            args.config_file_path(),
+            args.config_file_path().as_ref(),
             *args.verbose(),
             *args.quiet(),
             PudxBinary::Test,
