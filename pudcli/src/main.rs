@@ -196,6 +196,7 @@
 )]
 // clippy lints
 #![cfg_attr(nightly, deny(clippy::all, clippy::pedantic))]
+#![cfg_attr(nightly, allow(clippy::ref_option))]
 // rustdoc lints
 #![cfg_attr(
     nightly,
