@@ -40,7 +40,7 @@ where
 
     // Load the configuration
     let mut config = load::<TomlConfig, Config>(
-        args.config_file_path(),
+        args.config_file_path().as_ref(),
         *args.verbose(),
         *args.quiet(),
         PudxBinary::Pudcli,

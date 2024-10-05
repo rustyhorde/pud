@@ -37,7 +37,6 @@
         clashing_extern_declarations,
         coherence_leak_check,
         confusable_idents,
-        const_eval_mutable_ptr_in_final_value,
         const_evaluatable_unchecked,
         const_item_mutation,
         dead_code,
@@ -197,6 +196,7 @@
 )]
 // clippy lints
 #![cfg_attr(nightly, deny(clippy::all, clippy::pedantic))]
+#![cfg_attr(nightly, allow(clippy::ref_option))]
 // rustdoc lints
 #![cfg_attr(
     nightly,
