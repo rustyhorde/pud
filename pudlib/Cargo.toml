@@ -28,7 +28,7 @@ anyhow = { workspace = true }
 bytes = { workspace = true }
 clap = { workspace = true }
 console = "0.15.8"
-const_format = "0.2.32"
+const_format = "0.2.33"
 dirs2 = "3.0.1"
 getset = { workspace = true }
 lazy_static = { workspace = true }
@@ -46,7 +46,7 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["time"] }
 typed-builder = { workspace = true }
 uuid = { workspace = true }
-vergen-pretty = { version = "0.3.4", features = ["color", "trace"] }
+vergen-pretty = { version = "0.3.5", features = ["color", "trace"] }
 
 [build-dependencies]
 anyhow = { workspace = true }
