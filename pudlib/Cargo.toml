@@ -12,7 +12,7 @@ readme = "README.md"
 repository = "https://github.com/rustyhorde/pud"
 resolver = "2"
 version = "0.1.0"
-rust-version = "1.75.0"
+rust-version = "1.78.0"
 
 [package.metadata.cargo-all-features]
 denylist = ["unstable"]
@@ -43,10 +43,10 @@ time = { workspace = true, features = [
 ] }
 toml = "0.8.19"
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.18", features = ["time"] }
+tracing-subscriber = { version = "0.3.19", features = ["time"] }
 typed-builder = { workspace = true }
 uuid = { workspace = true }
-vergen-pretty = { version = "0.3.5", features = ["color", "trace"] }
+vergen-pretty = { version = "0.3.6", features = ["color", "trace"] }
 
 [build-dependencies]
 anyhow = { workspace = true }
