@@ -215,7 +215,6 @@
 )]
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use error::{clap_or_error, success};
 use std::process;
