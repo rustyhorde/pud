@@ -4170,9 +4170,9 @@ dependencies = [
 
 [[package]]
 name = "vergen-gix"
-version = "1.0.5"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "141db1e1a37e4721809dc0653697877c4d302d70c648c3c655a6b78b54ac1dba"
+checksum = "2b218ac3c56c2c31227bd7813735bfa51eb0dc5212e6d4bab6eac7c8208e5b66"
 dependencies = [
  "anyhow",
  "derive_builder 0.20.2",
@@ -4196,9 +4196,9 @@ dependencies = [
 
 [[package]]
 name = "vergen-pretty"
-version = "0.3.8"
+version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a188a3c4b0e4beda18d5df715bd0d4aa4c0bfcad7c3b6031cbe746b8f368427b"
+checksum = "7b6dba3d634a79e4a7af9eb2eb75d3629f81e3bbb8ae55d3ec2821acdeaac618"
 dependencies = [
  "anyhow",
  "console",
