@@ -21,9 +21,8 @@ use crate::{
     utils::until_err,
 };
 use anyhow::Result;
-use lazy_static::lazy_static;
 use regex::Regex;
-use std::collections::HashSet;
+use std::{collections::HashSet, sync::LazyLock};
 use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 
@@ -31,12 +30,11 @@ pub(crate) mod dow;
 pub(crate) mod hms;
 pub(crate) mod ymd;
 
-lazy_static! {
-    static ref RANGE_RE: Regex =
-        Regex::new(r"(\d{1,2})\.\.(\d{1,2})").expect("invalid range regex");
-    static ref REP_RE: Regex =
-        Regex::new(r"(\d{1,2})(\.\.(\d{1,2}))?/(\d{1,2})").expect("invalid repetition regex");
-}
+static RANGE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(\d{1,2})\.\.(\d{1,2})").expect("invalid range regex"));
+static REP_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(\d{1,2})(\.\.(\d{1,2}))?/(\d{1,2})").expect("invalid repetition regex")
+});
 
 const MINUTELY: &str = "minutely";
 const HOURLY: &str = "hourly";

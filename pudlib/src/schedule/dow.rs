@@ -13,15 +13,13 @@ use crate::{
     utils::until_err,
 };
 use anyhow::{anyhow, Result};
-use lazy_static::lazy_static;
 use regex::Regex;
-use std::{collections::HashSet, fmt::Display};
+use std::{collections::HashSet, fmt::Display, sync::LazyLock};
 use time::Weekday;
 
-lazy_static! {
-    static ref DOW_RANGE_RE: Regex =
-        Regex::new(r"([a-zA-Z]{3,})\.\.([a-zA-Z]{3,})").expect("invalid day of week range regex");
-}
+static DOW_RANGE_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"([a-zA-Z]{3,})\.\.([a-zA-Z]{3,})").expect("invalid day of week range regex")
+});
 
 /// The day of the week for a realtime schedule
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
