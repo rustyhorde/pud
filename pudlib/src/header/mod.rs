@@ -81,10 +81,11 @@ fn trace(app_style: Style, prefix: &'static str) -> Result<()> {
 
 #[cfg(test)]
 mod test {
+    use std::sync::LazyLock;
+
     use super::{from_u8, header};
     use crate::log::Config as LogConfig;
     use console::Style;
-    use lazy_static::lazy_static;
     use regex::Regex;
     use tracing::Level;
 
@@ -153,11 +154,12 @@ mod test {
         }
     }
 
-    lazy_static! {
-        static ref BUILD_TIMESTAMP: Regex = Regex::new(r"Timestamp \(  build\)").unwrap();
-        static ref BUILD_SEMVER: Regex = Regex::new(r"Semver \(  rustc\)").unwrap();
-        static ref GIT_BRANCH: Regex = Regex::new(r"Branch \(    git\)").unwrap();
-    }
+    static BUILD_TIMESTAMP: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"Timestamp \(  build\)").unwrap());
+    static BUILD_SEMVER: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"Semver \(  rustc\)").unwrap());
+    static GIT_BRANCH: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"Branch \(    git\)").unwrap());
 
     #[test]
     fn from_u8_works() {
