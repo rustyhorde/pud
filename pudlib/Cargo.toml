@@ -31,7 +31,7 @@ console = "0.15.8"
 const_format = "0.2.34"
 dirs2 = "3.0.1"
 getset = { workspace = true }
-rand = "0.8.5"
+rand = "0.9.0"
 regex = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
