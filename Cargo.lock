@@ -2888,7 +2888,6 @@ dependencies = [
  "const_format",
  "dirs2",
  "getset",
- "lazy_static",
  "rand 0.8.5",
  "regex",
  "rustversion",

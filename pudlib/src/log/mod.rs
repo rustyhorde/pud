@@ -9,10 +9,9 @@
 // Logging
 
 use anyhow::Result;
-use lazy_static::lazy_static;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
+    Arc, LazyLock, Mutex,
 };
 use time::format_description::well_known::Iso8601;
 use tracing::Level;
@@ -46,9 +45,8 @@ pub trait Config {
     fn set_level(&mut self, level: Level) -> &mut Self;
 }
 
-lazy_static! {
-    static ref INIT_LOCK: Arc<Mutex<AtomicBool>> = Arc::new(Mutex::new(AtomicBool::new(false)));
-}
+static INIT_LOCK: LazyLock<Arc<Mutex<AtomicBool>>> =
+    LazyLock::new(|| Arc::new(Mutex::new(AtomicBool::new(false))));
 
 /// Initialize tracing
 ///
