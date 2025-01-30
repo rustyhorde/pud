@@ -31,7 +31,6 @@ console = "0.15.8"
 const_format = "0.2.34"
 dirs2 = "3.0.1"
 getset = { workspace = true }
-lazy_static = { workspace = true }
 rand = "0.8.5"
 regex = { workspace = true }
 serde = { workspace = true }
