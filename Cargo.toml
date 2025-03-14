@@ -27,5 +27,5 @@ tracing = { version = "0.1.41", features = [
   "release_max_level_info",
 ] }
 typed-builder = "0.20.0"
-uuid = { version = "1.11.0", features = ["v4", "serde"] }
+uuid = { version = "1.16.0", features = ["v4", "serde"] }
 vergen-gix = { version = "1.0.3", features = ["build", "cargo", "rustc", "si"] }
