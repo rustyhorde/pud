@@ -21,7 +21,7 @@ rustversion = "1.0.18"
 serde = { version = "1.0.216", features = ["derive"] }
 thiserror = "2.0.8"
 time = "0.3.37"
-tokio = { version = "1.42.0", features = ["sync"] }
+tokio = { version = "1.44.2", features = ["sync"] }
 tracing = { version = "0.1.41", features = [
   "max_level_trace",
   "release_max_level_info",
