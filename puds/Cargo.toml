@@ -25,7 +25,7 @@ unstable = ["pudlib/unstable"]
 [dependencies]
 actix = { workspace = true }
 actix-http = { workspace = true }
-actix-web = { version = "4.9.0", features = ["rustls-0_23"] }
+actix-web = { version = "4.10.2", features = ["rustls-0_23"] }
 actix-web-actors = "4.3.1"
 anyhow = { workspace = true }
 bincode = { workspace = true }
@@ -34,7 +34,7 @@ clap = { workspace = true }
 getset = { workspace = true }
 pudlib = { path = "../pudlib" }
 ruarango = "0.1.2"
-rustls = "0.23.20"
+rustls = "0.23.25"
 rustls-pemfile = "2.2.0"
 serde = { workspace = true }
 thiserror = { workspace = true }

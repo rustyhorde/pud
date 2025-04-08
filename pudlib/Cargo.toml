@@ -27,11 +27,11 @@ actix = { workspace = true }
 anyhow = { workspace = true }
 bytes = { workspace = true }
 clap = { workspace = true }
-console = "0.15.8"
+console = "0.15.11"
 const_format = "0.2.34"
 dirs2 = "3.0.1"
 getset = { workspace = true }
-rand = "0.8.5"
+rand = "0.9.0"
 regex = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
@@ -40,12 +40,12 @@ time = { workspace = true, features = [
     "serde",
     "serde-human-readable",
 ] }
-toml = "0.8.19"
+toml = "0.8.20"
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["time"] }
 typed-builder = { workspace = true }
 uuid = { workspace = true }
-vergen-pretty = { version = "0.3.6", features = ["color", "trace"] }
+vergen-pretty = { version = "0.3.9", features = ["color", "trace"] }
 
 [build-dependencies]
 anyhow = { workspace = true }

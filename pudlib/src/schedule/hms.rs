@@ -41,8 +41,8 @@ impl All for Hour {
     }
 
     fn rand() -> Self {
-        let mut rng = rand::thread_rng();
-        let rand_in_range = rng.gen_range(0..24);
+        let mut rng = rand::rng();
+        let rand_in_range = rng.random_range(0..24);
         Hour::Hours(vec![rand_in_range])
     }
 }
@@ -83,8 +83,8 @@ impl All for Minute {
     }
 
     fn rand() -> Self {
-        let mut rng = rand::thread_rng();
-        let rand_in_range = rng.gen_range(0..60);
+        let mut rng = rand::rng();
+        let rand_in_range = rng.random_range(0..60);
         Minute::Minutes(vec![rand_in_range])
     }
 }
@@ -125,8 +125,8 @@ impl All for Second {
     }
 
     fn rand() -> Self {
-        let mut rng = rand::thread_rng();
-        let rand_in_range = rng.gen_range(0..60);
+        let mut rng = rand::rng();
+        let rand_in_range = rng.random_range(0..60);
         Second::Seconds(vec![rand_in_range])
     }
 }
