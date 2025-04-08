@@ -81,8 +81,8 @@ impl All for Month {
     }
 
     fn rand() -> Self {
-        let mut rng = rand::thread_rng();
-        let rand_in_range = rng.gen_range(1..13);
+        let mut rng = rand::rng();
+        let rand_in_range = rng.random_range(1..13);
         Month::Months(vec![rand_in_range])
     }
 }
@@ -123,8 +123,8 @@ impl All for Day {
     }
 
     fn rand() -> Self {
-        let mut rng = rand::thread_rng();
-        let rand_in_range = rng.gen_range(1..29);
+        let mut rng = rand::rng();
+        let rand_in_range = rng.random_range(1..29);
         Day::Days(vec![rand_in_range])
     }
 }

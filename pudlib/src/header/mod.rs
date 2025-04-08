@@ -38,8 +38,8 @@ where
     T: LogConfig,
     U: Write + ?Sized,
 {
-    let mut rng = rand::thread_rng();
-    let app_style = from_u8(rng.gen_range(0..7));
+    let mut rng = rand::rng();
+    let app_style = from_u8(rng.random_range(0..7));
     if let Some(writer) = writer {
         output_to_writer(writer, app_style, prefix)?;
     } else if let Some(level) = config.level() {
