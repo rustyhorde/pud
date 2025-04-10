@@ -28,4 +28,4 @@ tracing = { version = "0.1.41", features = [
 ] }
 typed-builder = "0.21.0"
 uuid = { version = "1.16.0", features = ["v4", "serde"] }
-vergen-gix = { version = "1.0.6", features = ["build", "cargo", "rustc", "si"] }
+vergen-gix = { version = "1.0.9", features = ["build", "cargo", "rustc", "si"] }
