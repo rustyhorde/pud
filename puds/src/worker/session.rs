@@ -208,10 +208,9 @@ impl Session {
                     if let Ok(coll_config) =
                         coll::input::ConfigBuilder::default().name(&name_c).build()
                     {
-                        if let Err(e) = Collection::create(&conn_c, &coll_config).await {
-                            error!("{e}");
-                        } else {
-                            info!("collection '{name_c}' created successfully!");
+                        match Collection::create(&conn_c, &coll_config).await {
+                            Ok(_) => info!("collection '{name_c}' created successfully!"),
+                            Err(e) => error!("{e}"),
                         }
                     }
                 }

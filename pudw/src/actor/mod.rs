@@ -464,6 +464,7 @@ impl Handler<WorkerClientToWorkerSession> for Worker {
     }
 }
 
+#[allow(clippy::too_many_lines, clippy::single_match_else)]
 fn run_cmd(
     name: &str,
     command: &str,
@@ -481,92 +482,102 @@ fn run_cmd(
         _ = cmd.stdout(Stdio::piped());
         _ = cmd.stderr(Stdio::piped());
 
-        if let Ok(mut child) = cmd.spawn() {
-            let _stdout_handle_opt = if let Some(child_stdout) = child.stdout.take() {
-                let tx_stdout = tx.clone();
-                let stdout_handle = thread::spawn(move || {
-                    let stdout_reader = BufReader::new(child_stdout);
-                    for line in stdout_reader.lines().map_while(Result::ok) {
-                        let stdout_m = WorkerClientToWorkerSession::Stdout {
-                            id: command_id,
-                            line,
-                        };
-                        if let Err(e) = tx_stdout.send(stdout_m) {
-                            error!("{e}");
-                        }
-                    }
-                });
-                Some(stdout_handle)
-            } else {
-                error!("Unable to produce stdout!");
-                None
-            };
-
-            let _stderr_handle_opt = if let Some(child_stderr) = child.stderr.take() {
-                let tx_stderr = tx.clone();
-                let stderr_handle = thread::spawn(move || {
-                    let stderr_reader = BufReader::new(child_stderr);
-                    for line in stderr_reader.lines().map_while(Result::ok) {
-                        let stderr_m = WorkerClientToWorkerSession::Stderr {
-                            id: command_id,
-                            line,
-                        };
-                        if let Err(e) = tx_stderr.send(stderr_m) {
-                            error!("{e}");
-                        }
-                    }
-                });
-                Some(stderr_handle)
-            } else {
-                error!("Unable to produce stderr!");
-                None
-            };
-
-            let pair = running_pair.clone();
-
-            loop {
-                match child.try_wait() {
-                    Ok(Some(status)) => {
-                        if let Some(code) = status.code() {
-                            info!("command result: {}", code);
-                            let status_msg = WorkerClientToWorkerSession::Status {
-                                id: command_id,
-                                code,
-                            };
-                            if let Err(e) = tx.send(status_msg) {
-                                error!("{e}");
-                            }
-                        }
-                        break;
-                    }
-                    Ok(None) => {
-                        let (lock, cvar) = &*pair;
-                        let running = match lock.lock() {
-                            Ok(guard) => guard,
-                            Err(poisoned) => poisoned.into_inner(),
-                        };
-                        if let Ok((res, wt_res)) =
-                            cvar.wait_timeout(running, Duration::from_millis(500))
-                        {
-                            if wt_res.timed_out() {
-                                debug!("timed out waiting on cvar, checking running flag");
-                            }
-                            // If we aren't in a running state, try to kill the child process
-                            if !(*res) {
-                                if let Err(e) = child.kill() {
-                                    error!("Unable to kill child process: {e}");
+        match cmd.spawn() {
+            Ok(mut child) => {
+                let _stdout_handle_opt = match child.stdout.take() {
+                    Some(child_stdout) => {
+                        let tx_stdout = tx.clone();
+                        let stdout_handle = thread::spawn(move || {
+                            let stdout_reader = BufReader::new(child_stdout);
+                            for line in stdout_reader.lines().map_while(Result::ok) {
+                                let stdout_m = WorkerClientToWorkerSession::Stdout {
+                                    id: command_id,
+                                    line,
+                                };
+                                if let Err(e) = tx_stdout.send(stdout_m) {
+                                    error!("{e}");
                                 }
-                                break;
                             }
-                        } else {
-                            error!("condvar wait timeout error");
-                        }
+                        });
+                        Some(stdout_handle)
                     }
-                    Err(e) => error!("{e}"),
+                    _ => {
+                        error!("Unable to produce stdout!");
+                        None
+                    }
+                };
+
+                let _stderr_handle_opt = match child.stderr.take() {
+                    Some(child_stderr) => {
+                        let tx_stderr = tx.clone();
+                        let stderr_handle = thread::spawn(move || {
+                            let stderr_reader = BufReader::new(child_stderr);
+                            for line in stderr_reader.lines().map_while(Result::ok) {
+                                let stderr_m = WorkerClientToWorkerSession::Stderr {
+                                    id: command_id,
+                                    line,
+                                };
+                                if let Err(e) = tx_stderr.send(stderr_m) {
+                                    error!("{e}");
+                                }
+                            }
+                        });
+                        Some(stderr_handle)
+                    }
+                    _ => {
+                        error!("Unable to produce stderr!");
+                        None
+                    }
+                };
+
+                let pair = running_pair.clone();
+
+                loop {
+                    match child.try_wait() {
+                        Ok(Some(status)) => {
+                            if let Some(code) = status.code() {
+                                info!("command result: {}", code);
+                                let status_msg = WorkerClientToWorkerSession::Status {
+                                    id: command_id,
+                                    code,
+                                };
+                                if let Err(e) = tx.send(status_msg) {
+                                    error!("{e}");
+                                }
+                            }
+                            break;
+                        }
+                        Ok(None) => {
+                            let (lock, cvar) = &*pair;
+                            let running = match lock.lock() {
+                                Ok(guard) => guard,
+                                Err(poisoned) => poisoned.into_inner(),
+                            };
+                            match cvar.wait_timeout(running, Duration::from_millis(500)) {
+                                Ok((res, wt_res)) => {
+                                    if wt_res.timed_out() {
+                                        debug!("timed out waiting on cvar, checking running flag");
+                                    }
+                                    // If we aren't in a running state, try to kill the child process
+                                    if !(*res) {
+                                        if let Err(e) = child.kill() {
+                                            error!("Unable to kill child process: {e}");
+                                        }
+                                        break;
+                                    }
+                                }
+                                _ => {
+                                    error!("condvar wait timeout error");
+                                }
+                            }
+                        }
+                        Err(e) => error!("{e}"),
+                    }
                 }
             }
-        } else {
-            error!("unable to spawn command");
+            _ => {
+                error!("unable to spawn command");
+            }
         }
 
         record_job_end(command_id, name, tx);
