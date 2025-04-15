@@ -34,6 +34,7 @@ const HEADER_PREFIX: &str = r"██████╗ ██╗   ██╗██�
 ██║     ╚██████╔╝██████╔╝╚███╔███╔╝
 ╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ ";
 
+#[allow(tail_expr_drop_order, clippy::single_match_else)]
 pub(crate) fn run<I, T>(args: Option<I>) -> Result<()>
 where
     I: IntoIterator<Item = T>,
@@ -75,28 +76,31 @@ where
                     .max_http_version(Version::HTTP_11)
                     .finish();
 
-                if let Ok((response, framed)) = awc.ws(&url_c).connect().await.map_err(|e| {
+                match awc.ws(&url_c).connect().await.map_err(|e| {
                     error!("Error: {e:?}");
                 }) {
-                    debug!("{response:?}");
-                    let (sink, stream) = framed.split();
-                    let addr = Worker::create(|ctx| {
-                        _ = Worker::add_stream(stream, ctx);
-                        Worker::builder()
-                            .addr(SinkWrite::new(sink, ctx))
-                            .tx(tx.clone())
-                            .build()
-                    });
+                    Ok((response, framed)) => {
+                        debug!("{response:?}");
+                        let (sink, stream) = framed.split();
+                        let addr = Worker::create(|ctx| {
+                            _ = Worker::add_stream(stream, ctx);
+                            Worker::builder()
+                                .addr(SinkWrite::new(sink, ctx))
+                                .tx(tx.clone())
+                                .build()
+                        });
 
-                    let status_addr = addr;
-                    let _handle = spawn(async move {
-                        while let Some(status) = rx.recv().await {
-                            status_addr.do_send(status);
-                        }
-                    });
-                } else {
-                    error!("unable to connect");
-                    System::current().stop();
+                        let status_addr = addr;
+                        let _handle = spawn(async move {
+                            while let Some(status) = rx.recv().await {
+                                status_addr.do_send(status);
+                            }
+                        });
+                    }
+                    _ => {
+                        error!("unable to connect");
+                        System::current().stop();
+                    }
                 }
             });
 

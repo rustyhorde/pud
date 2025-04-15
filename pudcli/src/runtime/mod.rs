@@ -26,6 +26,7 @@ use std::ffi::OsString;
 use tokio::sync::mpsc::unbounded_channel;
 use tracing::{debug, error};
 
+#[allow(tail_expr_drop_order)]
 pub(crate) fn run<I, T>(args: Option<I>) -> Result<()>
 where
     I: IntoIterator<Item = T>,
@@ -69,27 +70,30 @@ where
             let client = Client::builder()
                 .max_http_version(Version::HTTP_11)
                 .finish();
-            if let Ok((response, framed)) = client.ws(&url).connect().await.map_err(|e| {
+            match client.ws(&url).connect().await.map_err(|e| {
                 error!("Error: {e}");
             }) {
-                debug!("{response:?}");
-                let (sink, stream) = framed.split();
-                let addr = CommandLine::create(|ctx| {
-                    _ = CommandLine::add_stream(stream, ctx);
-                    CommandLine::builder()
-                        .addr(SinkWrite::new(sink, ctx))
-                        .tx(tx.clone())
-                        .command_to_run(command_to_run)
-                        .build()
-                });
+                Ok((response, framed)) => {
+                    debug!("{response:?}");
+                    let (sink, stream) = framed.split();
+                    let addr = CommandLine::create(|ctx| {
+                        _ = CommandLine::add_stream(stream, ctx);
+                        CommandLine::builder()
+                            .addr(SinkWrite::new(sink, ctx))
+                            .tx(tx.clone())
+                            .command_to_run(command_to_run)
+                            .build()
+                    });
 
-                let _handle = spawn(async move {
-                    while let Some(status) = rx.recv().await {
-                        addr.do_send(status);
-                    }
-                });
-            } else {
-                System::current().stop();
+                    let _handle = spawn(async move {
+                        while let Some(status) = rx.recv().await {
+                            addr.do_send(status);
+                        }
+                    });
+                }
+                _ => {
+                    System::current().stop();
+                }
             }
         });
 
