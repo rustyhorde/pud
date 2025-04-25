@@ -40,7 +40,7 @@ time = { workspace = true, features = [
     "serde",
     "serde-human-readable",
 ] }
-toml = "0.8.20"
+toml = "0.8.21"
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["time"] }
 typed-builder = { workspace = true }
