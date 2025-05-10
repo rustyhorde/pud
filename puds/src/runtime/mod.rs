@@ -93,7 +93,7 @@ where
         let conn_data = Data::new(conn);
 
         match default_provider().install_default() {
-            Ok(_) => info!("aws lc provider initialized"),
+            Ok(()) => info!("aws lc provider initialized"),
             Err(e) => error!("unable to initialize aws lc provider: {e:?}"),
         }
 
@@ -145,7 +145,6 @@ fn load_tls_config(config: &Config) -> Result<ServerConfig> {
             Err(e) => error!("invalid key file: {e}"),
         })
         .filter_map(Result::ok)
-        .map(PrivateKeyDer::from)
         .collect();
     debug!("private keys: {private_keys:?}");
 
