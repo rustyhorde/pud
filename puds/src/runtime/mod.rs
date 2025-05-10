@@ -27,11 +27,12 @@ use rustls::{
     pki_types::{CertificateDer, PrivateKeyDer},
     ServerConfig,
 };
-use rustls_pemfile::{certs, ec_private_keys};
+use rustls_pemfile::{certs, ec_private_keys, read_one};
 use std::{
     ffi::OsString,
     fs::File,
     io::{self, BufReader, Write},
+    iter,
 };
 use tracing::{debug, error, info};
 
@@ -134,10 +135,36 @@ fn load_tls_config(config: &Config) -> Result<ServerConfig> {
         .collect();
     debug!("cert chain: {cert_chain:?}");
 
-    let key_file =
+    let mut key_file =
         &mut BufReader::new(File::open(key_file_path).with_context(|| "Unable to read key file")?);
     debug!("key file: {key_file:?}");
 
+    for item in iter::from_fn(|| read_one(&mut key_file).transpose()) {
+        match item.unwrap() {
+            rustls_pemfile::Item::X509Certificate(certificate_der) => {
+                debug!("certificate {certificate_der:?}")
+            }
+            rustls_pemfile::Item::SubjectPublicKeyInfo(subject_public_key_info_der) => {
+                debug!("subject public key info {subject_public_key_info_der:?}")
+            }
+            rustls_pemfile::Item::Pkcs1Key(private_pkcs1_key_der) => {
+                debug!("rsa pkcs1 key {private_pkcs1_key_der:?}")
+            }
+            rustls_pemfile::Item::Pkcs8Key(private_pkcs8_key_der) => {
+                debug!("pkcs8 key {private_pkcs8_key_der:?}")
+            }
+            rustls_pemfile::Item::Sec1Key(private_sec1_key_der) => {
+                debug!("sec1 ec key {private_sec1_key_der:?}")
+            }
+            rustls_pemfile::Item::Crl(certificate_revocation_list_der) => {
+                debug!("certificate revocation list {certificate_revocation_list_der:?}")
+            }
+            rustls_pemfile::Item::Csr(certificate_signing_request_der) => {
+                debug!("certificate signing request {certificate_signing_request_der:?}")
+            }
+            _ => debug!("unknown certificate type"),
+        }
+    }
     let mut keys: Vec<PrivateKeyDer<'_>> = ec_private_keys(key_file)
         .inspect(|v| match v {
             Ok(_) => debug!("valid key file: {key_file_path}"),
