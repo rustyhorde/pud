@@ -27,7 +27,7 @@ use rustls::{
     pki_types::{CertificateDer, PrivateKeyDer},
     ServerConfig,
 };
-use rustls_pemfile::{certs, ec_private_keys, read_one};
+use rustls_pemfile::{certs, pkcs8_private_keys, read_one};
 use std::{
     ffi::OsString,
     fs::File,
@@ -165,7 +165,7 @@ fn load_tls_config(config: &Config) -> Result<ServerConfig> {
             _ => debug!("unknown certificate type"),
         }
     }
-    let mut keys: Vec<PrivateKeyDer<'_>> = ec_private_keys(key_file)
+    let mut keys: Vec<PrivateKeyDer<'_>> = pkcs8_private_keys(key_file)
         .inspect(|v| match v {
             Ok(_) => debug!("valid key file: {key_file_path}"),
             Err(e) => error!("invalid key file: {e}"),
