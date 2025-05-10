@@ -96,6 +96,7 @@ where
         let server_config = load_tls_config(&config)?;
 
         // Startup the server
+        debug!("Starting puds on {socket_addr:?}");
         info!("puds configured!");
         info!("puds starting!");
 
