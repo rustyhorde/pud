@@ -18,6 +18,8 @@ use awc::{http::Version, Client};
 use clap::Parser;
 use futures::StreamExt;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
+#[cfg(unix)]
+use rustls::crypto::aws_lc_rs;
 use std::{
     ffi::OsString,
     io::{self, Write},
@@ -60,6 +62,8 @@ where
 
     // Output the pretty header
     header::<Config, dyn Write>(&config, HEADER_PREFIX, Some(&mut io::stdout()))?;
+
+    install_provider();
 
     // Pull values out of config
     let url = config.server_url();
@@ -116,6 +120,17 @@ where
     }
     Ok(())
 }
+
+#[cfg(unix)]
+fn install_provider() {
+    match aws_lc_rs::default_provider().install_default() {
+        Ok(()) => info!("aws lc provider initialized"),
+        Err(e) => error!("unable to initialize aws lc provider: {e:?}"),
+    }
+}
+
+#[cfg(windows)]
+fn install_provider() {}
 
 #[cfg(test)]
 mod test {

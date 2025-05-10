@@ -12,7 +12,7 @@ readme = "README.md"
 repository = "https://github.com/rustyhorde/pud"
 resolver = "2"
 version = "0.1.0"
-rust-version = "1.81.0"
+rust-version = "1.82.0"
 
 [package.metadata.cargo-all-features]
 denylist = ["unstable"]
@@ -31,7 +31,7 @@ console = "0.15.11"
 const_format = "0.2.34"
 dirs2 = "3.0.1"
 getset = { workspace = true }
-rand = "0.9.0"
+rand = "0.9.1"
 regex = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }

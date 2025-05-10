@@ -24,10 +24,10 @@ use clap::Parser;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
 use ruarango::ConnectionBuilder;
 use rustls::{
-    pki_types::{CertificateDer, PrivateKeyDer},
+    crypto::aws_lc_rs::default_provider,
+    pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer},
     ServerConfig,
 };
-use rustls_pemfile::{certs, ec_private_keys};
 use std::{
     ffi::OsString,
     fs::File,
@@ -92,10 +92,16 @@ where
         // Add connection to app data
         let conn_data = Data::new(conn);
 
+        match default_provider().install_default() {
+            Ok(()) => info!("aws lc provider initialized"),
+            Err(e) => error!("unable to initialize aws lc provider: {e:?}"),
+        }
+
         // Load the TLS Keys
         let server_config = load_tls_config(&config)?;
 
         // Startup the server
+        debug!("Starting puds on {socket_addr:?}");
         info!("puds configured!");
         info!("puds starting!");
 
@@ -124,35 +130,30 @@ fn load_tls_config(config: &Config) -> Result<ServerConfig> {
     let cert_file = &mut BufReader::new(
         File::open(cert_file_path).with_context(|| "Unable to read cert file")?,
     );
-    let cert_chain: Vec<CertificateDer<'_>> = certs(cert_file)
-        .inspect(|v| match v {
-            Ok(_) => debug!("valid cert file: {cert_file_path}"),
-            Err(e) => error!("invalid cert file: {e}"),
-        })
-        .filter_map(Result::ok)
+
+    let cert_chain: Vec<CertificateDer<'_>> = CertificateDer::pem_reader_iter(cert_file)
+        .flatten()
         .collect();
-    debug!("cert chain: {cert_chain:?}");
 
     let key_file =
         &mut BufReader::new(File::open(key_file_path).with_context(|| "Unable to read key file")?);
     debug!("key file: {key_file:?}");
 
-    let mut keys: Vec<PrivateKeyDer<'_>> = ec_private_keys(key_file)
+    let mut private_keys: Vec<PrivateKeyDer<'_>> = PrivateKeyDer::pem_reader_iter(key_file)
         .inspect(|v| match v {
             Ok(_) => debug!("valid key file: {key_file_path}"),
             Err(e) => error!("invalid key file: {e}"),
         })
         .filter_map(Result::ok)
-        .map(PrivateKeyDer::from)
         .collect();
-    debug!("keys: {keys:?}");
+    debug!("private keys: {private_keys:?}");
 
-    if keys.is_empty() {
+    if private_keys.is_empty() {
         return Err(anyhow!("No valid private keys found"));
     }
     let config = ServerConfig::builder()
         .with_no_client_auth()
-        .with_single_cert(cert_chain, keys.remove(0))?;
+        .with_single_cert(cert_chain, private_keys.remove(0))?;
 
     Ok(config)
 }
