@@ -3234,6 +3234,7 @@ dependencies = [
  "futures",
  "getset",
  "pudlib",
+ "rustls",
  "rustversion",
  "serde",
  "thiserror 2.0.12",
