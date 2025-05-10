@@ -46,6 +46,7 @@ rustversion = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 awc = { workspace = true, features = ["rustls-0_23-webpki-roots"] }
+rustls = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 awc = { workspace = true, features = ["rustls-0_22-webpki-roots"] }

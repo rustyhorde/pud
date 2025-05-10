@@ -22,8 +22,12 @@ use awc::{http::Version, Client};
 use clap::Parser;
 use futures::StreamExt;
 use pudlib::{initialize, load, ManagerClientToManagerSession, PudxBinary};
+#[cfg(unix)]
+use rustls::crypto::aws_lc_rs;
 use std::ffi::OsString;
 use tokio::sync::mpsc::unbounded_channel;
+#[cfg(unix)]
+use tracing::info;
 use tracing::{debug, error};
 
 #[allow(tail_expr_drop_order)]
@@ -49,6 +53,8 @@ where
 
     // Setup logging
     initialize(&mut config)?;
+
+    install_provider();
 
     // Pull values out of config
     let url = config.server_url();
@@ -104,3 +110,14 @@ where
     }
     Ok(())
 }
+
+#[cfg(unix)]
+fn install_provider() {
+    match aws_lc_rs::default_provider().install_default() {
+        Ok(()) => info!("aws lc provider initialized"),
+        Err(e) => error!("unable to initialize aws lc provider: {e:?}"),
+    }
+}
+
+#[cfg(windows)]
+fn install_provider() {}
