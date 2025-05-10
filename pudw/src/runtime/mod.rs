@@ -18,7 +18,10 @@ use awc::{http::Version, Client};
 use clap::Parser;
 use futures::StreamExt;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
-use rustls::crypto::aws_lc_rs::default_provider;
+#[cfg(unix)]
+use rustls::crypto::aws_lc_rs;
+#[cfg(windows)]
+use rustls::crypto::ring;
 use std::{
     ffi::OsString,
     io::{self, Write},
@@ -121,6 +124,22 @@ where
         }
     }
     Ok(())
+}
+
+#[cfg(unix)]
+fn install_provider() {
+    match aws_lc_rs::default_provider().install_default() {
+        Ok(()) => info!("aws lc provider initialized"),
+        Err(e) => error!("unable to initialize aws lc provider: {e:?}"),
+    }
+}
+
+#[cfg(windows)]
+fn install_provider() {
+    match ring::default_provider().install_default() {
+        Ok(()) => info!("aws lc provider initialized"),
+        Err(e) => error!("unable to initialize aws lc provider: {e:?}"),
+    }
 }
 
 #[cfg(test)]

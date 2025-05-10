@@ -34,7 +34,6 @@ clap = { workspace = true }
 futures = { workspace = true }
 getset = { workspace = true }
 pudlib = { path = "../pudlib" }
-rustls = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 time = { workspace = true }
@@ -42,6 +41,12 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 typed-builder = { workspace = true }
 uuid = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+rustls = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+rustls = { workspace = true, default-features = false, features = [ "logging, prefer-post-quantum, ring, std, tls12"]}
 
 [build-dependencies]
 rustversion = { workspace = true }
