@@ -258,6 +258,8 @@ use self::error::{clap_or_error, success};
 use anyhow::Result;
 use std::process;
 
+use rustls_pemfile as _;
+
 #[actix_web::main]
 async fn main() -> Result<()> {
     process::exit(
