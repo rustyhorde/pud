@@ -20,8 +20,6 @@ use futures::StreamExt;
 use pudlib::{header, initialize, load, Cli, PudxBinary};
 #[cfg(unix)]
 use rustls::crypto::aws_lc_rs;
-#[cfg(windows)]
-use rustls::crypto::ring;
 use std::{
     ffi::OsString,
     io::{self, Write},
@@ -132,12 +130,7 @@ fn install_provider() {
 }
 
 #[cfg(windows)]
-fn install_provider() {
-    match ring::default_provider().install_default() {
-        Ok(()) => info!("aws lc provider initialized"),
-        Err(e) => error!("unable to initialize aws lc provider: {e:?}"),
-    }
-}
+fn install_provider() {}
 
 #[cfg(test)]
 mod test {
