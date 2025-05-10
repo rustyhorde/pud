@@ -130,16 +130,10 @@ fn load_tls_config(config: &Config) -> Result<ServerConfig> {
     let cert_file = &mut BufReader::new(
         File::open(cert_file_path).with_context(|| "Unable to read cert file")?,
     );
-    // let cert_chain: Vec<CertificateDer<'_>> = certs(cert_file)
-    //     .inspect(|v| match v {
-    //         Ok(_) => debug!("valid cert file: {cert_file_path}"),
-    //         Err(e) => error!("invalid cert file: {e}"),
-    //     })
-    //     .filter_map(Result::ok)
-    //     .collect();
-    // debug!("cert chain: {cert_chain:?}");
 
-    let cert_chain: Vec<CertificateDer<'_>> = CertificateDer::pem_reader_iter(cert_file).flatten().collect();
+    let cert_chain: Vec<CertificateDer<'_>> = CertificateDer::pem_reader_iter(cert_file)
+        .flatten()
+        .collect();
 
     let key_file =
         &mut BufReader::new(File::open(key_file_path).with_context(|| "Unable to read key file")?);
@@ -154,41 +148,6 @@ fn load_tls_config(config: &Config) -> Result<ServerConfig> {
         .map(PrivateKeyDer::from)
         .collect();
     debug!("private keys: {private_keys:?}");
-    // for item in iter::from_fn(|| read_one(&mut key_file).transpose()) {
-    //     match item.unwrap() {
-    //         rustls_pemfile::Item::X509Certificate(certificate_der) => {
-    //             debug!("certificate {certificate_der:?}")
-    //         }
-    //         rustls_pemfile::Item::SubjectPublicKeyInfo(subject_public_key_info_der) => {
-    //             debug!("subject public key info {subject_public_key_info_der:?}")
-    //         }
-    //         rustls_pemfile::Item::Pkcs1Key(private_pkcs1_key_der) => {
-    //             debug!("rsa pkcs1 key {private_pkcs1_key_der:?}")
-    //         }
-    //         rustls_pemfile::Item::Pkcs8Key(private_pkcs8_key_der) => {
-    //             debug!("pkcs8 key {private_pkcs8_key_der:?}")
-    //         }
-    //         rustls_pemfile::Item::Sec1Key(private_sec1_key_der) => {
-    //             debug!("sec1 ec key {private_sec1_key_der:?}")
-    //         }
-    //         rustls_pemfile::Item::Crl(certificate_revocation_list_der) => {
-    //             debug!("certificate revocation list {certificate_revocation_list_der:?}")
-    //         }
-    //         rustls_pemfile::Item::Csr(certificate_signing_request_der) => {
-    //             debug!("certificate signing request {certificate_signing_request_der:?}")
-    //         }
-    //         _ => debug!("unknown certificate type"),
-    //     }
-    // }
-    // let mut keys: Vec<PrivateKeyDer<'_>> = pkcs8_private_keys(key_file)
-    //     .inspect(|v| match v {
-    //         Ok(_) => debug!("valid key file: {key_file_path}"),
-    //         Err(e) => error!("invalid key file: {e}"),
-    //     })
-    //     .filter_map(Result::ok)
-    //     .map(PrivateKeyDer::from)
-    //     .collect();
-    // debug!("keys: {keys:?}");
 
     if private_keys.is_empty() {
         return Err(anyhow!("No valid private keys found"));
