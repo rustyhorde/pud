@@ -46,7 +46,7 @@ uuid = { workspace = true }
 rustls = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-rustls = { workspace = true, default-features = false, features = [ "logging", "prefer-post-quantum", "ring", "std", "tls12"]}
+rustls = { version = "0.23.27", default-features = false, features = [ "logging", "prefer-post-quantum", "ring", "std", "tls12"]}
 
 [build-dependencies]
 rustversion = { workspace = true }
