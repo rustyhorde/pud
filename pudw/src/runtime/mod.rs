@@ -65,10 +65,7 @@ where
     // Output the pretty header
     header::<Config, dyn Write>(&config, HEADER_PREFIX, Some(&mut io::stdout()))?;
 
-    match default_provider().install_default() {
-        Ok(()) => info!("aws lc provider initialized"),
-        Err(e) => error!("unable to initialize aws lc provider: {e:?}"),
-    }
+    install_provider();
 
     // Pull values out of config
     let url = config.server_url();
