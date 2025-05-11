@@ -12,7 +12,7 @@ readme = "README.md"
 repository = "https://github.com/rustyhorde/pud"
 resolver = "2"
 version = "0.1.0"
-rust-version = "1.81.0"
+rust-version = "1.82.0"
 
 [package.metadata.cargo-all-features]
 denylist = ["unstable"]
@@ -28,7 +28,6 @@ actix-codec = { workspace = true }
 actix-http = { workspace = true }
 actix-rt = { workspace = true }
 anyhow = { workspace = true }
-awc = { workspace = true }
 bincode = { workspace = true }
 bytes = { workspace = true }
 clap = { workspace = true }
@@ -44,3 +43,10 @@ typed-builder = { workspace = true }
 
 [build-dependencies]
 rustversion = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+awc = { workspace = true, features = ["rustls-0_23-webpki-roots"] }
+rustls = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+awc = { workspace = true, features = ["rustls-0_22-webpki-roots"] }
