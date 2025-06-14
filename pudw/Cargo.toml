@@ -34,7 +34,6 @@ futures = { workspace = true }
 getset = { workspace = true }
 pudlib = { path = "../pudlib" }
 serde = { workspace = true }
-thiserror = { workspace = true }
 time = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

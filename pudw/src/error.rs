@@ -9,26 +9,7 @@
 // Errors
 
 use clap::error::ErrorKind;
-use serde::{ser::SerializeStruct, Serialize, Serializer};
-use std::error::Error as StdError;
 use tracing::error;
-
-#[derive(thiserror::Error, Debug)]
-pub(crate) enum Error {}
-
-impl Serialize for Error {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Error", 2)?;
-        state.serialize_field("reason", &format!("{self}"))?;
-        if let Some(source) = self.source() {
-            state.serialize_field("source", &format!("{source}"))?;
-        }
-        state.end()
-    }
-}
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn clap_or_error(err: anyhow::Error) -> i32 {
