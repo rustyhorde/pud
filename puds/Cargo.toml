@@ -25,8 +25,8 @@ unstable = ["pudlib/unstable"]
 [dependencies]
 actix = { workspace = true }
 actix-http = { workspace = true }
-actix-web = { version = "4.10.2", features = ["rustls-0_23"] }
-actix-web-actors = "4.3.1"
+actix-web = { version = "4.11.0", features = ["rustls-0_23"] }
+actix-web-actors = "4.3.0"
 anyhow = { workspace = true }
 bincode = { workspace = true }
 bytestring = "1.4.0"
