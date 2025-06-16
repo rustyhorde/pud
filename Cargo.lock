@@ -3150,7 +3150,7 @@ dependencies = [
 
 [[package]]
 name = "pudcli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix",
  "actix-codec",
@@ -3176,7 +3176,7 @@ dependencies = [
 
 [[package]]
 name = "pudlib"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix",
  "anyhow",
@@ -3203,7 +3203,7 @@ dependencies = [
 
 [[package]]
 name = "puds"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix",
  "actix-http",
@@ -3230,7 +3230,7 @@ dependencies = [
 
 [[package]]
 name = "pudw"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix",
  "actix-codec",
