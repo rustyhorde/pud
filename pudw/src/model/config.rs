@@ -8,7 +8,6 @@
 
 // configuration structs
 
-use crate::error::Error;
 use getset::{Getters, Setters};
 use pudlib::{LogConfig, Verbosity};
 use serde::{Deserialize, Serialize};
@@ -102,10 +101,8 @@ impl LogConfig for Config {
     }
 }
 
-impl TryFrom<TomlConfig> for Config {
-    type Error = Error;
-
-    fn try_from(config: TomlConfig) -> Result<Self, Self::Error> {
+impl From<TomlConfig> for Config {
+    fn from(config: TomlConfig) -> Self {
         let name = config.name().clone();
         let server_addr = config.actix().ip().clone();
         let server_port = *config.actix().port();
@@ -122,7 +119,7 @@ impl TryFrom<TomlConfig> for Config {
             } else {
                 (false, false, false, false, true)
             };
-        Ok(Config {
+        Config {
             verbose: 0,
             quiet: 0,
             path: PathBuf::new(),
@@ -136,7 +133,7 @@ impl TryFrom<TomlConfig> for Config {
             name,
             level: None,
             with_level,
-        })
+        }
     }
 }
 
