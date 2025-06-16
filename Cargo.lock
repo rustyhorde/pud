@@ -450,7 +450,7 @@ dependencies = [
  "pin-project-lite",
  "rand 0.9.1",
  "rustls 0.22.4",
- "rustls 0.23.27",
+ "rustls 0.23.28",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -3164,7 +3164,7 @@ dependencies = [
  "futures",
  "getset",
  "pudlib",
- "rustls 0.23.27",
+ "rustls 0.23.28",
  "rustversion",
  "serde",
  "thiserror 2.0.12",
@@ -3217,7 +3217,7 @@ dependencies = [
  "getset",
  "pudlib",
  "ruarango",
- "rustls 0.23.27",
+ "rustls 0.23.28",
  "rustversion",
  "serde",
  "thiserror 2.0.12",
@@ -3243,7 +3243,7 @@ dependencies = [
  "futures",
  "getset",
  "pudlib",
- "rustls 0.23.27",
+ "rustls 0.23.28",
  "rustversion",
  "serde",
  "time",
@@ -3537,9 +3537,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.27"
+version = "0.23.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "730944ca083c1c233a75c09f199e973ca499344a2b7ba9e755c457e86fb4a321"
+checksum = "7160e3e10bf4535308537f3c4e1641468cd0e485175d6163087c0393c7d46643"
 dependencies = [
  "aws-lc-rs",
  "log",
@@ -4073,7 +4073,7 @@ version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e727b36a1a0e8b74c376ac2211e40c2c8af09fb4013c60d910495810f008e9b"
 dependencies = [
- "rustls 0.23.27",
+ "rustls 0.23.28",
  "tokio",
 ]
 
