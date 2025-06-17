@@ -19,7 +19,6 @@ use crate::{
 use anyhow::{Context, Result};
 use getset::CopyGetters;
 use serde::de::DeserializeOwned;
-use tracing::info;
 use std::{fs::File, io::Read, path::PathBuf};
 
 /// Can store verbosity information
@@ -115,7 +114,6 @@ where
     let config_file_path = config_file_path(path, defaults)?;
     // Setup error handling
     let path = config_file_path.clone();
-    eprintln!("Config file path: {}", path.display());
     let ctx = |msg: &'static str| -> String { format!("{msg} {}", path.display()) };
     // Read the config file
     let config_file = read_config_file(&config_file_path, ctx)?;
@@ -176,7 +174,6 @@ where
     let mut buf = String::new();
     let mut file = File::open(config_file_path).with_context(|| ctx(FILE_OPEN))?;
     _ = file.read_to_string(&mut buf).with_context(|| ctx(READ))?;
-    info!("Read config file: {}", config_file_path.display());
     Ok(buf)
 }
 
