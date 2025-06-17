@@ -115,6 +115,7 @@ where
     let config_file_path = config_file_path(path, defaults)?;
     // Setup error handling
     let path = config_file_path.clone();
+    info!("Config file path: {}", path.display());
     let ctx = |msg: &'static str| -> String { format!("{msg} {}", path.display()) };
     // Read the config file
     let config_file = read_config_file(&config_file_path, ctx)?;
