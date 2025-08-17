@@ -3309,7 +3309,7 @@ dependencies = [
  "anyhow",
  "bytes",
  "clap",
- "console 0.15.11",
+ "console",
  "const_format",
  "dirs2",
  "getset",

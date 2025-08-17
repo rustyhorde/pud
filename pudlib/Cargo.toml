@@ -27,7 +27,7 @@ actix = { workspace = true }
 anyhow = { workspace = true }
 bytes = { workspace = true }
 clap = { workspace = true }
-console = "0.15.11"
+console = "0.16.0"
 const_format = "0.2.34"
 dirs2 = "3.0.1"
 getset = { workspace = true }
