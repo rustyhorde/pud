@@ -42,10 +42,10 @@ time = { workspace = true, features = [
 ] }
 toml = "0.9.5"
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.19", features = ["time"] }
+tracing-subscriber = { version = "=0.3.19", features = ["time"] }
 typed-builder = { workspace = true }
 uuid = { workspace = true }
-vergen-pretty = { version = "1.0.2", features = ["color", "trace"] }
+vergen-pretty = { version = "2.0.0", features = ["color", "trace"] }
 
 [build-dependencies]
 anyhow = { workspace = true }
