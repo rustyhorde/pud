@@ -14,7 +14,7 @@ use console::Style;
 use rand::Rng;
 use std::io::Write;
 use tracing::Level;
-use vergen_pretty::{vergen_pretty_env, PrefixBuilder, PrettyBuilder};
+use vergen_pretty::{vergen_pretty_env, Prefix, Pretty};
 
 fn from_u8(val: u8) -> Style {
     let style = Style::new();
@@ -44,7 +44,7 @@ where
         output_to_writer(writer, app_style, prefix)?;
     } else if let Some(level) = config.level() {
         if level >= Level::INFO {
-            trace(app_style, prefix)?;
+            trace(app_style, prefix);
         }
     }
     Ok(())
@@ -54,29 +54,28 @@ fn output_to_writer<T>(writer: &mut T, app_style: Style, prefix: &'static str) -
 where
     T: Write + ?Sized,
 {
-    let prefix = PrefixBuilder::default()
+    let prefix = Prefix::builder()
         .lines(prefix.lines().map(str::to_string).collect())
         .style(app_style)
-        .build()?;
-    PrettyBuilder::default()
+        .build();
+    Pretty::builder()
         .env(vergen_pretty_env!())
         .prefix(prefix)
-        .build()?
+        .build()
         .display(writer)?;
     Ok(())
 }
 
-fn trace(app_style: Style, prefix: &'static str) -> Result<()> {
-    let prefix = PrefixBuilder::default()
+fn trace(app_style: Style, prefix: &'static str) {
+    let prefix = Prefix::builder()
         .lines(prefix.lines().map(str::to_string).collect())
         .style(app_style)
-        .build()?;
-    PrettyBuilder::default()
+        .build();
+    Pretty::builder()
         .env(vergen_pretty_env!())
         .prefix(prefix)
-        .build()?
+        .build()
         .trace();
-    Ok(())
 }
 
 #[cfg(test)]
