@@ -45,11 +45,7 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "=0.3.19", features = ["time"] }
 typed-builder = { workspace = true }
 uuid = { workspace = true }
-<<<<<<< HEAD
-vergen-pretty = { version = "1.0.2", features = ["color", "trace"] }
-=======
 vergen-pretty = { version = "2.0.0", features = ["color", "trace"] }
->>>>>>> 1c0a4bfd7b6f53767281862030e0f2232ab7ced9
 
 [build-dependencies]
 anyhow = { workspace = true }
